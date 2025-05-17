@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Toaster } from '@/components/ui/sonner';
 import Navigation from '@/components/Navigation';
 import GameGrid from '@/components/GameGrid';
 import Footer from '@/components/Footer';
@@ -53,6 +54,7 @@ const Dashboard = () => {
       </main>
       
       <Footer />
+      <Toaster />
     </div>
   );
 };

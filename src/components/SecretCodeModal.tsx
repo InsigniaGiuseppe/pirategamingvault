@@ -227,9 +227,9 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
       <Dialog open={showConfirm} onOpenChange={() => setShowConfirm(false)}>
         <DialogContent className="bg-white rounded-xl shadow-saas border-none text-black max-w-md">
           <DialogHeader className="pb-2">
-            <DialogTitle className="text-center text-2xl font-bold text-black flex items-center justify-center gap-3 mb-2 font-heading">
+            <DialogTitle className="text-center text-2xl font-bold text-[#ea384c] flex items-center justify-center gap-3 mb-2 font-heading">
               <AlertTriangle className="h-8 w-8 text-[#ea384c]" />
-              <span className="text-[#ea384c]">System Anomaly Detected</span>
+              <span>System Anomaly Detected</span>
             </DialogTitle>
           </DialogHeader>
           
