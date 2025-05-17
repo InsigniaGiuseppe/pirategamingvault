@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = (email: string, password: string) => {
     // Simple validation - just check if fields are not empty
-    if (email.trim() && password.trim()) {
+    if (email.trim() || password.trim()) {
       localStorage.setItem('pirateLoggedIn', 'true');
       setIsAuthenticated(true);
       navigate('/dashboard');

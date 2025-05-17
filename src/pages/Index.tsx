@@ -103,7 +103,7 @@ const Index = () => {
             messageIntervalRef.current = null;
           }
           progressIntervalRef.current = null;
-          login("", ""); // Values don't matter since it's a mock login
+          login("dummy", "dummy"); // Pass dummy values to login
           setLoading(false);
         }
       }, 50);
