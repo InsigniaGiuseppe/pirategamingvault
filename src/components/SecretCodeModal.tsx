@@ -7,6 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Shield, X } from 'lucide-react';
+import { verifyAuthCode } from '@/services/credentialService';
+import { useAuth } from '@/hooks/useAuth';
 import ConfirmationModal from './ConfirmationModal';
 
 interface SecretCodeModalProps {
@@ -36,6 +38,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
   const [messageIndex, setMessageIndex] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -60,24 +63,35 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             const increment = 0.5;
             const newProgress = prev + increment;
             
-            if (newProgress >= 100) {
-              clearInterval(timer);
-              clearInterval(messageTimer);
-              setTimeout(() => {
-                if (code === '010101!') {
-                  navigate('/gotcha');
-                } else {
-                  toast({
-                    variant: "destructive",
-                    title: "Access Denied",
-                    description: "Invalid authentication sequence.",
-                  });
-                  setLoading(false);
-                  setProgress(0);
-                  setContinuedLoading(false);
-                }
-              }, 500);
-              return 100;
+            if (newProgress >= 99) {
+              // Make the last 1% extremely slow
+              const finalIncrement = 0.05; // Very slow increment for the last 1%
+              const finalProgress = prev + finalIncrement;
+              
+              if (finalProgress >= 100) {
+                clearInterval(timer);
+                clearInterval(messageTimer);
+                setTimeout(() => {
+                  // Verify auth code against the user's credentials
+                  const isValid = currentUser ? verifyAuthCode(currentUser, code) : code === '010101!';
+                  
+                  if (isValid) {
+                    navigate('/gotcha');
+                  } else {
+                    toast({
+                      variant: "destructive",
+                      title: "Access Denied",
+                      description: "Wrong code, landlubber! Walk the plank!"
+                    });
+                    setLoading(false);
+                    setProgress(0);
+                    setContinuedLoading(false);
+                  }
+                }, 500);
+                return 100;
+              }
+              
+              return finalProgress;
             }
             
             return newProgress;
@@ -94,14 +108,12 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
       if (timer) clearInterval(timer);
       if (messageTimer) clearInterval(messageTimer);
     };
-  }, [loading, continuedLoading, code, navigate, toast]);
+  }, [loading, continuedLoading, code, navigate, toast, currentUser]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
   };
-
-  // Remove the handleContinueLoading function since we're triggering the modal directly in useEffect
 
   const handleConfirmContinue = () => {
     setShowConfirm(false);

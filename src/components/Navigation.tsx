@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu, User, Settings, HelpCircle, ChevronDown } from 'lucide-react';
+import { LogOut, Menu, User, Settings, HelpCircle, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -86,6 +86,12 @@ const Navigation = () => {
               </div>
             </div>
           </div>
+          
+          {/* Admin Link */}
+          <Link to="/admin" className="text-black hover:text-gray-700 transition-colors py-2 flex items-center gap-1">
+            <Shield size={16} className="text-black" />
+            Admin
+          </Link>
         </div>
         
         <div className="flex items-center gap-3">
@@ -122,6 +128,10 @@ const Navigation = () => {
               <p className="text-gray-500 text-sm mb-2">Resources</p>
               <a href="#" className="block py-2 text-black hover:text-gray-700">Support Center</a>
               <a href="https://discord.gg/cZ7MfkNH" className="block py-2 text-black hover:text-gray-700">Community</a>
+              <Link to="/admin" className="block py-2 text-black hover:text-gray-700 flex items-center gap-2">
+                <Shield size={14} />
+                Admin Access
+              </Link>
             </div>
           </div>
         </div>
