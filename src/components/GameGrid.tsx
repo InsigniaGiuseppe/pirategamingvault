@@ -49,12 +49,13 @@ const GameGrid = () => {
           
           <div className="saas-card">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-saas-grey-200 flex items-center justify-center">
-                <span className="text-saas-grey-500 font-bold">JS</span>
-              </div>
+              <Avatar className="w-12 h-12">
+                <AvatarImage src="/lovable-uploads/ae48e00f-9a3a-414c-ba60-3c1099f45e2a.png" alt="Dean V" />
+                <AvatarFallback className="bg-saas-grey-200">DV</AvatarFallback>
+              </Avatar>
               <div>
                 <p className="text-saas-grey-800 italic mb-3">"As a game developer, I appreciate the attention to detail in the PIRATE GAMING platform. It showcases our games beautifully."</p>
-                <p className="text-saas-grey-600 font-medium">Jane Smith, Game Developer</p>
+                <p className="text-saas-grey-600 font-medium">Dean V, Full Time Content Creator</p>
               </div>
             </div>
           </div>
