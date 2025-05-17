@@ -85,7 +85,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       </form>
       
       <div className="mt-8 text-sm text-gray-600 text-center">
-        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-black hover:underline">Join Pirate Gaming Discord</a> for access.</p>
+        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-black hover:underline">Join Pirate Gaming Discord</a> and ask GIUSEPPE for access.</p>
       </div>
     </div>
   );
