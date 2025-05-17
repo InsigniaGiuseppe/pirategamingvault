@@ -158,11 +158,11 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-saas-navy bg-[url('/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-saas-navy/90 backdrop-blur-sm"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-saas-lavender-gradient">
+      <div className="absolute inset-0 bg-saas-lavender-dual-gradient"></div>
       
       {loading ? (
-        <div className="fixed inset-0 bg-saas-navy/95 flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-saas-navy/35 backdrop-blur-sm flex flex-col items-center justify-center z-50">
           <div className="relative mb-8">
             <img 
               src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
@@ -182,27 +182,27 @@ const Index = () => {
           </div>
 
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-            <AlertDialogContent className="saas-panel-dark border-saas-grey-800/30 max-w-md">
+            <AlertDialogContent className="bg-white rounded-xl shadow-saas border-none max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-center text-2xl font-bold text-saas-teal flex items-center justify-center gap-3 mb-4 font-heading">
+                <AlertDialogTitle className="text-center text-2xl font-bold text-saas-text-headline flex items-center justify-center gap-3 mb-4 font-heading">
                   <Compass className="text-saas-teal h-6 w-6" />
                   System Anomaly Detected
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-saas-white font-medium text-base text-center">
+                <AlertDialogDescription className="text-saas-text-body font-medium text-base text-center">
                   We've hit the doldrums! What shall we do, matey?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="mt-6 flex flex-col sm:flex-row gap-3">
                 <AlertDialogCancel 
                   onClick={cancelLogin}
-                  className="saas-button-secondary order-2 sm:order-1"
+                  className="bg-white text-saas-text-body border border-saas-grey-200 hover:bg-saas-grey-100 hover:text-saas-text-headline order-2 sm:order-1"
                   disabled={loginAttempts >= 3}
                 >
                   GO BACK TO LOGIN
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={resumeLoading}
-                  className="saas-button-primary order-1 sm:order-2"
+                  className="bg-saas-teal text-saas-white hover:bg-saas-teal/90 shadow-saas-primary order-1 sm:order-2"
                 >
                   CONTINUE
                 </AlertDialogAction>
@@ -211,16 +211,16 @@ const Index = () => {
           </AlertDialog>
 
           {loginAttempts >= 3 && showDialog && (
-            <div className="absolute inset-0 bg-saas-navy/95 backdrop-blur-md flex items-center justify-center z-50">
-              <div className="saas-panel-dark p-8 max-w-md text-center">
+            <div className="absolute inset-0 bg-saas-navy/35 backdrop-blur-md flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-saas p-8 max-w-md text-center">
                 <AlertTriangle className="text-saas-pink h-12 w-12 mx-auto mb-4" />
-                <h3 className="text-xl font-heading text-saas-pink mb-3">Continuous errors detected!</h3>
-                <p className="text-saas-white font-medium mb-6">
+                <h3 className="text-xl font-heading text-saas-text-headline mb-3">Continuous errors detected!</h3>
+                <p className="text-saas-text-body font-medium mb-6">
                   Please hail Pirate Gaming Support on Discord for assistance.
                 </p>
                 <button 
                   onClick={resumeLoading} 
-                  className="saas-button-primary px-6 py-2.5 rounded-md font-medium"
+                  className="bg-saas-teal text-white px-6 py-2.5 rounded-md font-medium shadow-saas-primary hover:shadow-saas-hover"
                 >
                   DISMISS
                 </button>
@@ -231,30 +231,21 @@ const Index = () => {
       ) : (
         <div className="relative z-10 flex flex-col items-center px-4 w-full max-w-md">
           <div className="flex flex-col items-center gap-3 mb-10">
-            <img 
-              src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
-              alt="Pirate Gaming Logo" 
-              className="h-16"
-              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 5px rgba(39, 230, 247, 0.8))' }} 
-            />
+            <div className="flex items-center">
+              <img 
+                src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
+                alt="Pirate Gaming Logo" 
+                className="h-20"
+                style={{ filter: 'drop-shadow(0 0 5px rgba(39, 230, 247, 0.4))' }} 
+              />
+            </div>
             <div className="text-center">
-              <h1 className="text-saas-teal font-bold text-4xl md:text-5xl font-heading">PIRATE GAMING</h1>
-              <p className="text-saas-grey-400 text-sm tracking-widest -mt-1">ENTERPRISE VAULT</p>
+              <h1 className="text-saas-text-headline font-bold text-4xl md:text-5xl font-heading">PIRATE GAMING</h1>
+              <p className="text-saas-text-body text-sm tracking-widest -mt-1">GAME VAULT</p>
             </div>
           </div>
           
           <LoginForm onLogin={handleLogin} />
-          
-          <div className="mt-12 grid grid-cols-4 gap-8 max-w-lg">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full bg-saas-grey-800/50 flex items-center justify-center">
-                  <span className="text-saas-grey-500">C{i}</span>
-                </div>
-                <span className="text-saas-grey-500 text-xs mt-2">Client {i}</span>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>

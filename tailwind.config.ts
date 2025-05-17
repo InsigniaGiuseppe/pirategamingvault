@@ -19,12 +19,17 @@ export default {
     },
     extend: {
       colors: {
-        // Enterprise SaaS aesthetic colors
+        // Updated Enterprise SaaS aesthetic colors
         saas: {
           navy: "#0d1017",      // Deep navy for backgrounds
           white: "#FFFFFF",     // Pure white for text & sections
           teal: "#27E6F7",      // Teal for primary CTAs
           pink: "#FF6BCB",      // Fuchsia-pink for secondary accents
+          lavender: "#E5D8FA",  // New pastel lavender for gradients
+          text: {
+            headline: "#111111", // Near-black for headlines
+            body: "#444444",     // Dark gray for body text
+          },
           grey: {
             100: "#F5F7FA",     // Lightest grey
             200: "#E4E7EB",     // Light grey
@@ -36,7 +41,7 @@ export default {
             800: "#3E4C5A",     // Very dark grey
           }
         },
-        // Legacy digital-AI aesthetic colors
+        // Legacy digital-AI aesthetic colors (kept for backward compatibility)
         digital: {
           background: "#0d1017", // page background
           panel: "rgba(255,255,255,0.06)", // glass cards & modals
@@ -100,9 +105,9 @@ export default {
         'cinzel': ['Cinzel', 'serif'], // kept for backward compatibility
       },
       boxShadow: {
-        'saas': '0 4px 16px rgba(0, 0, 0, 0.08)',
-        'saas-hover': '0 8px 24px rgba(0, 0, 0, 0.12)',
-        'saas-primary': '0 4px 16px rgba(39, 230, 247, 0.15)',
+        'saas': '0 6px 24px rgba(0, 0, 0, 0.06)',
+        'saas-hover': '0 8px 32px rgba(0, 0, 0, 0.1)',
+        'saas-primary': '0 0 8px rgba(39, 230, 247, 0.6)',
         'saas-secondary': '0 4px 16px rgba(255, 107, 203, 0.15)',
         'digital': '0 4px 20px rgba(39, 230, 247, 0.15)',
         'digital-hover': '0 8px 30px rgba(39, 230, 247, 0.3)',
@@ -115,6 +120,8 @@ export default {
         'saas-light-gradient': 'linear-gradient(135deg, #F5F7FA 0%, #E4E7EB 100%)',
         'saas-primary-gradient': 'linear-gradient(135deg, #27E6F7 0%, #33B3EC 100%)',
         'saas-secondary-gradient': 'linear-gradient(135deg, #FF6BCB 0%, #F873DB 100%)',
+        'saas-lavender-gradient': 'radial-gradient(circle at center, rgba(229,216,250,0.4) 0%, #ffffff 80%)',
+        'saas-lavender-dual-gradient': 'radial-gradient(circle at top center, rgba(229,216,250,0.4) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at bottom center, rgba(229,216,250,0.4) 0%, rgba(255,255,255,0) 70%)',
         'space-gradient': 'linear-gradient(135deg, #0d1017 0%, #141b2d 100%)',
         'digital-glow': 'linear-gradient(135deg, rgba(39, 230, 247, 0.4) 0%, rgba(39, 230, 247, 0) 50%)',
         'digital-panel': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
@@ -163,6 +170,10 @@ export default {
           "0%": { opacity: "1", transform: "translateY(0)" },
           "100%": { opacity: "0", transform: "translateY(10px)" }
         },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -174,8 +185,10 @@ export default {
         "tilt": "tilt 0.2s ease-out forwards",
         "fade-in": "fade-in 0.5s ease-out",
         "fade-out": "fade-out 0.3s ease-out",
+        "fade-up": "fade-up 0.4s ease-out",
       },
       borderRadius: {
+        'xl': '24px',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
