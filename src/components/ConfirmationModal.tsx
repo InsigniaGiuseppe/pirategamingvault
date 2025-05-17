@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Ship } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel }: ConfirmationModalPro
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold text-black font-heading flex flex-col items-center gap-3 pb-2">
             <AlertCircle className="text-black h-8 w-8 mb-1" />
-            Double Check
+            DOUBLE CHECK
           </DialogTitle>
         </DialogHeader>
         
@@ -31,10 +31,9 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel }: ConfirmationModalPro
             />
           </div>
           
+          {/* Removed the ship animation and just kept a simple progress bar */}
           <div className="mt-4 w-full h-1 bg-gray-200 relative overflow-hidden">
-            <div className="absolute top-0 left-0 h-full w-full bg-black animate-ship-sailing">
-              <Ship className="h-6 w-6 text-black absolute -top-2 animate-ship-sailing" />
-            </div>
+            <div className="absolute top-0 left-0 h-full w-1/2 bg-black"></div>
           </div>
         </div>
         

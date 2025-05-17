@@ -264,21 +264,6 @@ const Index = () => {
         </div>
       ) : (
         <div className="relative z-10 flex flex-col items-center px-4 w-full max-w-md">
-          <div className="flex flex-col items-center gap-3 mb-10">
-            <div className="flex items-center">
-              <img 
-                src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
-                alt="Pirate Gaming Logo" 
-                className="h-20"
-                style={{ filter: 'brightness(0)' }} 
-              />
-            </div>
-            <div className="text-center">
-              <h1 className="text-black font-bold text-4xl md:text-5xl font-heading">PIRATE GAMING</h1>
-              <p className="text-gray-600 text-sm tracking-widest -mt-1">GAME VAULT</p>
-            </div>
-          </div>
-          
           <LoginForm onLogin={handleLogin} />
         </div>
       )}

@@ -53,7 +53,7 @@ const Gotcha = () => {
           
           <Button 
             variant="outline" 
-            className="bg-white text-gray-600 border-2 border-gray-300 w-full py-5 rounded-md flex items-center justify-center gap-2 hover:bg-gray-100"
+            className="bg-white text-[#8B5CF6] border-2 border-gray-300 w-full py-5 rounded-md flex items-center justify-center gap-2 hover:bg-gray-100"
             onClick={() => window.open('https://www.twitch.tv/dannehtv/clip/JollyChillyTaroBibleThump-UZFqPcyh8uzVBiDA', '_blank')}
           >
             <ExternalLink size={18} />
