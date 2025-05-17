@@ -25,7 +25,7 @@ const Dashboard = () => {
       <main className="flex-grow">
         <div className="relative overflow-hidden">
           {/* Further reduced hero section height by another 30% */}
-          <div className="h-[21vh] relative">
+          <div className="h-[15vh] relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
             
             <img
