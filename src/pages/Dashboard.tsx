@@ -35,8 +35,8 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-white"></div>
             
-            {/* Updated text alignment to center */}
-            <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/4 p-4 md:p-8 animate-fade-up text-center">
+            {/* Adjusted position of subtitle by reducing translate-y to avoid cutoff */}
+            <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/3 p-4 md:p-8 animate-fade-up text-center">
               <div className="flex flex-col items-center">
                 <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
                   Welcome to the PIRATE VAULT
