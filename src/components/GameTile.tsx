@@ -13,7 +13,7 @@ const GameTile = ({ game }: GameTileProps) => {
   // Updated map of game titles to their corresponding image sources
   const gameImageMap: { [key: string]: string } = {
     "Sea of Thieves": "https://upload.wikimedia.org/wikipedia/en/7/77/Sea_of_thieves_cover_art.jpg",
-    "Assassin's Creed IV: Black Flag": "https://upload.wikimedia.org/wikipedia/en/0/03/Assassins_Creed_IV_Black_Flag_cover.jpg",
+    "Assassin's Creed IV: Black Flag": "https://upload.wikimedia.org/wikipedia/en/1/16/Assassin%27s_Creed_IV_-_Black_Flag_cover.jpg",
     "The Secret of Monkey Island": "https://upload.wikimedia.org/wikipedia/en/a/a8/The_Secret_of_Monkey_Island_artwork.jpg",
     "Sid Meier's Pirates!": "https://upload.wikimedia.org/wikipedia/en/0/0f/Sid_Meier%27s_Pirates%21_%282004%29_Coverart.png",
     "Port Royale 4": "https://cdn.cloudflare.steamstatic.com/steam/apps/1024650/header.jpg",

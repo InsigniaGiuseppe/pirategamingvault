@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Shield, X } from 'lucide-react';
+import { Lock, Shield, X, AlertTriangle } from 'lucide-react';
 import { verifyAuthCode } from '@/services/credentialService';
 import { useAuth } from '@/hooks/useAuth';
-import ConfirmationModal from './ConfirmationModal';
 
 interface SecretCodeModalProps {
   isOpen: boolean;
@@ -54,7 +53,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
         setProgress(prev => {
           if (prev >= 60 && !continuedLoading) {
             clearInterval(timer);
-            setShowConfirm(true); // Move this here instead of having a separate function
+            setShowConfirm(true);
             return 60;
           }
           
@@ -224,11 +223,40 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
         </DialogContent>
       </Dialog>
 
-      <ConfirmationModal 
-        isOpen={showConfirm} 
-        onConfirm={handleConfirmContinue}
-        onCancel={handleCancelContinue}
-      />
+      {/* Updated confirmation modal with alert styling */}
+      <Dialog open={showConfirm} onOpenChange={() => setShowConfirm(false)}>
+        <DialogContent className="bg-white rounded-xl shadow-saas border-none text-black max-w-md">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-center text-2xl font-bold text-black flex items-center justify-center gap-3 mb-2 font-heading">
+              <AlertTriangle className="h-8 w-8 text-[#ea384c]" />
+              <span className="text-[#ea384c]">System Anomaly Detected</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="border-2 border-[#ea384c]/30 bg-[#ea384c]/5 rounded-lg p-4 my-4">
+            <p className="text-center text-black font-medium">
+              We've hit the doldrums! What shall we do, matey?
+            </p>
+          </div>
+          
+          <div className="flex flex-col space-y-3">
+            <Button
+              onClick={handleConfirmContinue}
+              className="bg-[#ea384c] hover:bg-[#ea384c]/80 text-white border-0 w-full py-3"
+            >
+              Continue loading
+            </Button>
+            
+            <Button
+              onClick={handleCancelContinue}
+              variant="outline" 
+              className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-black w-full py-3"
+            >
+              Return to sign-in
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
