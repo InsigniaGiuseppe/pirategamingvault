@@ -176,7 +176,7 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       {loading ? (
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-50">
           {/* Ship sailing animation */}
@@ -265,8 +265,10 @@ const Index = () => {
           )}
         </div>
       ) : (
-        <div className="relative z-10 flex flex-col items-center px-4 w-full max-w-md">
-          <LoginForm onLogin={handleLogin} />
+        <div className="flex-grow flex items-center justify-center px-4 py-10 w-full">
+          <div className="relative z-10 flex flex-col items-center w-full max-w-md">
+            <LoginForm onLogin={handleLogin} />
+          </div>
         </div>
       )}
       <Footer />

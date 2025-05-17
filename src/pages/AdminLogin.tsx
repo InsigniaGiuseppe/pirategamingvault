@@ -17,9 +17,12 @@ const AdminLogin = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
+    console.log('Attempting admin login with:', { username });
 
     setTimeout(() => {
       const credential = verifyCredentials(username, password);
+      console.log('Credential check result:', credential);
       
       if (credential && (credential.username === 'Dannehsbum' || credential.username === 'GIUSEPPE')) {
         // Admin login successful

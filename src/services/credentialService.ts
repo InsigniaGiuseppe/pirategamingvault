@@ -57,7 +57,7 @@ export const getCredentials = (): Credential[] => {
 // Find a credential by username
 export const findCredentialByUsername = (username: string): Credential | undefined => {
   const creds = getCredentials();
-  return creds.find(cred => cred.username.toLowerCase() === username.toLowerCase());
+  return creds.find(cred => cred.username === username);
 };
 
 // Verify credentials
@@ -80,7 +80,7 @@ export const addCredential = (username: string, password: string, authCode?: str
   const creds = getCredentials();
   
   // Check if username already exists
-  if (creds.some(cred => cred.username.toLowerCase() === username.toLowerCase())) {
+  if (creds.some(cred => cred.username === username)) {
     throw new Error('Username already exists');
   }
   
