@@ -18,22 +18,22 @@ const Gotcha = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#03060a] p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background p-6 bg-canvas-grain">
       <div className="max-w-xl text-center">
-        <Flag className="text-[#cfb53b] h-24 w-24 mx-auto animate-flag-wave" />
+        <Flag className="text-pirate-accent h-24 w-24 mx-auto animate-flag-wave" />
         
-        <h1 className="text-4xl font-bold text-[#cde8e5] mt-8 mb-6">
+        <h1 className="text-4xl font-bold text-pirate-text mt-8 mb-6 font-cinzel">
           All hands on deck!
         </h1>
         
-        <p className="text-xl text-[#cde8e5] mb-8">
+        <p className="text-xl text-pirate-text mb-8">
           We don't actually pirate games. We're just a gaming guild with a sense of humor!
           Join our Discord if you like playing games legally.
         </p>
         
         <div className="space-y-4">
           <Button 
-            className="bg-[#8b0000] hover:bg-[#8b0000]/80 text-[#cde8e5] w-full"
+            className="bg-pirate-action hover:bg-pirate-action/80 text-pirate-text w-full border border-pirate-accent shadow-pirate"
             onClick={() => navigate('/dashboard')}
           >
             Return to Home Port
@@ -41,7 +41,7 @@ const Gotcha = () => {
           
           <Button 
             variant="outline" 
-            className="text-[#cde8e5] border-[#cfb53b]/40 hover:bg-[#cfb53b]/10 w-full"
+            className="text-pirate-text border-pirate-accent hover:bg-pirate-accent/10 w-full shadow-pirate"
             onClick={() => window.open('https://discord.gg/cZ7MfkNH', '_blank')}
           >
             Join Our Discord
@@ -49,7 +49,7 @@ const Gotcha = () => {
           
           <Button 
             variant="outline" 
-            className="text-[#cde8e5] border-[#cfb53b]/40 hover:bg-[#cfb53b]/10 w-full"
+            className="text-pirate-text border-pirate-accent hover:bg-pirate-accent/10 w-full shadow-pirate"
             onClick={() => window.open('https://www.twitch.tv/dannehtv/clip/JollyChillyTaroBibleThump-UZFqPcyh8uzVBiDA', '_blank')}
           >
             Meet the Pirate

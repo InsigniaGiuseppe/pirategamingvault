@@ -20,14 +20,17 @@ export default {
     },
     extend: {
       colors: {
+        pirate: {
+          background: "#001426", // weather-worn midnight-blue
+          secondary: "#2b1e14", // dark ship-timber brown
+          accent: "#b68f40", // raw brass
+          action: "#7c0a02", // deep-crimson sail
+          text: "#c7dbd6", // moonlit-foam
+        },
         netflix: {
           background: "#141414",
           red: "#E50914",
           hover: "#181818",
-        },
-        pirate: {
-          gold: "#FFD700",
-          parchment: "#F5DEB3",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -62,6 +65,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
         },
+      },
+      fontFamily: {
+        cinzel: ['Cinzel', 'serif'],
+        inter: ['Inter', 'sans-serif'],
+      },
+      boxShadow: {
+        'pirate': '0 4px 10px rgba(0, 0, 0, 0.6)',
+      },
+      backgroundImage: {
+        'wood-texture': "url('/wood-texture.png')",
+        'canvas-grain': "linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.08) 50%, rgba(0,0,0,.08) 75%, transparent 75%, transparent)",
       },
       keyframes: {
         "accordion-down": {

@@ -5,8 +5,8 @@ import GameTile from './GameTile';
 const GameGrid = () => {
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="bg-gradient-to-r from-[#8b0000]/20 to-transparent p-1 mb-6 rounded-lg"></div>
-      <h2 className="text-2xl font-bold text-[#cde8e5] mb-6 shadow-sm">Featured Plunder</h2>
+      <div className="bg-gradient-to-r from-pirate-accent/20 to-transparent p-1 mb-6 rounded-lg"></div>
+      <h2 className="text-2xl font-bold text-pirate-text mb-6 shadow-pirate font-cinzel">Featured Plunder</h2>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {games.map((game) => (
@@ -14,8 +14,8 @@ const GameGrid = () => {
         ))}
       </div>
       
-      <div className="bg-gradient-to-r from-[#8b0000]/20 to-transparent p-1 my-6 rounded-lg"></div>
-      <h2 className="text-2xl font-bold text-[#cde8e5] mb-6 shadow-sm">Crew Favorites</h2>
+      <div className="bg-gradient-to-r from-pirate-accent/20 to-transparent p-1 my-6 rounded-lg"></div>
+      <h2 className="text-2xl font-bold text-pirate-text mb-6 shadow-pirate font-cinzel">Crew Favorites</h2>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
         {games.filter(game => !game.isPiratePun).slice(0, 5).map((game) => (

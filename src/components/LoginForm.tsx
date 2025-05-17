@@ -24,9 +24,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-[#0c1f2c]/80 rounded-lg shadow-xl backdrop-blur-sm border border-[#cfb53b]/30">
-      <h2 className="text-2xl font-bold text-[#cde8e5] mb-2">Ahoy, Matey!</h2>
-      <p className="text-[#cde8e5]/80 mb-6">Boarding the ship...</p>
+    <div className="w-full max-w-md mx-auto p-6 bg-pirate-secondary/80 rounded-lg shadow-pirate backdrop-blur-sm border border-pirate-accent/30">
+      <h2 className="text-2xl font-bold text-pirate-text mb-2 font-cinzel">Ahoy, Matey!</h2>
+      <p className="text-pirate-text/80 mb-6">Boarding the ship...</p>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -35,7 +35,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             placeholder="Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-[#3b2f2f] border-[#cfb53b]/30 text-[#cde8e5] placeholder:text-[#cde8e5]/50"
+            className="bg-pirate-background border-pirate-accent/30 text-pirate-text placeholder:text-pirate-text/50"
           />
         </div>
         
@@ -45,19 +45,19 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-[#3b2f2f] border-[#cfb53b]/30 text-[#cde8e5] placeholder:text-[#cde8e5]/50"
+            className="bg-pirate-background border-pirate-accent/30 text-pirate-text placeholder:text-pirate-text/50"
           />
         </div>
         
         <Button 
           type="submit" 
-          className="w-full bg-[#8b0000] hover:bg-[#8b0000]/80 text-white font-semibold shadow-md"
+          className="w-full bg-pirate-action hover:bg-pirate-action/80 text-pirate-text font-semibold shadow-pirate border border-pirate-accent/50"
         >
           Set Sail
         </Button>
       </form>
       
-      <div className="mt-6 text-sm text-[#cde8e5]/70 text-center">
+      <div className="mt-6 text-sm text-pirate-text/70 text-center">
         <p>Don't have credentials? Go to Pirate Gaming Discord to request.</p>
       </div>
     </div>

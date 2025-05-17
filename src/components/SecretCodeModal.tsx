@@ -34,16 +34,16 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#0c1f2c] border-[#cfb53b] border-2 text-[#cde8e5] max-w-md shadow-[0px_4px_10px_rgba(0,0,0,0.6)]">
+      <DialogContent className="bg-pirate-secondary border-pirate-accent border-2 text-pirate-text max-w-md shadow-pirate">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold text-[#cfb53b]">
+          <DialogTitle className="text-center text-2xl font-bold text-pirate-accent font-cinzel">
             🚫 Forbidden Treasure! 🚫
           </DialogTitle>
         </DialogHeader>
         
         <div className="text-center mb-4">
-          <p className="text-[#cfb53b]">Enter the Captain's code to access {gameTitle}</p>
-          <p className="text-xs text-[#cde8e5]/60 mt-2">(You can snag the code from our Discord tavern.)</p>
+          <p className="text-pirate-accent">Enter the Captain's code to access {gameTitle}</p>
+          <p className="text-xs text-pirate-text/60 mt-2">(You can snag the code from our Discord tavern.)</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -52,12 +52,12 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             value={code} 
             onChange={(e) => setCode(e.target.value)}
             placeholder="Enter secret code..."
-            className="bg-[#3b2f2f] border-[#cfb53b]/30 text-[#cde8e5]"
+            className="bg-pirate-background border-pirate-accent/30 text-pirate-text"
           />
           
           <Button 
             type="submit" 
-            className="w-full bg-[#8b0000] hover:bg-[#8b0000]/80 shadow-md"
+            className="w-full bg-pirate-action hover:bg-pirate-action/80 shadow-pirate border border-pirate-accent/50"
           >
             Unlock Treasure
           </Button>

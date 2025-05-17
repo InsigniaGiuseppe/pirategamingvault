@@ -1,37 +1,39 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 50% 3%;
+    --background: 210 100% 8%;
     --foreground: 180 39% 86%;
 
-    --card: 17 13% 21%;
+    --card: 30 36% 13%;
     --card-foreground: 180 39% 86%;
 
-    --popover: 210 50% 3%;
+    --popover: 210 100% 8%;
     --popover-foreground: 180 39% 86%;
 
-    --primary: 43 75% 52%;
+    --primary: 43 47% 48%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 17 13% 21%;
+    --secondary: 30 36% 13%;
     --secondary-foreground: 180 39% 86%;
 
-    --muted: 210 50% 6%;
+    --muted: 210 100% 12%;
     --muted-foreground: 180 39% 70%;
 
-    --accent: 0 100% 27%;
+    --accent: 360 89% 24%;
     --accent-foreground: 180 39% 86%;
 
-    --destructive: 0 100% 27%;
+    --destructive: 360 89% 24%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 43 75% 52%;
-    --input: 17 13% 21%;
-    --ring: 43 75% 52%;
+    --border: 43 47% 48%;
+    --input: 30 36% 13%;
+    --ring: 43 47% 48%;
 
     --radius: 0.5rem;
   }
@@ -43,8 +45,14 @@
   }
 
   body {
-    @apply bg-[#03060a] text-foreground overflow-x-hidden;
+    @apply bg-pirate-background text-pirate-text font-inter overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+    background-image: linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.08) 50%, rgba(0,0,0,.08) 75%, transparent 75%, transparent);
+    background-size: 8px 8px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cinzel;
   }
 
   .text-stroke {
@@ -55,30 +63,36 @@
     will-change: transform;
   }
   
-  .glossy-card {
-    @apply relative overflow-hidden;
+  .pirate-card {
+    @apply relative overflow-hidden bg-pirate-secondary border-2 border-pirate-accent rounded-3xl shadow-pirate;
   }
   
-  .glossy-card::before {
-    content: '';
+  .pirate-button {
+    @apply relative overflow-hidden bg-pirate-secondary border border-pirate-accent text-pirate-text 
+    shadow-pirate hover:bg-pirate-accent/20 transition-all duration-300;
+  }
+  
+  .action-button {
+    @apply relative overflow-hidden bg-pirate-action border border-pirate-accent text-pirate-text
+    shadow-pirate hover:bg-pirate-action/80 transition-all duration-300;
+  }
+
+  .glossy-overlay {
     @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-50;
   }
-  
-  .glossy-red {
-    @apply relative overflow-hidden bg-gradient-to-br from-[#8b0000] to-[#8b0000]/80;
+
+  .game-tile-frame {
+    @apply border-4 border-pirate-accent rounded-3xl overflow-hidden shadow-pirate transition-all duration-300
+    bg-pirate-secondary hover:scale-105;
   }
   
-  .glossy-red::before {
+  .game-tile-frame:before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none z-10 opacity-70;
+    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-0 
+    hover:opacity-40 transition-opacity duration-300;
   }
   
-  .glossy-gold {
-    @apply relative overflow-hidden border-2 border-[#cfb53b] shadow-md;
-  }
-  
-  .glossy-gold::before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-[#cfb53b]/20 to-transparent pointer-events-none z-10 opacity-50;
+  .parchment {
+    @apply bg-[#f5e9d0] border-2 border-pirate-accent text-pirate-secondary rounded-lg shadow-pirate;
   }
 }

@@ -14,7 +14,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#03060a] overflow-hidden relative">
+    <div className="min-h-screen flex items-center justify-center bg-pirate-background overflow-hidden relative bg-canvas-grain">
       <div className="parallax-cloud absolute animate-float opacity-20">
         <div className="h-32 w-32 rounded-full bg-white blur-xl -top-10 left-20"></div>
         <div className="h-24 w-48 rounded-full bg-white blur-xl top-40 left-60"></div>
@@ -22,10 +22,10 @@ const NotFound = () => {
       </div>
       
       <div className="text-center z-10">
-        <h1 className="text-6xl font-bold text-[#8b0000] mb-4">404</h1>
-        <p className="text-2xl text-[#cde8e5] mb-8">Here be no pages, matey.</p>
+        <h1 className="text-6xl font-bold text-pirate-action mb-4 font-cinzel">404</h1>
+        <p className="text-2xl text-pirate-text mb-8 font-cinzel">Here be no pages, matey.</p>
         <Link to="/">
-          <Button className="bg-[#8b0000] hover:bg-[#8b0000]/80 text-[#cde8e5]">
+          <Button className="bg-pirate-action hover:bg-pirate-action/80 text-pirate-text border border-pirate-accent shadow-pirate">
             Return to Home Port
           </Button>
         </Link>

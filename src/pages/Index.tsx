@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
 import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Compass } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const loadingMessages = [
   "Charting new waters…",
@@ -18,10 +22,19 @@ const loadingMessages = [
 const Index = () => {
   const { isAuthenticated, login } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(() => {
+    const attempts = sessionStorage.getItem('loginAttempts');
+    return attempts ? parseInt(attempts) : 0;
+  });
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
   const progressIntervalRef = useRef<number | null>(null);
   const messageIntervalRef = useRef<number | null>(null);
   
@@ -42,11 +55,18 @@ const Index = () => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem('loginAttempts', loginAttempts.toString());
+  }, [loginAttempts]);
   
   const handleLogin = (email: string, password: string) => {
+    setLoginEmail(email);
+    setLoginPassword(password);
     setLoading(true);
     setProgress(0);
     setIsPaused(false);
+    setShowDialog(false);
     
     // Message rotation logic
     const messageInterval = setInterval(() => {
@@ -56,7 +76,7 @@ const Index = () => {
     
     // Progress bar logic
     const startTime = Date.now();
-    const duration = 6000; // 6 seconds
+    const duration = 8000; // 8 seconds total
     
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -66,6 +86,7 @@ const Index = () => {
         clearInterval(progressInterval);
         setIsPaused(true);
         setProgress(60);
+        setShowDialog(true);
       } else if (!isPaused) {
         setProgress(newProgress);
         
@@ -85,9 +106,10 @@ const Index = () => {
   const resumeLoading = () => {
     if (isPaused) {
       setIsPaused(false);
+      setShowDialog(false);
       
       const startTime = Date.now();
-      const remainingDuration = 6000 * ((100 - progress) / 100); // Calculate remaining time
+      const remainingDuration = 8000 * ((100 - progress) / 100); // Calculate remaining time
       
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
@@ -103,42 +125,105 @@ const Index = () => {
             messageIntervalRef.current = null;
           }
           progressIntervalRef.current = null;
-          login("dummy", "dummy"); // Pass dummy values to login
+          login(loginEmail, loginPassword);
           setLoading(false);
         }
       }, 50);
       progressIntervalRef.current = progressInterval as unknown as number;
     }
   };
+
+  const cancelLogin = () => {
+    setLoginAttempts(prev => prev + 1);
+    
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    
+    if (messageIntervalRef.current) {
+      clearInterval(messageIntervalRef.current);
+      messageIntervalRef.current = null;
+    }
+    
+    setLoading(false);
+    setIsPaused(false);
+    setShowDialog(false);
+    
+    toast({
+      title: "Journey aborted",
+      description: "Returning to safe harbor...",
+      variant: "default",
+    });
+  };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#03060a] bg-[url('/lovable-uploads/408372f3-3fa4-470e-a339-8ae385af8f01-profile_banner-480.jpeg')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-black/25 bg-[linear-gradient(45deg,rgba(0,0,0,.7)_25%,transparent_25%,transparent_50%,rgba(0,0,0,.7)_50%,rgba(0,0,0,.7)_75%,transparent_75%,transparent)] bg-[length:4px_4px]"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background bg-[url('/lovable-uploads/408372f3-3fa4-470e-a339-8ae385af8f01-profile_banner-480.jpeg')] bg-cover bg-center">
+      <div className="absolute inset-0 bg-black/50 bg-canvas-grain"></div>
       
       {loading ? (
-        <div 
-          className="fixed inset-0 bg-[#03060a]/90 flex flex-col items-center justify-center z-50 cursor-pointer"
-          onClick={isPaused ? resumeLoading : undefined}
-        >
+        <div className="fixed inset-0 bg-pirate-background/90 flex flex-col items-center justify-center z-50">
           <img src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" alt="Pirate Logo" className="h-20 mb-6 animate-pulse" />
           
-          {isPaused ? (
-            <h2 className="text-[#cde8e5] text-xl mb-6 text-center px-6">
-              Oops, we're becalmed in the doldrums…<br />click to give the sails a push!
-            </h2>
-          ) : (
-            <h2 className="text-[#cde8e5] text-xl mb-6">{loadingMessages[messageIndex]}</h2>
+          {!showDialog && (
+            <h2 className="text-pirate-text text-xl mb-6 font-cinzel">{loadingMessages[messageIndex]}</h2>
           )}
           
           <div className="w-64 mb-4">
-            <Progress value={progress} className="h-2 bg-[#001f3f]" />
+            <Progress value={progress} className="h-2 bg-pirate-secondary" />
           </div>
+
+          <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
+            <AlertDialogContent className="parchment">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-pirate-secondary text-xl flex items-center justify-center gap-2">
+                  <Compass className="text-pirate-action h-6 w-6" />
+                  <span>We've hit the doldrums!</span>
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-pirate-secondary/80 text-center">
+                  What shall we do, matey?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel 
+                  onClick={cancelLogin}
+                  className="border-pirate-accent text-pirate-secondary hover:bg-pirate-accent/10"
+                  disabled={loginAttempts >= 3}
+                >
+                  GO BACK TO LOGIN
+                </AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={resumeLoading}
+                  className="bg-pirate-action text-pirate-text border-pirate-accent hover:bg-pirate-action/80"
+                >
+                  CONTINUE
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {loginAttempts >= 3 && showDialog && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="parchment p-6 max-w-md text-center">
+                <h3 className="text-xl font-cinzel text-pirate-secondary mb-3">Persistent squalls detected!</h3>
+                <p className="text-pirate-secondary/80 mb-4">
+                  Please hail Pirate Gaming Support for assistance!
+                </p>
+                <button 
+                  onClick={resumeLoading} 
+                  className="mt-2 px-4 py-2 bg-pirate-action text-pirate-text border border-pirate-accent rounded shadow-pirate hover:bg-pirate-action/80"
+                >
+                  CONTINUE ANYWAY
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="relative z-10 flex flex-col items-center">
           <div className="flex items-center gap-2 mb-8">
             <img src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" alt="Pirate Logo" className="h-[42px]" />
-            <h1 className="text-[#8b0000] font-bold text-4xl bg-gradient-to-r from-[#8b0000] to-[#8b0000]/90 text-transparent bg-clip-text">PirateGaming</h1>
+            <h1 className="text-pirate-accent font-bold text-4xl font-cinzel">PirateGaming</h1>
           </div>
           
           <LoginForm onLogin={handleLogin} />

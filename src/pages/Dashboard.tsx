@@ -19,13 +19,13 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col bg-[#03060a] bg-[linear-gradient(45deg,rgba(0,0,0,.7)_25%,transparent_25%,transparent_50%,rgba(0,0,0,.7)_50%,rgba(0,0,0,.7)_75%,transparent_75%,transparent)] bg-[length:4px_4px]">
+    <div className="min-h-screen flex flex-col bg-pirate-background bg-canvas-grain">
       <Navigation />
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
           <div className="h-[50vh] relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#03060a]"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-pirate-background"></div>
             
             <img
               src="/lovable-uploads/e252566e-bd30-4d27-af92-2381a541a2ea.png"
@@ -34,10 +34,10 @@ const Dashboard = () => {
             />
             
             <div className="absolute bottom-0 left-0 p-6 md:p-12">
-              <h1 className="text-4xl md:text-6xl font-bold text-[#cde8e5] mb-2 shadow-lg">
+              <h1 className="text-4xl md:text-6xl font-bold text-pirate-text mb-2 shadow-lg font-cinzel">
                 Pirate Gaming Vault
               </h1>
-              <p className="text-xl text-[#cde8e5] mb-6 max-w-md shadow-lg">
+              <p className="text-xl text-pirate-text mb-6 max-w-md shadow-lg">
                 Hoist the mainsail and dive into our collection of treasured adventures!
               </p>
             </div>
