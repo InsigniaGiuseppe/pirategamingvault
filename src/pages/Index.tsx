@@ -179,7 +179,7 @@ const Index = () => {
                   <Compass className="text-pirate-action h-6 w-6" />
                   <span>We've hit the doldrums!</span>
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-pirate-secondary/80 text-center">
+                <AlertDialogDescription className="text-pirate-secondary font-medium">
                   What shall we do, matey?
                 </AlertDialogDescription>
               </AlertDialogHeader>
@@ -205,7 +205,7 @@ const Index = () => {
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="parchment p-6 max-w-md text-center">
                 <h3 className="text-xl font-cinzel text-pirate-secondary mb-3">Persistent squalls detected!</h3>
-                <p className="text-pirate-secondary/80 mb-4">
+                <p className="text-pirate-secondary font-medium mb-4">
                   Please hail Pirate Gaming Support for assistance!
                 </p>
                 <button 
