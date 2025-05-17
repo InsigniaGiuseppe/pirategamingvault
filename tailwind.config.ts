@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -98,17 +99,19 @@ export default {
         },
       },
       fontFamily: {
+        'regola': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'Inter', 'sans-serif'],
         'space': ['Space Grotesk', 'sans-serif'],
         'inter': ['Inter', 'sans-serif'],
-        'sans': ['Inter', 'system-ui', 'sans-serif'],
-        'heading': ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'sans': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'Inter', 'sans-serif'],
+        'heading': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'sans-serif'],
         'cinzel': ['Cinzel', 'serif'], // kept for backward compatibility
       },
       boxShadow: {
         'saas': '0 6px 24px rgba(0, 0, 0, 0.06)',
         'saas-hover': '0 8px 32px rgba(0, 0, 0, 0.1)',
         'saas-primary': '0 0 8px rgba(39, 230, 247, 0.6)',
-        'saas-secondary': '0 4px 16px rgba(255, 107, 203, 0.15)',
+        'saas-secondary': '0 0 8px rgba(255, 107, 203, 0.6)',
+        'saas-disabled': '0 2px 4px rgba(0, 0, 0, 0.05)',
         'digital': '0 4px 20px rgba(39, 230, 247, 0.15)',
         'digital-hover': '0 8px 30px rgba(39, 230, 247, 0.3)',
         'digital-secondary': '0 4px 20px rgba(255, 107, 203, 0.15)',

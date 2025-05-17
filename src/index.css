@@ -1,6 +1,9 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* FT Regola Neue font-face declarations would go here if self-hosted */
+/* Using Space Grotesk as fallback since FT Regola Neue might not be available */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,10 +20,10 @@
     --popover-foreground: 210 100% 8%;
 
     --primary: 185 94% 56%;
-    --primary-foreground: 210 100% 8%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 322 100% 71%;
-    --secondary-foreground: 210 100% 8%;
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 215 16% 94%;
     --muted-foreground: 215 16% 56%;
@@ -45,7 +48,7 @@
   }
 
   body {
-    @apply bg-saas-navy text-saas-white font-sans overflow-x-hidden;
+    @apply bg-saas-navy text-saas-white font-regola overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
@@ -62,14 +65,20 @@
     @apply bg-saas-navy rounded-lg shadow-saas border border-saas-grey-800/20;
   }
   
+  /* Updated button classes */
   .saas-button-primary {
-    @apply bg-saas-teal text-saas-navy font-medium rounded-md px-6 py-3 shadow-saas-primary
+    @apply bg-saas-teal text-white font-medium rounded-md px-6 py-3 shadow-saas-primary
     hover:shadow-saas-hover transition-all duration-300;
   }
 
   .saas-button-secondary {
-    @apply bg-saas-pink/10 text-saas-pink font-medium rounded-md px-6 py-3 border border-saas-pink/30
-    hover:bg-saas-pink/20 transition-all duration-300;
+    @apply bg-saas-pink text-white font-medium rounded-md px-6 py-3
+    hover:shadow-saas-secondary transition-all duration-300;
+  }
+  
+  .saas-button-tertiary {
+    @apply bg-saas-grey-200 text-saas-grey-600 font-medium rounded-md px-6 py-3
+    hover:bg-saas-grey-300 transition-all duration-300;
   }
   
   .saas-button-outline {
@@ -77,6 +86,11 @@
     hover:bg-saas-grey-100 hover:text-saas-grey-800 transition-all duration-300;
   }
   
+  .saas-button-disabled {
+    @apply bg-saas-grey-200 text-saas-grey-500 font-medium rounded-md px-6 py-3 cursor-not-allowed
+    shadow-saas-disabled;
+  }
+
   .saas-headline-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-saas-teal to-saas-pink;
   }
