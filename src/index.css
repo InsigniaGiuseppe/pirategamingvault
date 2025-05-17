@@ -54,9 +54,22 @@
   .parallax-cloud {
     will-change: transform;
   }
-
-  .circular-tile {
-    @apply overflow-hidden border-2 border-transparent transition-all duration-200 hover:border-netflix-red hover:scale-105 hover:shadow-lg;
-    aspect-ratio: 1;
+  
+  .glossy-card {
+    @apply relative overflow-hidden;
+  }
+  
+  .glossy-card::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-50;
+  }
+  
+  .glossy-red {
+    @apply relative overflow-hidden bg-gradient-to-br from-netflix-red to-netflix-red/80;
+  }
+  
+  .glossy-red::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none z-10 opacity-70;
   }
 }

@@ -23,7 +23,7 @@ const LoginForm = () => {
         <div>
           <Input
             type="text"
-            placeholder="Email / Username"
+            placeholder="Username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="bg-[#333] border-netflix-red/30 text-white placeholder:text-gray-400"
@@ -49,7 +49,7 @@ const LoginForm = () => {
       </form>
       
       <div className="mt-6 text-sm text-gray-400 text-center">
-        <p>First time aboard? <span className="text-netflix-red cursor-pointer">Sign up for the crew</span></p>
+        <p>Don't have credentials? Go to Pirate Gaming Discord to request.</p>
       </div>
     </div>
   );

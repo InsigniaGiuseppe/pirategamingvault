@@ -19,7 +19,7 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col bg-netflix-background">
+    <div className="min-h-screen flex flex-col bg-netflix-background bg-[linear-gradient(45deg,rgba(0,0,0,.7)_25%,transparent_25%,transparent_50%,rgba(0,0,0,.7)_50%,rgba(0,0,0,.7)_75%,transparent_75%,transparent)] bg-[length:4px_4px]">
       <Navigation />
       
       <main className="flex-grow">
