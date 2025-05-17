@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -8,6 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
 import { AlertTriangle, Compass, Ship } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import Footer from '@/components/Footer';
 
 const loadingMessages = [
   "Initializing user session…",
@@ -267,6 +269,7 @@ const Index = () => {
           <LoginForm onLogin={handleLogin} />
         </div>
       )}
+      <Footer />
     </div>
   );
 };
