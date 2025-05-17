@@ -19,21 +19,19 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col bg-[#0c1f2c] bg-[linear-gradient(45deg,rgba(0,0,0,.7)_25%,transparent_25%,transparent_50%,rgba(0,0,0,.7)_50%,rgba(0,0,0,.7)_75%,transparent_75%,transparent)] bg-[length:4px_4px]">
+    <div className="min-h-screen flex flex-col bg-[#03060a] bg-[linear-gradient(45deg,rgba(0,0,0,.7)_25%,transparent_25%,transparent_50%,rgba(0,0,0,.7)_50%,rgba(0,0,0,.7)_75%,transparent_75%,transparent)] bg-[length:4px_4px]">
       <Navigation />
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
           <div className="h-[50vh] relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0c1f2c]"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#03060a]"></div>
             
-            <iframe
-              src="https://clips.twitch.tv/embed?clip=JollyChillyTaroBibleThump-UZFqPcyh8uzVBiDA&parent=localhost&autoplay=true&muted=true"
+            <img
+              src="/lovable-uploads/e252566e-bd30-4d27-af92-2381a541a2ea.png"
               className="absolute inset-0 w-full h-full object-cover opacity-50 blur-[2px]"
-              allowFullScreen
-              frameBorder="0"
-              allow="autoplay; clipboard-write"
-            ></iframe>
+              alt="Hero background"
+            />
             
             <div className="absolute bottom-0 left-0 p-6 md:p-12">
               <h1 className="text-4xl md:text-6xl font-bold text-[#cde8e5] mb-2 shadow-lg">

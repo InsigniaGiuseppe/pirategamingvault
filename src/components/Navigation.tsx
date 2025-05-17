@@ -1,7 +1,6 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Skull } from 'lucide-react';
 import { DoorOpen } from 'lucide-react';
 
 const Navigation = () => {
@@ -10,7 +9,7 @@ const Navigation = () => {
   if (!isAuthenticated) return null;
 
   return (
-    <nav className="bg-[#0c1f2c] border-b border-[#cfb53b]/30 sticky top-0 z-50 shadow-md">
+    <nav className="bg-[#03060a] border-b border-[#cfb53b]/30 sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" alt="Pirate Logo" className="h-[42px]" />

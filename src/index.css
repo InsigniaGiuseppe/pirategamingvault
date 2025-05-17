@@ -5,13 +5,13 @@
 
 @layer base {
   :root {
-    --background: 210 50% 11%;
+    --background: 210 50% 3%;
     --foreground: 180 39% 86%;
 
     --card: 17 13% 21%;
     --card-foreground: 180 39% 86%;
 
-    --popover: 210 50% 11%;
+    --popover: 210 50% 3%;
     --popover-foreground: 180 39% 86%;
 
     --primary: 43 75% 52%;
@@ -20,7 +20,7 @@
     --secondary: 17 13% 21%;
     --secondary-foreground: 180 39% 86%;
 
-    --muted: 210 50% 16%;
+    --muted: 210 50% 6%;
     --muted-foreground: 180 39% 70%;
 
     --accent: 0 100% 27%;
@@ -43,7 +43,7 @@
   }
 
   body {
-    @apply bg-[#0c1f2c] text-foreground overflow-x-hidden;
+    @apply bg-[#03060a] text-foreground overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
