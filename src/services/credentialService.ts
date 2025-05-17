@@ -1,3 +1,4 @@
+
 // Credential service for managing user authentication
 import { v4 as uuidv4 } from 'uuid';
 
@@ -34,6 +35,14 @@ const initializeCredStore = () => {
       authCode: "010101!",
       active: true,
       createdAt: new Date().toISOString()
+    },
+    {
+      id: uuidv4(),
+      username: "admin123",
+      password: "admin123",
+      authCode: "010101!",
+      active: true,
+      createdAt: new Date().toISOString()
     }
   ];
   
@@ -54,15 +63,16 @@ export const getCredentials = (): Credential[] => {
   return initializeCredStore();
 };
 
-// Find a credential by username
+// Find a credential by username (case insensitive)
 export const findCredentialByUsername = (username: string): Credential | undefined => {
   const creds = getCredentials();
-  return creds.find(cred => cred.username === username);
+  return creds.find(cred => cred.username.toLowerCase() === username.toLowerCase());
 };
 
 // Verify credentials
 export const verifyCredentials = (username: string, password: string): Credential | undefined => {
   const credential = findCredentialByUsername(username);
+  console.log('Found credential:', credential);
   if (credential && credential.password === password && credential.active) {
     return credential;
   }
@@ -80,7 +90,7 @@ export const addCredential = (username: string, password: string, authCode?: str
   const creds = getCredentials();
   
   // Check if username already exists
-  if (creds.some(cred => cred.username === username)) {
+  if (creds.some(cred => cred.username.toLowerCase() === username.toLowerCase())) {
     throw new Error('Username already exists');
   }
   

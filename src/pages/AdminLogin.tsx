@@ -24,9 +24,8 @@ const AdminLogin = () => {
       const credential = verifyCredentials(username, password);
       console.log('Credential check result:', credential);
       
-      if (credential && credential.username && 
-          (credential.username.toUpperCase() === 'GIUSEPPE' || 
-           credential.username === 'Dannehsbum')) {
+      // Check if credential exists and is valid
+      if (credential) {
         // Admin login successful
         localStorage.setItem('pirateAdminLoggedIn', 'true');
         toast({
