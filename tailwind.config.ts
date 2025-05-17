@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      fontSize: {
+        "clamp-hero": "clamp(3.5rem, 6vw, 5rem)",
+      },
       colors: {
         // Monochrome palette
         black: "#111111",
@@ -177,6 +180,13 @@ export default {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
+        "ship-sailing": {
+          '0%': { transform: 'translateY(0px) rotate(0deg)' },
+          '25%': { transform: 'translateY(-5px) rotate(2deg)' },
+          '50%': { transform: 'translateY(0px) rotate(0deg)' },
+          '75%': { transform: 'translateY(5px) rotate(-2deg)' },
+          '100%': { transform: 'translateY(0px) rotate(0deg)' }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -190,6 +200,7 @@ export default {
         "fade-out": "fade-out 0.3s ease-out",
         "fade-up": "fade-up 0.4s ease-out",
         "skull-spin": "skull-spin 1.5s linear infinite",
+        "ship-sailing": "ship-sailing 3s ease-in-out infinite",
       },
       borderRadius: {
         'xl': '24px',

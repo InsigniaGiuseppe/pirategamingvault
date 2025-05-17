@@ -17,7 +17,7 @@ const Navigation = () => {
         <div className="flex items-center gap-2">
           <Link to="/dashboard" className="flex items-center gap-2">
             <img 
-              src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
+              src="/lovable-uploads/e658c565-6755-4834-9495-f23f5cbac18c.png" 
               alt="Pirate Gaming Logo" 
               className="h-[42px]"
               style={{ filter: 'brightness(0)' }}

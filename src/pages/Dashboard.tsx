@@ -35,12 +35,12 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-white"></div>
             
-            {/* Reduced header size proportionally */}
+            {/* Increased header size */}
             <div className="absolute bottom-0 left-0 p-4 md:p-8 animate-fade-up">
-              <h1 className="text-2xl md:text-3xl font-bold text-black mb-2 font-satoshi">
+              <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
                 Welcome to the PIRATE GAMING VAULT
               </h1>
-              <p className="text-sm text-gray-600 mb-4 max-w-md">
+              <p className="text-base md:text-xl text-gray-600 mb-4 max-w-md">
                 Access our private collection of digital adventures
               </p>
             </div>

@@ -65,7 +65,7 @@ const GameTile = ({ game }: GameTileProps) => {
             <img 
               src={imageSource} 
               alt={game.title}
-              className="w-full h-full aspect-[16/9] object-cover rounded-t-lg grayscale"
+              className="w-full h-full aspect-[16/9] object-cover rounded-t-lg grayscale brightness-[0.7] group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-200"
               onError={(e) => {
                 // Fall back to picsum if the image fails to load
                 const target = e.target as HTMLImageElement;
