@@ -8,7 +8,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Shield, X, Ship } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
-import ShipAnimation from './ShipAnimation';
 
 interface SecretCodeModalProps {
   isOpen: boolean;
@@ -16,19 +15,38 @@ interface SecretCodeModalProps {
   gameTitle: string;
 }
 
+// Pirate-themed loading messages
+const pirateLoadingMessages = [
+  "Hoisting the main sail...",
+  "Checking for stowaways...",
+  "Polishing the cannon balls...",
+  "Consulting the treasure map...",
+  "Scanning the horizon for rivals...",
+  "Feeding the captain's parrot...",
+  "Swabbing the poop deck...",
+  "Setting course for adventure..."
+];
+
 const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showConfirm, setShowConfirm] = useState(false);
   const [continuedLoading, setContinuedLoading] = useState(false);
+  const [messageIndex, setMessageIndex] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
+    let messageTimer: NodeJS.Timeout;
     
     if (loading) {
+      // Rotate through pirate messages
+      messageTimer = setInterval(() => {
+        setMessageIndex(prev => (prev + 1) % pirateLoadingMessages.length);
+      }, 1500);
+      
       timer = setInterval(() => {
         setProgress(prev => {
           if (prev >= 60 && !continuedLoading) {
@@ -43,6 +61,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             
             if (newProgress >= 100) {
               clearInterval(timer);
+              clearInterval(messageTimer);
               setTimeout(() => {
                 if (code === '010101!') {
                   navigate('/gotcha');
@@ -72,6 +91,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
     
     return () => {
       if (timer) clearInterval(timer);
+      if (messageTimer) clearInterval(messageTimer);
     };
   }, [loading, continuedLoading, code, navigate, toast]);
 
@@ -172,11 +192,10 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
           </DialogHeader>
           
           <div className="text-center mb-6">
-            <p className="text-black text-lg mb-6">Validating authorization code...</p>
+            <p className="text-black text-lg mb-6">{pirateLoadingMessages[messageIndex]}</p>
             
             <div className="relative mb-4">
               <Progress value={progress} className="h-2" />
-              <ShipAnimation />
             </div>
             
             <p className="text-sm text-gray-600 mt-1">{progress.toFixed(0)}% Complete</p>

@@ -24,8 +24,8 @@ const Dashboard = () => {
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
-          {/* Increased hero section height by 15% */}
-          <div className="h-[17.25vh] relative">
+          {/* Increased hero section height by 20% */}
+          <div className="h-[20vh] relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
             
             <img
@@ -35,8 +35,8 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-white"></div>
             
-            {/* Added proper positioning to prevent text hiding under header */}
-            <div className="absolute bottom-0 left-0 p-4 md:p-8 pt-12 animate-fade-up">
+            {/* Improved positioning with more space from top */}
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/4 p-4 md:p-8 animate-fade-up">
               <div className="flex flex-col">
                 <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
                   Welcome to the PIRATE VAULT

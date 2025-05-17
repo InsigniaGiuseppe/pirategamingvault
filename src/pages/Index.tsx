@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -6,8 +5,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { AlertTriangle, Compass } from 'lucide-react';
+import { AlertTriangle, Compass, Ship } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 const loadingMessages = [
   "Initializing user session…",
@@ -28,6 +28,7 @@ const Index = () => {
   const [messageIndex, setMessageIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(() => {
     const attempts = sessionStorage.getItem('loginAttempts');
     return attempts ? parseInt(attempts) : 0;
@@ -104,16 +105,31 @@ const Index = () => {
   };
   
   const resumeLoading = () => {
+    // First close the initial dialog and show confirmation
+    setShowDialog(false);
+    setShowConfirm(true);
+  };
+
+  const confirmResumeLoading = () => {
     if (isPaused) {
       setIsPaused(false);
-      setShowDialog(false);
+      setShowConfirm(false);
       
       const startTime = Date.now();
+      // Increase duration for the final 40% to make it slower, especially the last 10%
       const remainingDuration = 8000 * ((100 - progress) / 100); // Calculate remaining time
       
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        const additionalProgress = Math.min(100 - progress, (elapsed / remainingDuration) * (100 - progress));
+        let additionalProgress;
+        
+        // Make the last 10% slower
+        if (progress + additionalProgress >= 90) {
+          additionalProgress = Math.min(100 - progress, (elapsed / (remainingDuration * 1.5)) * (100 - progress));
+        } else {
+          additionalProgress = Math.min(100 - progress, (elapsed / remainingDuration) * (100 - progress));
+        }
+        
         const newProgress = progress + additionalProgress;
         
         setProgress(newProgress);
@@ -161,8 +177,8 @@ const Index = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       {loading ? (
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+          {/* Ship sailing animation */}
           <div className="relative mb-8">
-            {/* Ship sailing animation */}
             <svg width="120" height="60" viewBox="0 0 120 60" className="sailing-ship">
               <path
                 d="M10,40 Q30,35 60,40 Q90,45 110,40"
@@ -185,7 +201,7 @@ const Index = () => {
             </svg>
           </div>
           
-          {!showDialog && (
+          {!showDialog && !showConfirm && (
             <h2 className="text-black text-xl mb-8 font-heading">{loadingMessages[messageIndex]}</h2>
           )}
           
@@ -221,6 +237,12 @@ const Index = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          <ConfirmationModal 
+            isOpen={showConfirm}
+            onConfirm={confirmResumeLoading}
+            onCancel={cancelLogin}
+          />
 
           {loginAttempts >= 3 && showDialog && (
             <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex items-center justify-center z-50">
