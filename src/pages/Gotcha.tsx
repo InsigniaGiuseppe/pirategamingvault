@@ -23,7 +23,7 @@ const Gotcha = () => {
         // Add delay for chat bubble to appear after image animation completes
         const chatTimer = setTimeout(() => {
           setShowChatBubble(true);
-        }, 1500); // Display chat bubble 1.5s after image appears
+        }, 2000); // Increase delay to 2s to ensure animation completes first
         
         return () => clearTimeout(chatTimer);
       }, 1000);
@@ -103,19 +103,19 @@ const Gotcha = () => {
               }}
             />
             
-            {/* Chat bubble */}
+            {/* Chat bubble - Ensure it appears properly */}
             {showChatBubble && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className="absolute left-0 bottom-full mb-2 transform -translate-x-1/2 max-w-52"
+                transition={{ duration: 0.5 }}
+                className="absolute -left-[120px] top-0 -translate-y-1/2 sm:left-auto sm:right-full sm:mr-4 sm:top-1/2 sm:-translate-y-1/2 max-w-52"
               >
                 <div className="bg-black text-white p-3 rounded-xl rounded-br-none shadow-lg relative text-sm md:text-base font-satoshi">
                   <p className="font-medium">
                     You should've subscribed, you dickhead!
                   </p>
-                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-black transform translate-x-1/2 translate-y-1/3 rotate-45"></div>
+                  <div className="absolute bottom-[40%] right-0 w-4 h-4 bg-black transform translate-x-1/2 rotate-45 sm:bottom-1/2 sm:translate-y-1/2"></div>
                 </div>
               </motion.div>
             )}
