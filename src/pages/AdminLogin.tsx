@@ -21,7 +21,7 @@ const AdminLogin = () => {
     setTimeout(() => {
       const credential = verifyCredentials(username, password);
       
-      if (credential && credential.username === 'Dannehsbum') {
+      if (credential && (credential.username === 'Dannehsbum' || credential.username === 'GIUSEPPE')) {
         // Admin login successful
         localStorage.setItem('pirateAdminLoggedIn', 'true');
         toast({

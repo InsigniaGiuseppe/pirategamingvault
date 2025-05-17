@@ -1,6 +1,7 @@
 
 import { Link } from 'react-router-dom';
 import { Shield } from 'lucide-react';
+import { Button } from './ui/button';
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -47,7 +48,18 @@ const Footer = () => {
           </div>
         </div>
         
-        <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-1 text-gray-500 hover:text-black"
+            asChild
+          >
+            <Link to="/admin/login">
+              <Shield size={14} />
+              Admin Login
+            </Link>
+          </Button>
           <p className="text-center text-gray-600 text-sm">
             © {year} Pirate Gaming. All rights reserved.
           </p>

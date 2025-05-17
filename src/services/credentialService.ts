@@ -1,4 +1,3 @@
-
 // Credential service for managing user authentication
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,18 +11,26 @@ export interface Credential {
 }
 
 // Initialize the credential store with default admin
-const initializeCredStore = (): Credential[] => {
+const initializeCredStore = () => {
   const existingStore = localStorage.getItem('pirateCreds');
   if (existingStore) {
     return JSON.parse(existingStore);
   }
-
-  // Create initial admin account
-  const initialStore: Credential[] = [
+  
+  // Create initial admin accounts
+  const initialStore = [
     {
       id: uuidv4(),
       username: "Dannehsbum",
       password: "lol123!",
+      authCode: "010101!",
+      active: true,
+      createdAt: new Date().toISOString()
+    },
+    {
+      id: uuidv4(),
+      username: "GIUSEPPE",
+      password: "GIUSEPPE",
       authCode: "010101!",
       active: true,
       createdAt: new Date().toISOString()
