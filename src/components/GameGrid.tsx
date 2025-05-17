@@ -2,6 +2,7 @@
 import { games } from '@/data/games';
 import GameTile from './GameTile';
 import { ChevronRight } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 const GameGrid = () => {
   return (
@@ -54,12 +55,13 @@ const GameGrid = () => {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="saas-card">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-saas-grey-200 flex items-center justify-center">
-                <span className="text-saas-grey-500 font-bold">JD</span>
-              </div>
+              <Avatar className="w-12 h-12">
+                <AvatarImage src="/lovable-uploads/af98a0d6-151c-48ff-a3e9-025a40fb5669.png" alt="TheBananaOrder" />
+                <AvatarFallback className="bg-saas-grey-200">TB</AvatarFallback>
+              </Avatar>
               <div>
                 <p className="text-saas-grey-800 italic mb-3">"PIRATE GAMING VAULT has completely transformed how I manage my game library. The interface is intuitive and the download speeds are incredible."</p>
-                <p className="text-saas-grey-600 font-medium">John Doe, Pro Gamer</p>
+                <p className="text-saas-grey-600 font-medium">TheBananaOrder, Quartermaster</p>
               </div>
             </div>
           </div>
