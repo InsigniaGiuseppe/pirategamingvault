@@ -2,7 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { FileQuestion } from "lucide-react";
+import { FileQuestion, ArrowLeft } from 'lucide-react';
 
 const NotFound = () => {
   const location = useLocation();
@@ -15,18 +15,18 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-space-gradient overflow-hidden relative">
-      <div className="absolute inset-0 animated-gradient opacity-10"></div>
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+    <div className="min-h-screen flex items-center justify-center bg-saas-navy overflow-hidden relative">
+      <div className="absolute inset-0 bg-saas-gradient opacity-30"></div>
       
-      <div className="text-center z-10 glass-panel p-8 max-w-md">
-        <div className="bg-digital-primary/10 rounded-full p-4 w-24 h-24 flex items-center justify-center mx-auto mb-6">
-          <FileQuestion className="h-12 w-12 text-digital-primary" />
+      <div className="text-center z-10 saas-panel-dark p-10 max-w-md">
+        <div className="bg-saas-teal/10 rounded-full p-5 w-24 h-24 flex items-center justify-center mx-auto mb-8">
+          <FileQuestion className="h-12 w-12 text-saas-teal" />
         </div>
-        <h1 className="text-6xl font-bold text-digital-primary mb-4 font-space glow-text">404</h1>
-        <p className="text-2xl text-digital-text mb-8 font-space">File not found in the system.</p>
+        <h1 className="text-6xl font-bold text-saas-teal mb-4 font-heading">404</h1>
+        <p className="text-2xl text-saas-white mb-8 font-heading">Resource not found.</p>
         <Link to="/">
-          <Button className="primary-button text-black px-8 py-6 rounded-md">
+          <Button className="saas-button-primary px-8 py-6 rounded-md flex items-center gap-2">
+            <ArrowLeft size={18} />
             Return to Main Interface
           </Button>
         </Link>

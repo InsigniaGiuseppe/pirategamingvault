@@ -1,10 +1,35 @@
 
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
   text-align: center;
 }
 
+/* Enterprise SaaS styling */
+.enterprise-heading {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.enterprise-subheading {
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--saas-grey-400);
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Legacy styles kept for compatibility */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -40,3 +65,4 @@
 .read-the-docs {
   color: #e6ecf3;
 }
+

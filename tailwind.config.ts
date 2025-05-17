@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,11 +19,28 @@ export default {
     },
     extend: {
       colors: {
-        // New digital-AI aesthetic colors
+        // Enterprise SaaS aesthetic colors
+        saas: {
+          navy: "#0d1017",      // Deep navy for backgrounds
+          white: "#FFFFFF",     // Pure white for text & sections
+          teal: "#27E6F7",      // Teal for primary CTAs
+          pink: "#FF6BCB",      // Fuchsia-pink for secondary accents
+          grey: {
+            100: "#F5F7FA",     // Lightest grey
+            200: "#E4E7EB",     // Light grey
+            300: "#CBD2D9",     // Medium light grey
+            400: "#9AA5B1",     // Medium grey
+            500: "#7B8794",     // Standard grey
+            600: "#616E7C",     // Medium dark grey
+            700: "#52606D",     // Dark grey
+            800: "#3E4C5A",     // Very dark grey
+          }
+        },
+        // Legacy digital-AI aesthetic colors
         digital: {
           background: "#0d1017", // page background
           panel: "rgba(255,255,255,0.06)", // glass cards & modals
-          primary: "#27e6f7", // neon-cyan buttons, focus rings, glows
+          primary: "#27E6F7", // neon-cyan buttons, focus rings, glows
           secondary: "#ff6bcb", // secondary CTAs, hover hue-shift  
           text: "#e6ecf3", // primary copy
           muted: "#8a96ad", // helper text
@@ -79,9 +95,15 @@ export default {
       fontFamily: {
         'space': ['Space Grotesk', 'sans-serif'],
         'inter': ['Inter', 'sans-serif'],
-        cinzel: ['Cinzel', 'serif'], // kept for backward compatibility
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
+        'heading': ['Space Grotesk', 'system-ui', 'sans-serif'],
+        'cinzel': ['Cinzel', 'serif'], // kept for backward compatibility
       },
       boxShadow: {
+        'saas': '0 4px 16px rgba(0, 0, 0, 0.08)',
+        'saas-hover': '0 8px 24px rgba(0, 0, 0, 0.12)',
+        'saas-primary': '0 4px 16px rgba(39, 230, 247, 0.15)',
+        'saas-secondary': '0 4px 16px rgba(255, 107, 203, 0.15)',
         'digital': '0 4px 20px rgba(39, 230, 247, 0.15)',
         'digital-hover': '0 8px 30px rgba(39, 230, 247, 0.3)',
         'digital-secondary': '0 4px 20px rgba(255, 107, 203, 0.15)',
@@ -89,6 +111,10 @@ export default {
         'pirate': '0 4px 10px rgba(0, 0, 0, 0.6)', // kept for backward compatibility
       },
       backgroundImage: {
+        'saas-gradient': 'linear-gradient(135deg, #0d1017 0%, #1A202C 100%)',
+        'saas-light-gradient': 'linear-gradient(135deg, #F5F7FA 0%, #E4E7EB 100%)',
+        'saas-primary-gradient': 'linear-gradient(135deg, #27E6F7 0%, #33B3EC 100%)',
+        'saas-secondary-gradient': 'linear-gradient(135deg, #FF6BCB 0%, #F873DB 100%)',
         'space-gradient': 'linear-gradient(135deg, #0d1017 0%, #141b2d 100%)',
         'digital-glow': 'linear-gradient(135deg, rgba(39, 230, 247, 0.4) 0%, rgba(39, 230, 247, 0) 50%)',
         'digital-panel': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
@@ -128,7 +154,15 @@ export default {
         "tilt": {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(2deg)' },
-        }
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" }
+        },
+        "fade-out": {
+          "0%": { opacity: "1", transform: "translateY(0)" },
+          "100%": { opacity: "0", transform: "translateY(10px)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -138,6 +172,8 @@ export default {
         "glow": "glow 3s ease-in-out infinite",
         "gradient-shift": "gradient-shift 15s ease infinite",
         "tilt": "tilt 0.2s ease-out forwards",
+        "fade-in": "fade-in 0.5s ease-out",
+        "fade-out": "fade-out 0.3s ease-out",
       },
       borderRadius: {
         lg: 'var(--radius)',
