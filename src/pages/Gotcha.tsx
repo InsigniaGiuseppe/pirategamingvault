@@ -23,8 +23,8 @@ const Gotcha = () => {
         // Add delay for chat bubble to appear after image animation completes
         const chatTimer = setTimeout(() => {
           setShowChatBubble(true);
-          console.log("Setting chat bubble to visible"); // Debug log
-        }, 2500); // Increased delay to ensure animation completes first
+          console.log("Chat bubble should be visible now");
+        }, 1500); // Shorter delay to make sure speech bubble appears soon after image
         
         return () => clearTimeout(chatTimer);
       }, 1000);
@@ -93,7 +93,7 @@ const Gotcha = () => {
           }}
           className="absolute bottom-24 right-8 md:right-16 lg:right-24 z-20"
         >
-          <div className="rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105 relative">
+          <div className="relative rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
             <img 
               src="/lovable-uploads/10a05905-3893-4a2d-b626-9d976bb16378.png" 
               alt="Pirate Captain" 
@@ -104,19 +104,19 @@ const Gotcha = () => {
               }}
             />
             
-            {/* Chat bubble coming from the image */}
+            {/* Speech bubble coming from the image */}
             {showChatBubble && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="absolute -left-48 top-1/4 md:-left-52 w-48 md:w-52"
+                className="absolute -left-48 -top-10 md:-left-52 w-48 md:w-52"
               >
-                <div className="bg-black text-white p-3 rounded-xl rounded-tr-none shadow-lg relative text-sm md:text-base">
+                <div className="bg-[#9b87f5] text-white p-3 rounded-xl rounded-br-none shadow-lg relative text-sm md:text-base">
                   <p className="font-medium font-satoshi">
                     You should've subscribed, you dickhead!
                   </p>
-                  <div className="absolute top-0 right-0 w-4 h-4 bg-black transform translate-x-1/2 -translate-y-1/3 rotate-45"></div>
+                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-[#9b87f5] transform translate-x-1/2 translate-y-1/2 rotate-45"></div>
                 </div>
               </motion.div>
             )}
