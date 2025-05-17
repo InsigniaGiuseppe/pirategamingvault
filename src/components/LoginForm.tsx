@@ -35,7 +35,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             style={{ filter: 'brightness(0)' }}
           />
         </div>
-        <h2 className="text-2xl font-bold text-black mb-2 font-heading">Welcome to PIRATE GAMING</h2>
+        <h2 className="text-2xl font-bold text-black mb-2 font-heading">Welcome to the PIRATE VAULT</h2>
         <p className="text-gray-600">Enter your credentials to access your vault</p>
       </div>
       
