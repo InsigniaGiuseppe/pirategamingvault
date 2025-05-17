@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AlertTriangle, Compass } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const loadingMessages = [
   "Initializing user session…",
@@ -168,7 +168,7 @@ const Index = () => {
               src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
               alt="Pirate Gaming Logo" 
               className="h-20 skull-spin"
-              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(124, 124, 255, 0.8))' }} 
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(92, 124, 255, 0.8))' }} 
             />
           </div>
           
@@ -235,7 +235,7 @@ const Index = () => {
                 src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
                 alt="Pirate Gaming Logo" 
                 className="h-20"
-                style={{ filter: 'drop-shadow(0 0 5px rgba(124, 124, 255, 0.4))' }} 
+                style={{ filter: 'drop-shadow(0 0 5px rgba(92, 124, 255, 0.4))' }} 
               />
             </div>
             <div className="text-center">

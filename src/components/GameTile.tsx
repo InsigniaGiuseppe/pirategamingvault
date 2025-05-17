@@ -11,23 +11,48 @@ interface GameTileProps {
 const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
 
-  // Map game titles to their corresponding uploaded images
+  // Map game titles to their corresponding image sources
   const gameImageMap: { [key: string]: string } = {
-    "Deciphered Seas": "/lovable-uploads/deciphered-seas.jpg",
-    "Binary Plunder": "/lovable-uploads/binary-plunder.jpg",
-    "Code of the Caribbean": "/lovable-uploads/code-of-the-caribbean.jpg",
-    "Piracy Protocol": "/lovable-uploads/piracy-protocol.jpg",
-    "Silicon Sails": "/lovable-uploads/silicon-sails.jpg",
-    "Digital Doubloons": "/lovable-uploads/digital-doubloons.jpg",
-    "Byte the Plank": "/lovable-uploads/byte-the-plank.jpg",
-    "Cache Corsairs": "/lovable-uploads/cache-corsairs.jpg",
-    "Algorithm Ahoy": "/lovable-uploads/algorithm-ahoy.jpg",
-    "Hackbeard's Legacy": "/lovable-uploads/hackbeards-legacy.jpg",
-    "Quantum Kraken": "/lovable-uploads/quantum-kraken.jpg"
+    "Sea of Thieves": "https://upload.wikimedia.org/wikipedia/en/7/77/Sea_of_thieves_cover_art.jpg",
+    "Assassin's Creed IV: Black Flag": "https://upload.wikimedia.org/wikipedia/en/2/28/Assassins_Creed_IV_-_Black_Flag_cover.jpg",
+    "The Secret of Monkey Island": "https://upload.wikimedia.org/wikipedia/en/a/a8/The_Secret_of_Monkey_Island_artwork.jpg",
+    "Sid Meier's Pirates!": "https://upload.wikimedia.org/wikipedia/en/0/0f/Sid_Meier%27s_Pirates%21_%282004%29_Coverart.png",
+    "Port Royale 4": "https://cdn.cloudflare.steamstatic.com/steam/apps/1024650/header.jpg",
+    "Skull & Bones": "https://upload.wikimedia.org/wikipedia/en/e/e4/Skull_and_Bones_cover_art.jpg",
+    "ATLAS": "https://cdn.cloudflare.steamstatic.com/steam/apps/834910/header.jpg",
+    "Pillars of Eternity II: Deadfire": "https://upload.wikimedia.org/wikipedia/en/3/3a/Pillars_of_Eternity_II_Deadfire_cover_art.jpg",
+    "One Piece: Pirate Warriors 4": "https://upload.wikimedia.org/wikipedia/en/0/0c/One_Piece_Pirate_Warriors_4.jpg",
+    "Risen 2: Dark Waters": "https://upload.wikimedia.org/wikipedia/en/1/11/Risen_2_-_Dark_Waters_cover.jpg",
+    "Once Human": "https://cdn.cloudflare.steamstatic.com/steam/apps/2139460/header.jpg",
+    "Valheim": "https://upload.wikimedia.org/wikipedia/en/7/77/Valheim_2021_logo.jpg",
+    "Destiny 2": "https://upload.wikimedia.org/wikipedia/en/4/4d/Destiny_2_box_art.jpg",
+    "Rust": "https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg",
+    "Apex Legends": "https://upload.wikimedia.org/wikipedia/en/8/8f/Apex_legends_cover.jpg",
+    "Baldur's Gate 3": "https://upload.wikimedia.org/wikipedia/en/b/b2/Baldurs_Gate_3_cover_art.jpg",
+    "Minecraft": "https://upload.wikimedia.org/wikipedia/en/5/51/Minecraft_cover.png",
+    "Elden Ring": "https://upload.wikimedia.org/wikipedia/en/5/5e/Elden_Ring_Box_art.jpg",
+    "Cyberpunk 2077": "https://upload.wikimedia.org/wikipedia/en/9/9f/Cyberpunk_2077_box_art.jpg"
   };
 
-  // Use the mapped image if available, otherwise fall back to the provided imgSrc
-  const imageSource = gameImageMap[game.title] || game.imgSrc;
+  // Function to get image source with fallbacks
+  const getImageSource = (game: Game) => {
+    // Try mapped image first
+    if (gameImageMap[game.title]) {
+      return gameImageMap[game.title];
+    }
+    
+    // Try Unsplash with the game title
+    const unsplashUrl = `https://source.unsplash.com/600x800/?${encodeURIComponent(game.title)}`;
+    
+    // Fall back to Picsum with the game title as seed
+    const picsumUrl = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
+    
+    // Return original source from game data as last resort
+    return game.imgSrc || picsumUrl;
+  };
+
+  // Get the appropriate image source
+  const imageSource = getImageSource(game);
 
   return (
     <>
@@ -42,10 +67,10 @@ const GameTile = ({ game }: GameTileProps) => {
               alt={game.title}
               className="w-full h-full aspect-[16/9] object-cover rounded-t-lg"
               onError={(e) => {
-                // Fall back to the original image source if the mapped one fails
+                // Fall back to picsum if the image fails to load
                 const target = e.target as HTMLImageElement;
-                if (target.src !== game.imgSrc) {
-                  target.src = game.imgSrc;
+                if (!target.src.includes('picsum.photos')) {
+                  target.src = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
                 }
               }}
             />

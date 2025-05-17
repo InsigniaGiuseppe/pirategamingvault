@@ -37,8 +37,8 @@ const Dashboard = () => {
             
             {/* Reduced header size by 40% */}
             <div className="absolute bottom-0 left-0 p-4 md:p-8 animate-fade-up">
-              <h1 className="text-3xl md:text-4xl font-bold text-saas-text-headline mb-2 font-heading">
-                PIRATE GAMING VAULT
+              <h1 className="text-3xl md:text-4xl font-bold text-saas-lavender mb-2 font-heading">
+                Welcome to the PIRATE GAMING VAULT
               </h1>
               <p className="text-base text-saas-text-body mb-4 max-w-md">
                 Access our private collection of digital adventures
