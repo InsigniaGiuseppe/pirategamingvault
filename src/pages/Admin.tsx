@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,8 +17,9 @@ import {
   exportCredentialsAsCSV
 } from '@/services/credentialService';
 import { useToast } from '@/hooks/use-toast';
-import { Clipboard, Download, LogOut, Plus, Settings, Trash, X } from 'lucide-react';
+import { Clipboard, Download, LogOut, Plus, Settings, Trash, Share2 } from 'lucide-react';
 import CredentialFormModal from '@/components/CredentialFormModal';
+import CredentialSharingModal from '@/components/CredentialSharingModal';
 import AdminSettings from '@/components/AdminSettings';
 import Navigation from '@/components/Navigation';
 
@@ -27,6 +27,7 @@ const Admin = () => {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
   const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -136,6 +137,15 @@ const Admin = () => {
           <h1 className="text-3xl font-bold text-black font-heading">Credential Management</h1>
           
           <div className="flex gap-3">
+            <Button
+              onClick={() => setIsSharingOpen(true)}
+              variant="outline"
+              className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-black"
+            >
+              <Share2 size={18} className="mr-2" />
+              Share Credentials
+            </Button>
+          
             <Button
               onClick={() => setIsSettingsOpen(true)}
               variant="outline"
@@ -263,6 +273,12 @@ const Admin = () => {
         }}
         onSubmit={handleFormSubmit}
         credential={editingCredential}
+      />
+
+      <CredentialSharingModal
+        isOpen={isSharingOpen}
+        onClose={() => setIsSharingOpen(false)}
+        onImportSuccess={loadCredentials}
       />
 
       <AdminSettings

@@ -163,6 +163,34 @@ export const exportCredentialsAsCSV = (): string => {
   return headers + rows;
 };
 
+// NEW: Export credentials as JSON
+export const exportCredentialsAsJSON = (): string => {
+  const creds = getCredentials();
+  return JSON.stringify(creds, null, 2);
+};
+
+// NEW: Import credentials from JSON
+export const importCredentialsFromJSON = (jsonString: string): boolean => {
+  try {
+    const importedCreds = JSON.parse(jsonString);
+    
+    // Basic validation to ensure it's a credential array
+    if (!Array.isArray(importedCreds) || 
+        !importedCreds.every(cred => 
+          cred.id && cred.username && cred.password && cred.authCode !== undefined
+        )) {
+      return false;
+    }
+    
+    // Store the imported credentials
+    localStorage.setItem('pirateCreds', jsonString);
+    return true;
+  } catch (error) {
+    console.error('Failed to import credentials:', error);
+    return false;
+  }
+};
+
 // Update admin credentials 
 export const updateAdminCredentials = (username: string, password: string): Credential | undefined => {
   const creds = getCredentials();

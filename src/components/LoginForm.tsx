@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
 import { LogIn, User, Lock } from 'lucide-react';
+import CredentialShareButton from '@/components/CredentialShareButton';
 
 interface LoginFormProps {
   onLogin?: (email: string, password: string) => void;
@@ -84,8 +85,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         </Button>
       </form>
       
-      <div className="mt-8 text-sm text-gray-600 text-center">
+      <div className="mt-8 text-sm text-gray-600 text-center space-y-4">
         <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-black hover:underline">Join Pirate Gaming Discord</a> and ask GIUSEPPE for access.</p>
+        
+        <div className="flex justify-center">
+          <CredentialShareButton />
+        </div>
       </div>
     </div>
   );
