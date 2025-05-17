@@ -16,7 +16,7 @@ export const games: Game[] = [
   {
     id: "2",
     title: "Assassin's Creed IV: Black Flag",
-    imgSrc: "https://upload.wikimedia.org/wikipedia/en/2/28/Assassins_Creed_IV_-_Black_Flag_cover.jpg",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/0/03/Assassins_Creed_IV_Black_Flag_cover.jpg",
     isPiratePun: false
   },
   {

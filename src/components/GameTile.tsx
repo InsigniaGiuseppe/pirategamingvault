@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
@@ -11,10 +10,10 @@ interface GameTileProps {
 const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
 
-  // Map game titles to their corresponding image sources
+  // Updated map of game titles to their corresponding image sources
   const gameImageMap: { [key: string]: string } = {
     "Sea of Thieves": "https://upload.wikimedia.org/wikipedia/en/7/77/Sea_of_thieves_cover_art.jpg",
-    "Assassin's Creed IV: Black Flag": "https://upload.wikimedia.org/wikipedia/en/2/28/Assassins_Creed_IV_-_Black_Flag_cover.jpg",
+    "Assassin's Creed IV: Black Flag": "https://upload.wikimedia.org/wikipedia/en/0/03/Assassins_Creed_IV_Black_Flag_cover.jpg",
     "The Secret of Monkey Island": "https://upload.wikimedia.org/wikipedia/en/a/a8/The_Secret_of_Monkey_Island_artwork.jpg",
     "Sid Meier's Pirates!": "https://upload.wikimedia.org/wikipedia/en/0/0f/Sid_Meier%27s_Pirates%21_%282004%29_Coverart.png",
     "Port Royale 4": "https://cdn.cloudflare.steamstatic.com/steam/apps/1024650/header.jpg",
@@ -23,6 +22,11 @@ const GameTile = ({ game }: GameTileProps) => {
     "Pillars of Eternity II: Deadfire": "https://upload.wikimedia.org/wikipedia/en/3/3a/Pillars_of_Eternity_II_Deadfire_cover_art.jpg",
     "One Piece: Pirate Warriors 4": "https://upload.wikimedia.org/wikipedia/en/0/0c/One_Piece_Pirate_Warriors_4.jpg",
     "Risen 2: Dark Waters": "https://upload.wikimedia.org/wikipedia/en/1/11/Risen_2_-_Dark_Waters_cover.jpg",
+    "Blackwake": "https://cdn.cloudflare.steamstatic.com/steam/apps/420290/header.jpg",
+    "King of Seas": "https://cdn.cloudflare.steamstatic.com/steam/apps/1209410/header.jpg",
+    "Furious Seas": "https://cdn.cloudflare.steamstatic.com/steam/apps/875760/header.jpg",
+    "Tempest: Pirate Action RPG": "https://cdn.cloudflare.steamstatic.com/steam/apps/418180/header.jpg",
+    "Man O' War: Corsair": "https://cdn.cloudflare.steamstatic.com/steam/apps/344240/header.jpg",
     "Once Human": "https://cdn.cloudflare.steamstatic.com/steam/apps/2139460/header.jpg",
     "Valheim": "https://upload.wikimedia.org/wikipedia/en/7/77/Valheim_2021_logo.jpg",
     "Destiny 2": "https://upload.wikimedia.org/wikipedia/en/4/4d/Destiny_2_box_art.jpg",
@@ -41,14 +45,16 @@ const GameTile = ({ game }: GameTileProps) => {
       return gameImageMap[game.title];
     }
     
-    // Try Unsplash with the game title
+    // Try the image source from the game data
+    if (game.imgSrc) {
+      return game.imgSrc;
+    }
+    
+    // Fall back to Unsplash with the game title
     const unsplashUrl = `https://source.unsplash.com/600x800/?${encodeURIComponent(game.title)}`;
     
     // Fall back to Picsum with the game title as seed
-    const picsumUrl = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
-    
-    // Return original source from game data as last resort
-    return game.imgSrc || picsumUrl;
+    return `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
   };
 
   // Get the appropriate image source
