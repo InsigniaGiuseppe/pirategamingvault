@@ -23,7 +23,8 @@ const Gotcha = () => {
         // Add delay for chat bubble to appear after image animation completes
         const chatTimer = setTimeout(() => {
           setShowChatBubble(true);
-        }, 2000); // Increase delay to 2s to ensure animation completes first
+          console.log("Setting chat bubble to visible"); // Debug log
+        }, 2500); // Increased delay to ensure animation completes first
         
         return () => clearTimeout(chatTimer);
       }, 1000);
@@ -103,19 +104,19 @@ const Gotcha = () => {
               }}
             />
             
-            {/* Chat bubble - Ensure it appears properly */}
+            {/* Chat bubble coming from the image */}
             {showChatBubble && (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
-                className="absolute -left-[120px] top-0 -translate-y-1/2 sm:left-auto sm:right-full sm:mr-4 sm:top-1/2 sm:-translate-y-1/2 max-w-52"
+                className="absolute -left-48 top-1/4 md:-left-52 w-48 md:w-52"
               >
-                <div className="bg-black text-white p-3 rounded-xl rounded-br-none shadow-lg relative text-sm md:text-base font-satoshi">
-                  <p className="font-medium">
+                <div className="bg-black text-white p-3 rounded-xl rounded-tr-none shadow-lg relative text-sm md:text-base">
+                  <p className="font-medium font-satoshi">
                     You should've subscribed, you dickhead!
                   </p>
-                  <div className="absolute bottom-[40%] right-0 w-4 h-4 bg-black transform translate-x-1/2 rotate-45 sm:bottom-1/2 sm:translate-y-1/2"></div>
+                  <div className="absolute top-0 right-0 w-4 h-4 bg-black transform translate-x-1/2 -translate-y-1/3 rotate-45"></div>
                 </div>
               </motion.div>
             )}
