@@ -36,6 +36,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="bg-pirate-background border-pirate-accent/30 text-pirate-text placeholder:text-pirate-text/50"
+            required
           />
         </div>
         
@@ -46,6 +47,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="bg-pirate-background border-pirate-accent/30 text-pirate-text placeholder:text-pirate-text/50"
+            required
           />
         </div>
         

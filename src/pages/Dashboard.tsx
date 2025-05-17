@@ -28,7 +28,7 @@ const Dashboard = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-pirate-background"></div>
             
             <img
-              src="/lovable-uploads/e252566e-bd30-4d27-af92-2381a541a2ea.png"
+              src="/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png"
               className="absolute inset-0 w-full h-full object-cover opacity-50 blur-[2px]"
               alt="Hero background"
             />

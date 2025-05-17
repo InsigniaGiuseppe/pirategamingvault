@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -158,7 +157,7 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background bg-[url('/lovable-uploads/408372f3-3fa4-470e-a339-8ae385af8f01-profile_banner-480.jpeg')] bg-cover bg-center">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background bg-[url('/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png')] bg-cover bg-center">
       <div className="absolute inset-0 bg-black/50 bg-canvas-grain"></div>
       
       {loading ? (
