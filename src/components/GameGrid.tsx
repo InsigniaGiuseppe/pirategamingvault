@@ -26,11 +26,13 @@ const GameGrid = () => {
         </div>
       </div>
       
-      {/* Social proof section */}
+      {/* Social proof section with left-aligned heading */}
       <div className="mb-16">
-        <div className="text-center mb-10">
-          <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">02 / Testimonials</span>
-          <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Trusted by Gamers</h2>
+        <div className="flex items-start justify-between mb-8">
+          <div>
+            <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">02 / Testimonials</span>
+            <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Trusted by Gamers</h2>
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8">
