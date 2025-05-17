@@ -48,7 +48,7 @@ const Gotcha = () => {
             onClick={() => window.open('https://discord.gg/cZ7MfkNH', '_blank')}
           >
             <ExternalLink size={18} />
-            Join our Discord
+            Back to Discord
           </Button>
           
           <Button 

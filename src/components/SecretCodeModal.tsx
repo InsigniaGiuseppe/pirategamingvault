@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Shield, X, Ship } from 'lucide-react';
+import { Lock, Shield, X } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
 
 interface SecretCodeModalProps {
@@ -51,6 +51,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
         setProgress(prev => {
           if (prev >= 60 && !continuedLoading) {
             clearInterval(timer);
+            setShowConfirm(true); // Move this here instead of having a separate function
             return 60;
           }
           
@@ -100,9 +101,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
     setLoading(true);
   };
 
-  const handleContinueLoading = () => {
-    setShowConfirm(true);
-  };
+  // Remove the handleContinueLoading function since we're triggering the modal directly in useEffect
 
   const handleConfirmContinue = () => {
     setShowConfirm(false);
@@ -202,15 +201,6 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
           </div>
           
           <div className="flex flex-col space-y-3">
-            {progress >= 60 && !continuedLoading && (
-              <Button 
-                onClick={handleContinueLoading} 
-                className="bg-white text-black border-2 border-black w-full py-5 hover:bg-black hover:text-white"
-              >
-                Continue Loading
-              </Button>
-            )}
-            
             <Button 
               onClick={handleCancel}
               variant="outline"
