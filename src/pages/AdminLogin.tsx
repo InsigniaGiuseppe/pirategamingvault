@@ -1,11 +1,11 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Shield, User, Lock } from 'lucide-react';
-import { verifyCredentials } from '@/services/credentialService';
+import { verifyCredentials, resetCredentials } from '@/services/credentialService';
 
 const AdminLogin = () => {
   const [username, setUsername] = useState('');
@@ -13,6 +13,12 @@ const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Reset credentials on first load to ensure fresh data
+  useEffect(() => {
+    resetCredentials();
+    console.log('Admin login page loaded, credentials reset');
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +102,10 @@ const AdminLogin = () => {
             {isLoading ? 'Authenticating...' : 'Access Admin Panel'}
           </Button>
         </form>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-500">Available logins: admin123/admin123, giuseppe/GIUSEPPE</p>
+        </div>
       </div>
     </div>
   );

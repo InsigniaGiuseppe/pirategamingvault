@@ -12,17 +12,17 @@ export interface Credential {
 }
 
 // Initialize the credential store with default admin
-const initializeCredStore = () => {
+const initializeCredStore = (): Credential[] => {
   const existingStore = localStorage.getItem('pirateCreds');
   if (existingStore) {
     return JSON.parse(existingStore);
   }
   
   // Create initial admin accounts
-  const initialStore = [
+  const initialStore: Credential[] = [
     {
       id: uuidv4(),
-      username: "Dannehsbum",
+      username: "dannehsbum",
       password: "lol123!",
       authCode: "010101!",
       active: true,
@@ -30,7 +30,7 @@ const initializeCredStore = () => {
     },
     {
       id: uuidv4(),
-      username: "GIUSEPPE",
+      username: "giuseppe",
       password: "GIUSEPPE",
       authCode: "010101!",
       active: true,
@@ -66,13 +66,17 @@ export const getCredentials = (): Credential[] => {
 // Find a credential by username (case insensitive)
 export const findCredentialByUsername = (username: string): Credential | undefined => {
   const creds = getCredentials();
-  return creds.find(cred => cred.username.toLowerCase() === username.toLowerCase());
+  console.log('All credentials:', creds);
+  return creds.find(cred => 
+    cred.username.toLowerCase() === username.toLowerCase()
+  );
 };
 
 // Verify credentials
 export const verifyCredentials = (username: string, password: string): Credential | undefined => {
   const credential = findCredentialByUsername(username);
-  console.log('Found credential:', credential);
+  console.log('Found credential for', username, ':', credential);
+  
   if (credential && credential.password === password && credential.active) {
     return credential;
   }
@@ -162,7 +166,7 @@ export const exportCredentialsAsCSV = (): string => {
 // Update admin credentials 
 export const updateAdminCredentials = (username: string, password: string): Credential | undefined => {
   const creds = getCredentials();
-  const adminIndex = creds.findIndex(cred => cred.username === "Dannehsbum");
+  const adminIndex = creds.findIndex(cred => cred.username.toLowerCase() === "dannehsbum");
   
   if (adminIndex !== -1) {
     creds[adminIndex].username = username;
@@ -172,4 +176,10 @@ export const updateAdminCredentials = (username: string, password: string): Cred
   }
   
   return undefined;
+};
+
+// Reset credentials store to force recreation
+export const resetCredentials = (): void => {
+  localStorage.removeItem('pirateCreds');
+  initializeCredStore();
 };
