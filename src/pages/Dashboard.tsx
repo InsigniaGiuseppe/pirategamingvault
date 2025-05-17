@@ -24,7 +24,8 @@ const Dashboard = () => {
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
-          <div className="h-[50vh] relative">
+          {/* Reduced hero section height by 40% */}
+          <div className="h-[30vh] relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
             
             <img
@@ -34,11 +35,12 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-saas-charcoal-gradient"></div>
             
-            <div className="absolute bottom-0 left-0 p-6 md:p-12 animate-fade-up">
-              <h1 className="text-4xl md:text-6xl font-bold text-saas-text-headline mb-2 font-heading">
+            {/* Reduced header size by 40% */}
+            <div className="absolute bottom-0 left-0 p-4 md:p-8 animate-fade-up">
+              <h1 className="text-3xl md:text-4xl font-bold text-saas-text-headline mb-2 font-heading">
                 PIRATE GAMING VAULT
               </h1>
-              <p className="text-xl text-saas-text-body mb-6 max-w-md">
+              <p className="text-base text-saas-text-body mb-4 max-w-md">
                 Access our private collection of digital adventures
               </p>
             </div>

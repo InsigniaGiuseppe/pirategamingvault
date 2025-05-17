@@ -19,7 +19,7 @@ const buttonVariants = cva(
           "bg-saas-sage text-white hover:shadow-saas-secondary",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-saas-lavender underline-offset-4 hover:underline",
-        tertiary: "bg-saas-grey-200 text-saas-grey-600 hover:bg-saas-grey-300",
+        tertiary: "bg-saas-grey-200 text-saas-text-body hover:bg-saas-grey-300",
       },
       size: {
         default: "h-10 px-4 py-2",

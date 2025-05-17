@@ -51,7 +51,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
         
         <div className="text-center mb-6">
           <p className="text-saas-text-headline text-lg">Enter authorization code for {gameTitle}</p>
-          <p className="text-sm text-saas-text-body mt-2">(Obtain from our Discord server.)</p>
+          <p className="text-sm text-saas-text-body mt-2">(Obtain from GIUSEPPE in the Discord Server.)</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* FT Regola Neue font-face declarations would go here if self-hosted */
@@ -53,7 +52,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold;
+    @apply font-heading font-bold text-saas-text-headline;
   }
 
   /* Enterprise SaaS aesthetic */
@@ -65,7 +64,7 @@
     @apply bg-saas-navy rounded-lg shadow-saas border border-saas-grey-800/20;
   }
   
-  /* Updated button classes */
+  /* Updated button classes with grey tones */
   .saas-button-primary {
     @apply bg-saas-lavender text-white font-medium rounded-md px-6 py-3 shadow-saas-primary
     hover:shadow-saas-hover transition-all duration-300;
@@ -83,7 +82,7 @@
   
   .saas-button-outline {
     @apply bg-transparent border border-saas-grey-300 text-saas-grey-600 font-medium rounded-md px-6 py-3
-    hover:bg-saas-grey-100 hover:text-saas-grey-800 transition-all duration-300;
+    hover:bg-saas-grey-100 hover:text-saas-text-headline transition-all duration-300;
   }
   
   .saas-button-disabled {
