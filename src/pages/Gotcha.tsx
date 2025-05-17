@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Flag } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
 
 const Gotcha = () => {
   const { isAuthenticated } = useAuth();
@@ -18,40 +18,46 @@ const Gotcha = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background p-6 bg-canvas-grain">
-      <div className="max-w-xl text-center">
-        <Flag className="text-pirate-accent h-24 w-24 mx-auto animate-flag-wave" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-space-gradient p-6 relative">
+      <div className="absolute inset-0 animated-gradient opacity-20"></div>
+      
+      <div className="max-w-xl text-center z-10 glass-panel p-8">
+        <div className="bg-digital-secondary/10 rounded-full p-4 w-24 h-24 flex items-center justify-center mx-auto mb-6">
+          <AlertTriangle className="text-digital-secondary h-12 w-12" />
+        </div>
         
-        <h1 className="text-4xl font-bold text-pirate-text mt-8 mb-6 font-cinzel">
-          All hands on deck!
+        <h1 className="text-4xl font-bold text-digital-secondary mt-4 mb-6 font-space glow-text-secondary">
+          System Notice
         </h1>
         
-        <p className="text-xl text-pirate-text mb-8">
+        <p className="text-xl text-digital-text mb-8">
           We don't actually pirate games. We're just a gaming guild with a sense of humor!
           Join our Discord if you like playing games legally.
         </p>
         
         <div className="space-y-4">
           <Button 
-            className="bg-pirate-action hover:bg-pirate-action/80 text-pirate-text w-full border border-pirate-accent shadow-pirate"
+            className="primary-button text-black w-full py-5 rounded-md flex items-center justify-center gap-2"
             onClick={() => navigate('/dashboard')}
           >
-            Return to Home Port
+            Return to Main Interface
           </Button>
           
           <Button 
             variant="outline" 
-            className="text-pirate-text border-pirate-accent hover:bg-pirate-accent/10 w-full shadow-pirate"
+            className="secondary-button w-full py-5 rounded-md flex items-center justify-center gap-2"
             onClick={() => window.open('https://discord.gg/cZ7MfkNH', '_blank')}
           >
+            <ExternalLink size={18} />
             Join Our Discord
           </Button>
           
           <Button 
             variant="outline" 
-            className="text-pirate-text border-pirate-accent hover:bg-pirate-accent/10 w-full shadow-pirate"
+            className="secondary-button w-full py-5 rounded-md flex items-center justify-center gap-2"
             onClick={() => window.open('https://www.twitch.tv/dannehtv/clip/JollyChillyTaroBibleThump-UZFqPcyh8uzVBiDA', '_blank')}
           >
+            <ExternalLink size={18} />
             Meet the Pirate
           </Button>
         </div>

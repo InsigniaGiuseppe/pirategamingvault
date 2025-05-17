@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -5,17 +6,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Compass } from 'lucide-react';
+import { AlertTriangle, Compass } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const loadingMessages = [
-  "Charting new waters…",
-  "Unfurling the mainsail…",
-  "Polishing cutlasses…",
-  "Counting dubloons…",
-  "Bargaining with merfolk…",
-  "Spotting land through the spyglass…",
-  "Burying the X marks…"
+  "Initializing neural pathways…",
+  "Calibrating quantum algorithms…",
+  "Synchronizing neural networks…",
+  "Processing cognitive matrices…",
+  "Enhancing virtual reality…",
+  "Optimizing digital synapses…",
+  "Connecting parallel dimensions…"
 ];
 
 const Index = () => {
@@ -150,50 +151,59 @@ const Index = () => {
     setShowDialog(false);
     
     toast({
-      title: "Journey aborted",
-      description: "Returning to safe harbor...",
+      title: "Process terminated",
+      description: "Returning to authentication portal...",
       variant: "default",
     });
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-pirate-background bg-[url('/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png')] bg-cover bg-center">
-      <div className="absolute inset-0 bg-black/50 bg-canvas-grain"></div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-space-gradient bg-[url('/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png')] bg-cover bg-center">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 animated-gradient opacity-10"></div>
       
       {loading ? (
-        <div className="fixed inset-0 bg-pirate-background/90 flex flex-col items-center justify-center z-50">
-          <img src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" alt="Pirate Logo" className="h-20 mb-6 animate-pulse" />
+        <div className="fixed inset-0 bg-digital-background/90 flex flex-col items-center justify-center z-50 backdrop-blur-md">
+          <div className="relative">
+            <img 
+              src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
+              alt="Digital Gaming Logo" 
+              className="h-20 mb-6 filter brightness-0 invert opacity-80"
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(39, 230, 247, 0.8))' }} 
+            />
+            <div className="absolute inset-0 animate-glow"></div>
+          </div>
           
           {!showDialog && (
-            <h2 className="text-pirate-text text-xl mb-6 font-cinzel">{loadingMessages[messageIndex]}</h2>
+            <h2 className="text-digital-primary text-xl mb-6 font-space glow-text">{loadingMessages[messageIndex]}</h2>
           )}
           
           <div className="w-64 mb-4">
-            <Progress value={progress} className="h-2 bg-pirate-secondary" />
+            <Progress value={progress} className="h-1.5 bg-digital-background border border-digital-primary/20" indicatorClassName="bg-digital-primary" />
           </div>
 
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-            <AlertDialogContent className="parchment">
+            <AlertDialogContent className="glass-panel border-digital-primary/20 max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-pirate-secondary text-xl flex items-center justify-center gap-2 mb-2">
-                  <Compass className="text-pirate-action h-6 w-6" />
-                  <span>We've hit the doldrums!</span>
+                <AlertDialogTitle className="text-center text-2xl font-bold text-digital-primary flex items-center justify-center gap-3 mb-4">
+                  <Compass className="text-digital-primary h-6 w-6" />
+                  <span className="glow-text">System Anomaly Detected</span>
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-black font-medium text-base">
-                  What shall we do, matey?
+                <AlertDialogDescription className="text-digital-text font-medium text-base text-center">
+                  Neural pathway disrupted. How shall we proceed?
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter className="mt-4 flex flex-col sm:flex-row gap-3">
+              <AlertDialogFooter className="mt-6 flex flex-col sm:flex-row gap-3">
                 <AlertDialogCancel 
                   onClick={cancelLogin}
-                  className="border-pirate-accent text-pirate-secondary hover:bg-pirate-accent/10 font-medium order-2 sm:order-1"
+                  className="border-digital-secondary text-digital-secondary hover:bg-digital-secondary/10 font-medium order-2 sm:order-1 secondary-button"
                   disabled={loginAttempts >= 3}
                 >
-                  GO BACK TO LOGIN
+                  RETURN TO LOGIN
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={resumeLoading}
-                  className="bg-pirate-action text-white border-pirate-accent hover:bg-pirate-action/80 font-medium order-1 sm:order-2"
+                  className="bg-digital-primary text-black border-digital-primary/50 hover:bg-digital-primary/90 font-medium order-1 sm:order-2 shadow-digital-glow primary-button"
                 >
                   CONTINUE
                 </AlertDialogAction>
@@ -202,17 +212,18 @@ const Index = () => {
           </AlertDialog>
 
           {loginAttempts >= 3 && showDialog && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="parchment p-6 max-w-md text-center">
-                <h3 className="text-xl font-cinzel text-pirate-secondary mb-3">Persistent squalls detected!</h3>
-                <p className="text-black font-medium mb-4">
-                  Please hail Pirate Gaming Support for assistance!
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50">
+              <div className="glass-panel p-6 max-w-md text-center">
+                <AlertTriangle className="text-digital-secondary h-12 w-12 mx-auto mb-4" />
+                <h3 className="text-xl font-space text-digital-secondary mb-3 glow-text-secondary">Continuous errors detected!</h3>
+                <p className="text-digital-text font-medium mb-6">
+                  Please hail Pirate Gaming Support on Discord for assistance.
                 </p>
                 <button 
                   onClick={resumeLoading} 
-                  className="mt-2 px-4 py-2 bg-pirate-action text-white border border-pirate-accent rounded shadow-pirate hover:bg-pirate-action/80 font-medium"
+                  className="primary-button px-6 py-2.5 rounded-full font-medium"
                 >
-                  CONTINUE ANYWAY
+                  DISMISS
                 </button>
               </div>
             </div>
@@ -220,9 +231,14 @@ const Index = () => {
         </div>
       ) : (
         <div className="relative z-10 flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-8">
-            <img src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" alt="Pirate Logo" className="h-[42px]" />
-            <h1 className="text-pirate-accent font-bold text-4xl font-cinzel">PirateGaming</h1>
+          <div className="flex items-center gap-3 mb-10">
+            <img 
+              src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
+              alt="Digital Gaming Logo" 
+              className="h-12"
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(39, 230, 247, 0.8))' }} 
+            />
+            <h1 className="text-digital-primary font-bold text-4xl font-space glow-text">DIGITAL GAMING</h1>
           </div>
           
           <LoginForm onLogin={handleLogin} />

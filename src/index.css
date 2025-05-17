@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -45,16 +45,52 @@
   }
 
   body {
-    @apply bg-pirate-background text-pirate-text font-inter overflow-x-hidden;
+    @apply bg-digital-background text-digital-text font-inter overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background-image: linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.08) 50%, rgba(0,0,0,.08) 75%, transparent 75%, transparent);
-    background-size: 8px 8px;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-cinzel;
+    @apply font-space font-bold;
   }
 
+  /* Digital AI aesthetic */
+  .glass-panel {
+    @apply bg-digital-panel bg-opacity-10 backdrop-blur-md border border-white/10 rounded-2xl shadow-digital;
+  }
+  
+  .glass-button {
+    @apply relative overflow-hidden bg-digital-primary bg-opacity-10 border border-digital-primary/30 text-digital-primary
+    shadow-digital hover:shadow-digital-hover transition-all duration-300;
+  }
+  
+  .primary-button {
+    @apply bg-digital-primary text-black font-medium border border-digital-primary/50 shadow-digital
+    hover:shadow-digital-glow hover:bg-opacity-90 transition-all duration-300;
+  }
+
+  .secondary-button {
+    @apply bg-digital-secondary bg-opacity-10 text-digital-secondary font-medium border border-digital-secondary/30 
+    shadow-digital-secondary hover:bg-opacity-20 transition-all duration-300;
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 10px rgba(39, 230, 247, 0.6);
+  }
+  
+  .glow-text-secondary {
+    text-shadow: 0 0 10px rgba(255, 107, 203, 0.6);
+  }
+  
+  .game-tile {
+    @apply relative overflow-hidden rounded-2xl shadow-digital transition-all duration-300
+    backdrop-blur-sm border border-white/5 hover:shadow-digital-hover;
+  }
+  
+  .game-tile:hover {
+    @apply animate-tilt;
+  }
+
+  /* Old classes for backward compatibility during migration */
   .text-stroke {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   }
@@ -64,17 +100,15 @@
   }
   
   .pirate-card {
-    @apply relative overflow-hidden bg-pirate-secondary border-2 border-pirate-accent rounded-3xl shadow-pirate;
+    @apply glass-panel;
   }
   
   .pirate-button {
-    @apply relative overflow-hidden bg-pirate-secondary border border-pirate-accent text-pirate-text 
-    shadow-pirate hover:bg-pirate-accent/20 transition-all duration-300;
+    @apply secondary-button;
   }
   
   .action-button {
-    @apply relative overflow-hidden bg-pirate-action border border-pirate-accent text-pirate-text
-    shadow-pirate hover:bg-pirate-action/80 transition-all duration-300;
+    @apply primary-button;
   }
 
   .glossy-overlay {
@@ -82,17 +116,17 @@
   }
 
   .game-tile-frame {
-    @apply border-4 border-pirate-accent rounded-3xl overflow-hidden shadow-pirate transition-all duration-300
-    bg-pirate-secondary hover:scale-105;
-  }
-  
-  .game-tile-frame:before {
-    content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-0 
-    hover:opacity-40 transition-opacity duration-300;
+    @apply game-tile;
   }
   
   .parchment {
-    @apply bg-[#f5e9d0] border-2 border-pirate-accent text-pirate-secondary rounded-lg shadow-pirate;
+    @apply glass-panel text-digital-text;
+  }
+
+  /* Animated gradient backgrounds */
+  .animated-gradient {
+    background: linear-gradient(270deg, #27e6f7, #ff6bcb);
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
   }
 }

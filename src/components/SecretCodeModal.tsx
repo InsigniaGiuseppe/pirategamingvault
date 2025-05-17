@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Lock, Shield, X } from 'lucide-react';
 
 interface SecretCodeModalProps {
   isOpen: boolean;
@@ -26,40 +27,50 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
     } else {
       toast({
         variant: "destructive",
-        title: "Wrong code, landlubber!",
-        description: "Walk the plank!",
+        title: "Access Denied",
+        description: "Invalid authentication sequence.",
       });
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-pirate-secondary border-pirate-accent border-2 text-pirate-text max-w-md shadow-pirate">
+      <DialogContent className="glass-panel border-digital-primary/30 text-digital-text max-w-md bg-digital-panel">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold text-pirate-accent font-cinzel">
-            🚫 Forbidden Treasure! 🚫
+          <button 
+            onClick={onClose}
+            className="absolute right-4 top-4 p-1 rounded-full bg-digital-background/50 border border-digital-primary/20"
+          >
+            <X size={16} className="text-digital-muted" />
+          </button>
+          <DialogTitle className="text-center text-2xl font-bold text-digital-primary font-space flex flex-col items-center gap-2">
+            <Shield className="text-digital-primary h-8 w-8 mb-1" />
+            <span className="glow-text">RESTRICTED ACCESS</span>
           </DialogTitle>
         </DialogHeader>
         
         <div className="text-center mb-4">
-          <p className="text-pirate-accent">Enter the Captain's code to access {gameTitle}</p>
-          <p className="text-xs text-pirate-text/60 mt-2">(You can snag the code from our Discord tavern.)</p>
+          <p className="text-digital-text">Enter authorization code for {gameTitle}</p>
+          <p className="text-xs text-digital-muted mt-2">(Obtain from our Discord server.)</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input 
-            type="text" 
-            value={code} 
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Enter secret code..."
-            className="bg-pirate-background border-pirate-accent/30 text-pirate-text"
-          />
+          <div className="relative">
+            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-digital-muted" />
+            <Input 
+              type="text" 
+              value={code} 
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter authorization code"
+              className="bg-digital-background/40 border-digital-primary/20 text-digital-text pl-9 placeholder:text-digital-muted/70 focus:ring-digital-primary"
+            />
+          </div>
           
           <Button 
             type="submit" 
-            className="w-full bg-pirate-action hover:bg-pirate-action/80 shadow-pirate border border-pirate-accent/50"
+            className="w-full primary-button py-5 text-black"
           >
-            Unlock Treasure
+            Authenticate Access
           </Button>
         </form>
       </DialogContent>

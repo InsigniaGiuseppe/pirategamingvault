@@ -19,26 +19,27 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col bg-pirate-background bg-canvas-grain">
+    <div className="min-h-screen flex flex-col bg-space-gradient">
       <Navigation />
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
           <div className="h-[50vh] relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-pirate-background"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-digital-background"></div>
             
             <img
               src="/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png"
-              className="absolute inset-0 w-full h-full object-cover opacity-50 blur-[2px]"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 blur-[10px]"
               alt="Hero background"
             />
+            <div className="absolute inset-0 bg-digital-banner animate-gradient-shift"></div>
             
             <div className="absolute bottom-0 left-0 p-6 md:p-12">
-              <h1 className="text-4xl md:text-6xl font-bold text-pirate-text mb-2 shadow-lg font-cinzel">
-                Pirate Gaming Vault
+              <h1 className="text-4xl md:text-6xl font-bold text-digital-primary mb-2 font-space glow-text">
+                Digital Gaming Vault
               </h1>
-              <p className="text-xl text-pirate-text mb-6 max-w-md shadow-lg">
-                Hoist the mainsail and dive into our collection of treasured adventures!
+              <p className="text-xl text-digital-text mb-6 max-w-md">
+                Access our private collection of digital adventures
               </p>
             </div>
           </div>

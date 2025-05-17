@@ -2,6 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { FileQuestion } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -14,19 +15,19 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-pirate-background overflow-hidden relative bg-canvas-grain">
-      <div className="parallax-cloud absolute animate-float opacity-20">
-        <div className="h-32 w-32 rounded-full bg-white blur-xl -top-10 left-20"></div>
-        <div className="h-24 w-48 rounded-full bg-white blur-xl top-40 left-60"></div>
-        <div className="h-40 w-40 rounded-full bg-white blur-xl top-10 right-20"></div>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-space-gradient overflow-hidden relative">
+      <div className="absolute inset-0 animated-gradient opacity-10"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
       
-      <div className="text-center z-10">
-        <h1 className="text-6xl font-bold text-pirate-action mb-4 font-cinzel">404</h1>
-        <p className="text-2xl text-pirate-text mb-8 font-cinzel">Here be no pages, matey.</p>
+      <div className="text-center z-10 glass-panel p-8 max-w-md">
+        <div className="bg-digital-primary/10 rounded-full p-4 w-24 h-24 flex items-center justify-center mx-auto mb-6">
+          <FileQuestion className="h-12 w-12 text-digital-primary" />
+        </div>
+        <h1 className="text-6xl font-bold text-digital-primary mb-4 font-space glow-text">404</h1>
+        <p className="text-2xl text-digital-text mb-8 font-space">File not found in the system.</p>
         <Link to="/">
-          <Button className="bg-pirate-action hover:bg-pirate-action/80 text-pirate-text border border-pirate-accent shadow-pirate">
-            Return to Home Port
+          <Button className="primary-button text-black px-8 py-6 rounded-md">
+            Return to Main Interface
           </Button>
         </Link>
       </div>
