@@ -1,7 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* FT Regola Neue font-face declarations would go here if self-hosted */
-/* Using Space Grotesk as fallback since FT Regola Neue might not be available */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,108 +8,107 @@
 
 @layer base {
   :root {
-    --background: 210 100% 8%;
-    --foreground: 0 0% 100%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 100% 8%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 100% 8%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 240 100% 75%;
+    --primary: 0 0% 7%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 148 49% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 93%;
+    --secondary-foreground: 0 0% 7%;
 
-    --muted: 215 16% 94%;
-    --muted-foreground: 215 16% 56%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 35%;
 
-    --accent: 240 100% 75%;
-    --accent-foreground: 210 100% 8%;
+    --accent: 0 0% 93%;
+    --accent-foreground: 0 0% 7%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 0% 7%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 16% 94%;
-    --input: 215 16% 94%;
-    --ring: 240 100% 75%;
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 0 0% 7%;
 
     --radius: 0.5rem;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-saas-navy text-saas-white font-regola overflow-x-hidden;
+    @apply bg-white text-black font-satoshi overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
+    letter-spacing: -0.02em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold text-saas-text-headline;
+    @apply font-heading font-bold text-black;
+    letter-spacing: -0.02em;
   }
 
-  /* Enterprise SaaS aesthetic */
+  /* Monochrome aesthetics */
   .saas-panel {
-    @apply bg-white rounded-lg shadow-saas border border-saas-grey-200;
+    @apply bg-white rounded-lg shadow-saas border border-gray-200;
   }
   
   .saas-panel-dark {
-    @apply bg-saas-navy rounded-lg shadow-saas border border-saas-grey-800/20;
+    @apply bg-white rounded-lg shadow-saas border border-gray-200;
   }
   
-  /* Updated button classes with grey tones */
+  /* Updated button classes with monochrome styles */
   .saas-button-primary {
-    @apply bg-saas-lavender text-white font-medium rounded-md px-6 py-3 shadow-saas-primary
-    hover:shadow-saas-hover transition-all duration-300;
+    @apply bg-white text-black font-medium rounded-md px-6 py-3 border-2 border-black
+    hover:bg-black hover:text-white transition-all duration-300;
   }
 
   .saas-button-secondary {
-    @apply bg-saas-sage text-white font-medium rounded-md px-6 py-3
-    hover:shadow-saas-secondary transition-all duration-300;
+    @apply bg-white text-black font-medium rounded-md px-6 py-3 border-2 border-black
+    hover:bg-black hover:text-white transition-all duration-300;
   }
   
   .saas-button-tertiary {
-    @apply bg-saas-grey-200 text-saas-grey-600 font-medium rounded-md px-6 py-3
-    hover:bg-saas-grey-300 transition-all duration-300;
+    @apply bg-gray-100 text-black font-medium rounded-md px-6 py-3 border-2 border-gray-300
+    hover:bg-black hover:text-white hover:border-black transition-all duration-300;
   }
   
   .saas-button-outline {
-    @apply bg-transparent border border-saas-grey-300 text-saas-grey-600 font-medium rounded-md px-6 py-3
-    hover:bg-saas-grey-100 hover:text-saas-text-headline transition-all duration-300;
+    @apply bg-white border-2 border-black text-black font-medium rounded-md px-6 py-3
+    hover:bg-black hover:text-white transition-all duration-300;
   }
   
   .saas-button-disabled {
-    @apply bg-saas-grey-200 text-saas-grey-500 font-medium rounded-md px-6 py-3 cursor-not-allowed
-    shadow-saas-disabled;
+    @apply bg-white text-gray-400 font-medium rounded-md px-6 py-3 border-2 border-gray-400 cursor-not-allowed;
   }
 
   .saas-headline-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-saas-lavender to-saas-sage;
+    @apply text-black;
   }
   
   .saas-card {
-    @apply bg-white rounded-lg shadow-saas p-6 border border-saas-grey-200 hover:shadow-saas-hover transition-all duration-300;
+    @apply bg-white rounded-lg shadow-saas p-6 border border-gray-200 hover:shadow-saas-hover transition-all duration-300;
   }
   
   .saas-card-dark {
-    @apply bg-saas-navy rounded-lg shadow-saas p-6 border border-saas-grey-800/20 hover:shadow-saas-hover transition-all duration-300;
+    @apply bg-white rounded-lg shadow-saas p-6 border border-gray-200 hover:shadow-saas-hover transition-all duration-300;
   }
 
-  /* Game tiles with enterprise SaaS styling */
+  /* Game tiles with monochrome styling */
   .saas-game-tile {
     @apply relative overflow-hidden rounded-lg shadow-saas transition-all duration-300
-    border border-saas-grey-200 hover:shadow-saas-primary;
+    border border-gray-200 hover:shadow-saas-hover;
   }
 
   /* Legacy classes for backward compatibility during migration */
   .glass-panel {
-    @apply saas-panel-dark;
+    @apply saas-panel;
   }
   
   .glass-button {
@@ -126,11 +124,11 @@
   }
   
   .glow-text {
-    @apply text-saas-lavender;
+    @apply text-black;
   }
   
   .glow-text-secondary {
-    @apply text-saas-sage;
+    @apply text-black;
   }
   
   .game-tile {
@@ -139,7 +137,7 @@
   
   /* Old classes for backward compatibility during migration */
   .text-stroke {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
   }
 
   .parallax-cloud {
@@ -147,7 +145,7 @@
   }
   
   .pirate-card {
-    @apply saas-panel-dark;
+    @apply saas-panel;
   }
   
   .pirate-button {
@@ -159,7 +157,7 @@
   }
 
   .glossy-overlay {
-    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-50;
+    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-30;
   }
 
   .game-tile-frame {
@@ -167,13 +165,30 @@
   }
   
   .parchment {
-    @apply saas-panel-dark text-saas-white;
+    @apply saas-panel text-black;
   }
 
-  /* Animated gradient backgrounds */
+  /* Simple gradient background */
   .animated-gradient {
-    background: linear-gradient(270deg, #7C7CFF, #5BBF8A);
+    background: linear-gradient(to bottom, rgba(0,0,0,0.015), rgba(0,0,0,0));
     background-size: 200% 200%;
     animation: gradient-shift 15s ease infinite;
+  }
+
+  /* Ship animation for loading */
+  @keyframes ship-sailing {
+    0% {
+      transform: translateX(-100%) translateY(5px);
+    }
+    50% {
+      transform: translateX(0%) translateY(-5px);
+    }
+    100% {
+      transform: translateX(100%) translateY(5px);
+    }
+  }
+  
+  .sailing-ship {
+    animation: ship-sailing 3s ease-in-out infinite;
   }
 }

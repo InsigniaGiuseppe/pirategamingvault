@@ -27,41 +27,41 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-white rounded-xl shadow-saas">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-saas-text-headline mb-2 font-heading">Welcome to PIRATE GAMING</h2>
-        <p className="text-saas-text-body">Enter your credentials to access your vault</p>
+        <h2 className="text-2xl font-bold text-black mb-2 font-heading">Welcome to PIRATE GAMING</h2>
+        <p className="text-gray-600">Enter your credentials to access your vault</p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-saas-text-headline block">Username</label>
+          <label htmlFor="email" className="text-sm font-medium text-black block">Username</label>
           <div className="relative">
-            <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-saas-grey-500" />
+            <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <Input
               id="email"
               type="text"
               placeholder="Enter your username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
+              className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
               required
             />
           </div>
         </div>
         
         <div className="space-y-2">
-          <label htmlFor="password" className="text-sm font-medium text-saas-text-headline flex justify-between items-center">
+          <label htmlFor="password" className="text-sm font-medium text-black flex justify-between items-center">
             <span>Password</span>
-            <a href="#" className="text-saas-lavender text-xs hover:underline">Forgot password?</a>
+            <a href="#" className="text-black text-xs hover:underline">Forgot password?</a>
           </label>
           <div className="relative">
-            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-saas-grey-500" />
+            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <Input
               id="password"
               type="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
+              className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
               required
             />
           </div>
@@ -69,15 +69,15 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         
         <Button 
           type="submit" 
-          className="bg-saas-lavender text-white w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium shadow-saas-primary hover:shadow-saas-hover"
+          className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
         >
           <LogIn size={18} />
           Sign in to your vault
         </Button>
       </form>
       
-      <div className="mt-8 text-sm text-saas-text-body text-center">
-        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-saas-lavender hover:underline">Join Pirate Gaming Discord</a> for access.</p>
+      <div className="mt-8 text-sm text-gray-600 text-center">
+        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-black hover:underline">Join Pirate Gaming Discord</a> for access.</p>
       </div>
     </div>
   );

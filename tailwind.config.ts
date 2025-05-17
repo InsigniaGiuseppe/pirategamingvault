@@ -19,118 +19,114 @@ export default {
     },
     extend: {
       colors: {
-        // Updated SaaS aesthetic colors with new soft-blue palette
+        // Monochrome palette
+        black: "#111111",
+        white: "#FFFFFF",
+        gray: {
+          100: "#F8F8F8",
+          200: "#EEEEEE",
+          300: "#E0E0E0",
+          400: "#BDBDBD",
+          500: "#9E9E9E",
+          600: "#757575",
+          700: "#616161",
+          800: "#424242",
+          900: "#212121",
+        },
+        // Legacy colors kept but remapped to monochrome
         saas: {
-          navy: "#0d1017",      // Deep navy for backgrounds
-          white: "#FFFFFF",     // Pure white for text & sections
-          lavender: "#5C7CFF",  // Updated primary color (soft-blue)
-          sage: "#6FA8FF",      // Updated secondary color (mist-blue)
-          pink: "#FF6BCB",      // Legacy fuchsia-pink kept for backward compatibility
-          teal: "#5C7CFF",      // Renamed but points to soft-blue for backward compatibility
+          navy: "#111111",      // Mapped to near-black
+          white: "#FFFFFF",     // Pure white
+          lavender: "#111111",  // Mapped to near-black
+          sage: "#111111",      // Mapped to near-black
+          pink: "#111111",      // Mapped to near-black
+          teal: "#111111",      // Mapped to near-black
           text: {
-            headline: "#555555", // Dark grey for headlines
-            body: "#666666",     // Grey for body text
+            headline: "#111111", // Near-black for headlines
+            body: "#5A5A5A",     // Mid-grey for body text
           },
           grey: {
-            100: "#F5F7FA",     // Lightest grey
-            200: "#E4E7EB",     // Light grey
-            300: "#CBD2D9",     // Medium light grey
-            400: "#9AA5B1",     // Medium grey
-            500: "#7B8794",     // Standard grey
-            600: "#616E7C",     // Medium dark grey
-            700: "#52606D",     // Dark grey
-            800: "#3E4C5A",     // Very dark grey
+            100: "#F8F8F8",     // Lightest grey
+            200: "#EEEEEE",     // Light grey
+            300: "#E0E0E0",     // Medium light grey
+            400: "#BDBDBD",     // Medium grey
+            500: "#9E9E9E",     // Standard grey
+            600: "#757575",     // Medium dark grey
+            700: "#616161",     // Dark grey
+            800: "#424242",     // Very dark grey
           }
         },
-        // Legacy colors kept for backward compatibility
-        digital: {
-          background: "#0d1017", // page background
-          panel: "rgba(255,255,255,0.06)", // glass cards & modals
-          primary: "#27E6F7", // neon-cyan buttons, focus rings, glows
-          secondary: "#ff6bcb", // secondary CTAs, hover hue-shift  
-          text: "#e6ecf3", // primary copy
-          muted: "#8a96ad", // helper text
-        },
-        pirate: {
-          background: "#001426", // weather-worn midnight-blue
-          secondary: "#2b1e14", // dark ship-timber brown
-          accent: "#b68f40", // raw brass
-          action: "#7c0a02", // deep-crimson sail
-          text: "#c7dbd6", // moonlit-foam
-        },
-        netflix: {
-          background: "#141414",
-          red: "#E50914",
-          hover: "#181818",
-        },
+        // Legacy colors remapped to monochrome
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))"
+          DEFAULT: "#111111",
+          foreground: "#FFFFFF"
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))"
+          DEFAULT: "#EEEEEE",
+          foreground: "#111111"
         },
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))"
+          DEFAULT: "#111111",
+          foreground: "#FFFFFF"
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))"
+          DEFAULT: "#EEEEEE",
+          foreground: "#5A5A5A"
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))"
+          DEFAULT: "#EEEEEE",
+          foreground: "#111111"
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))"
+          DEFAULT: "#FFFFFF",
+          foreground: "#111111"
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))"
+          DEFAULT: "#FFFFFF",
+          foreground: "#111111"
         },
       },
       fontFamily: {
-        'regola': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'Inter', 'sans-serif'],
+        'satoshi': ['Satoshi Variable', 'Space Grotesk', 'Inter', 'sans-serif'],
+        'sans': ['Satoshi Variable', 'Space Grotesk', 'Inter', 'sans-serif'],
+        'heading': ['Satoshi Variable', 'Space Grotesk', 'sans-serif'],
+        // Keep legacy fonts for backward compatibility
+        'regola': ['Satoshi Variable', 'Space Grotesk', 'Inter', 'sans-serif'],
         'space': ['Space Grotesk', 'sans-serif'],
         'inter': ['Inter', 'sans-serif'],
-        'sans': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'Inter', 'sans-serif'],
-        'heading': ['FT Regola Neue', 'Graphik', 'Space Grotesk', 'sans-serif'],
-        'cinzel': ['Cinzel', 'serif'], // kept for backward compatibility
+        'cinzel': ['Cinzel', 'serif'],
       },
       boxShadow: {
-        'saas': '0 6px 24px rgba(0, 0, 0, 0.06)',
-        'saas-hover': '0 8px 32px rgba(0, 0, 0, 0.1)',
-        'saas-primary': '0 0 8px rgba(92, 124, 255, 0.45)', // Updated for soft-blue
-        'saas-secondary': '0 0 8px rgba(111, 168, 255, 0.45)', // Updated for mist-blue
+        'saas': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'saas-hover': '0 8px 32px rgba(0, 0, 0, 0.08)',
+        'saas-primary': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'saas-secondary': '0 4px 20px rgba(0, 0, 0, 0.05)',
         'saas-disabled': '0 2px 4px rgba(0, 0, 0, 0.05)',
-        'digital': '0 4px 20px rgba(39, 230, 247, 0.15)',
-        'digital-hover': '0 8px 30px rgba(39, 230, 247, 0.3)',
-        'digital-secondary': '0 4px 20px rgba(255, 107, 203, 0.15)',
-        'digital-glow': '0 0 15px rgba(39, 230, 247, 0.6)',
-        'pirate': '0 4px 10px rgba(0, 0, 0, 0.6)', // kept for backward compatibility
+        'digital': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'digital-hover': '0 8px 32px rgba(0, 0, 0, 0.08)',
+        'digital-secondary': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'digital-glow': '0 4px 20px rgba(0, 0, 0, 0.05)',
+        'pirate': '0 4px 10px rgba(0, 0, 0, 0.05)',
       },
       backgroundImage: {
-        'saas-gradient': 'linear-gradient(135deg, #0d1017 0%, #1A202C 100%)',
-        'saas-light-gradient': 'linear-gradient(135deg, #F5F7FA 0%, #E4E7EB 100%)',
-        'saas-primary-gradient': 'linear-gradient(135deg, #5C7CFF 0%, #4A6AE0 100%)', // Updated
-        'saas-secondary-gradient': 'linear-gradient(135deg, #6FA8FF 0%, #5A93E8 100%)', // Updated
-        'saas-charcoal-gradient': 'radial-gradient(circle at center, rgba(108,140,255,0.28) 0%, #ffffff 80%)', // Updated to soft-blue wash
-        'saas-lavender-gradient': 'radial-gradient(circle at center, rgba(108,140,255,0.28) 0%, #ffffff 80%)', // Updated to soft-blue
-        'saas-lavender-dual-gradient': 'radial-gradient(circle at top center, rgba(108,140,255,0.28) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at bottom center, rgba(108,140,255,0.28) 0%, rgba(255,255,255,0) 70%)', // Updated
-        'space-gradient': 'linear-gradient(135deg, #0d1017 0%, #141b2d 100%)',
-        'digital-glow': 'linear-gradient(135deg, rgba(39, 230, 247, 0.4) 0%, rgba(39, 230, 247, 0) 50%)',
-        'digital-panel': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-        'digital-banner': 'linear-gradient(135deg, rgba(39, 230, 247, 0.3) 0%, rgba(255, 107, 203, 0.3) 100%)',
-        'wood-texture': "url('/wood-texture.png')", // kept for backward compatibility
-        'canvas-grain': "linear-gradient(45deg, rgba(0,0,0,.08) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.08) 50%, rgba(0,0,0,.08) 75%, transparent 75%, transparent)",
+        'saas-gradient': 'linear-gradient(to bottom, rgba(0,0,0,0.015), rgba(0,0,0,0))',
+        'saas-light-gradient': 'linear-gradient(to bottom, rgba(0,0,0,0.015), rgba(0,0,0,0))',
+        'saas-primary-gradient': 'none',
+        'saas-secondary-gradient': 'none',
+        'saas-charcoal-gradient': 'none',
+        'saas-lavender-gradient': 'none',
+        'saas-lavender-dual-gradient': 'none',
+        'space-gradient': 'linear-gradient(to bottom, rgba(0,0,0,0.015), rgba(0,0,0,0))',
+        'digital-glow': 'none',
+        'digital-panel': 'none',
+        'digital-banner': 'none',
+        'wood-texture': "url('/wood-texture.png')",
+        'canvas-grain': "linear-gradient(45deg, rgba(0,0,0,.02) 25%, transparent 25%, transparent 50%, rgba(0,0,0,.02) 50%, rgba(0,0,0,.02) 75%, transparent 75%, transparent)",
       },
       keyframes: {
         "accordion-down": {

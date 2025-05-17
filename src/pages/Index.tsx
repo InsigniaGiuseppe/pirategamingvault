@@ -158,50 +158,63 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-saas-charcoal-gradient">
-      <div className="absolute inset-0 bg-saas-lavender-dual-gradient"></div>
-      
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       {loading ? (
-        <div className="fixed inset-0 bg-saas-navy/35 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center z-50">
           <div className="relative mb-8">
-            <img 
-              src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
-              alt="Pirate Gaming Logo" 
-              className="h-20 skull-spin"
-              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(92, 124, 255, 0.8))' }} 
-            />
+            {/* Ship sailing animation */}
+            <svg width="120" height="60" viewBox="0 0 120 60" className="sailing-ship">
+              <path
+                d="M10,40 Q30,35 60,40 Q90,45 110,40"
+                stroke="#111111"
+                strokeWidth="1"
+                fill="none"
+              />
+              <path
+                d="M60,20 L85,40 L35,40 Z"
+                stroke="#111111"
+                strokeWidth="2"
+                fill="none"
+              />
+              <path
+                d="M60,20 L60,5 L75,15 L60,20"
+                stroke="#111111"
+                strokeWidth="2"
+                fill="none"
+              />
+            </svg>
           </div>
           
           {!showDialog && (
-            <h2 className="text-saas-lavender text-xl mb-8 font-heading">{loadingMessages[messageIndex]}</h2>
+            <h2 className="text-black text-xl mb-8 font-heading">{loadingMessages[messageIndex]}</h2>
           )}
           
           <div className="w-80 mb-6">
-            <Progress value={progress} className="h-2 bg-saas-navy/50 border border-saas-lavender/20" indicatorClassName="bg-saas-lavender" />
+            <Progress value={progress} className="h-2 bg-gray-100" indicatorClassName="bg-black" />
           </div>
 
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
             <AlertDialogContent className="bg-white rounded-xl shadow-saas border-none max-w-md">
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-center text-2xl font-bold text-saas-text-headline flex items-center justify-center gap-3 mb-4 font-heading">
-                  <Compass className="text-saas-lavender h-6 w-6" />
+                <AlertDialogTitle className="text-center text-2xl font-bold text-black flex items-center justify-center gap-3 mb-4 font-heading">
+                  <Compass className="text-black h-6 w-6" />
                   System Anomaly Detected
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-saas-text-body font-medium text-base text-center">
+                <AlertDialogDescription className="text-gray-600 font-medium text-base text-center">
                   We've hit the doldrums! What shall we do, matey?
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter className="mt-6 flex flex-col sm:flex-row gap-3">
                 <AlertDialogCancel 
                   onClick={cancelLogin}
-                  className="bg-white text-saas-text-body border border-saas-grey-200 hover:bg-saas-grey-100 hover:text-saas-text-headline order-2 sm:order-1"
+                  className="bg-white text-black border-2 border-black hover:bg-black hover:text-white order-2 sm:order-1"
                   disabled={loginAttempts >= 3}
                 >
                   Return to sign-in
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={resumeLoading}
-                  className="bg-saas-lavender text-saas-white hover:bg-saas-lavender/90 shadow-saas-primary order-1 sm:order-2"
+                  className="bg-white text-black border-2 border-black hover:bg-black hover:text-white order-1 sm:order-2"
                 >
                   Continue loading
                 </AlertDialogAction>
@@ -210,16 +223,16 @@ const Index = () => {
           </AlertDialog>
 
           {loginAttempts >= 3 && showDialog && (
-            <div className="absolute inset-0 bg-saas-navy/35 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-md flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-saas p-8 max-w-md text-center">
-                <AlertTriangle className="text-saas-sage h-12 w-12 mx-auto mb-4" />
-                <h3 className="text-xl font-heading text-saas-text-headline mb-3">Continuous errors detected</h3>
-                <p className="text-saas-text-body font-medium mb-6">
+                <AlertTriangle className="text-black h-12 w-12 mx-auto mb-4" />
+                <h3 className="text-xl font-heading text-black mb-3">Continuous errors detected</h3>
+                <p className="text-gray-600 font-medium mb-6">
                   Please contact Pirate Gaming Support on Discord for assistance.
                 </p>
                 <button 
                   onClick={resumeLoading} 
-                  className="bg-saas-lavender text-white px-6 py-2.5 rounded-md font-medium shadow-saas-primary hover:shadow-saas-hover"
+                  className="bg-white text-black border-2 border-black px-6 py-2.5 rounded-md font-medium hover:bg-black hover:text-white"
                 >
                   Dismiss
                 </button>
@@ -235,12 +248,12 @@ const Index = () => {
                 src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
                 alt="Pirate Gaming Logo" 
                 className="h-20"
-                style={{ filter: 'drop-shadow(0 0 5px rgba(92, 124, 255, 0.4))' }} 
+                style={{ filter: 'brightness(0)' }} 
               />
             </div>
             <div className="text-center">
-              <h1 className="text-saas-text-headline font-bold text-4xl md:text-5xl font-heading">PIRATE GAMING</h1>
-              <p className="text-saas-text-body text-sm tracking-widest -mt-1">GAME VAULT</p>
+              <h1 className="text-black font-bold text-4xl md:text-5xl font-heading">PIRATE GAMING</h1>
+              <p className="text-gray-600 text-sm tracking-widest -mt-1">GAME VAULT</p>
             </div>
           </div>
           

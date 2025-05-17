@@ -35,41 +35,41 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-white rounded-xl shadow-saas border-none text-saas-text-headline max-w-md">
+      <DialogContent className="bg-white rounded-xl shadow-saas border-none text-black max-w-md">
         <DialogHeader>
           <button 
             onClick={onClose}
-            className="absolute right-4 top-4 p-1 rounded-full bg-saas-grey-100 hover:bg-saas-grey-200 transition-colors"
+            className="absolute right-4 top-4 p-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
           >
-            <X size={16} className="text-saas-text-body" />
+            <X size={16} className="text-black" />
           </button>
-          <DialogTitle className="text-center text-2xl font-bold text-saas-text-headline font-heading flex flex-col items-center gap-3 pb-2">
-            <Shield className="text-saas-lavender h-8 w-8 mb-1" />
+          <DialogTitle className="text-center text-2xl font-bold text-black font-heading flex flex-col items-center gap-3 pb-2">
+            <Shield className="text-black h-8 w-8 mb-1" />
             Restricted Access
           </DialogTitle>
         </DialogHeader>
         
         <div className="text-center mb-6">
-          <p className="text-saas-text-headline text-lg">Enter authorization code for {gameTitle}</p>
-          <p className="text-sm text-saas-text-body mt-2">(Obtain from GIUSEPPE in the Discord Server.)</p>
+          <p className="text-black text-lg">Enter authorization code for {gameTitle}</p>
+          <p className="text-sm text-gray-600 mt-2">(Obtain from GIUSEPPE in the Discord Server.)</p>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
-            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-saas-grey-500" />
+            <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <Input 
               type="text" 
               value={code} 
               onChange={(e) => setCode(e.target.value)}
               placeholder="Enter authorization code"
-              className="bg-white border-saas-grey-200 text-saas-text-headline pl-9 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
+              className="bg-white border-2 border-gray-300 text-black pl-9 placeholder:text-gray-400 focus:border-black focus:ring-black"
             />
           </div>
           
           <div className="flex flex-col space-y-3">
             <Button 
               type="submit" 
-              className="bg-saas-lavender text-white w-full py-5 shadow-saas-primary hover:shadow-saas-hover"
+              className="bg-white text-black border-2 border-black w-full py-5 hover:bg-black hover:text-white"
             >
               Authenticate Access
             </Button>
@@ -78,7 +78,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
               type="button"
               onClick={onClose}
               variant="outline"
-              className="border-saas-grey-200 text-saas-text-body hover:bg-saas-grey-100 hover:text-saas-text-headline w-full py-3"
+              className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-black w-full py-3"
             >
               Cancel
             </Button>

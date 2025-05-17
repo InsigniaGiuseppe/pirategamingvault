@@ -11,10 +11,10 @@ const GameGrid = () => {
       <div className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <span className="text-saas-grey-400 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
-            <h2 className="text-2xl md:text-3xl font-bold text-saas-lavender mt-1">Featured Collection</h2>
+            <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
+            <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Featured Collection</h2>
           </div>
-          <a href="#" className="flex items-center text-saas-grey-400 hover:text-saas-lavender transition-colors text-sm font-medium">
+          <a href="#" className="flex items-center text-gray-500 hover:text-black transition-colors text-sm font-medium">
             View all <ChevronRight size={16} className="ml-1" />
           </a>
         </div>
@@ -29,8 +29,8 @@ const GameGrid = () => {
       {/* Social proof section */}
       <div className="mb-16">
         <div className="text-center mb-10">
-          <span className="text-saas-grey-400 text-sm font-medium uppercase tracking-wider">02 / Testimonials</span>
-          <h2 className="text-2xl md:text-3xl font-bold text-saas-lavender mt-1">Trusted by Gamers</h2>
+          <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">02 / Testimonials</span>
+          <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Trusted by Gamers</h2>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8">
@@ -38,11 +38,11 @@ const GameGrid = () => {
             <div className="flex items-start gap-4">
               <Avatar className="w-12 h-12">
                 <AvatarImage src="/lovable-uploads/af98a0d6-151c-48ff-a3e9-025a40fb5669.png" alt="TheBananaOrder" />
-                <AvatarFallback className="bg-saas-grey-200">TB</AvatarFallback>
+                <AvatarFallback className="bg-gray-200">TB</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-saas-grey-800 italic mb-3">"PIRATE GAMING VAULT has completely transformed how I manage my game library. The interface is intuitive and the download speeds are incredible."</p>
-                <p className="text-saas-grey-600 font-medium">TheBananaOrder, Quartermaster</p>
+                <p className="text-black italic mb-3">"PIRATE GAMING VAULT has completely transformed how I manage my game library. The interface is intuitive and the download speeds are incredible."</p>
+                <p className="text-gray-600 font-medium">TheBananaOrder, Quartermaster</p>
               </div>
             </div>
           </div>
@@ -51,11 +51,11 @@ const GameGrid = () => {
             <div className="flex items-start gap-4">
               <Avatar className="w-12 h-12">
                 <AvatarImage src="/lovable-uploads/ae48e00f-9a3a-414c-ba60-3c1099f45e2a.png" alt="Dean V" />
-                <AvatarFallback className="bg-saas-grey-200">DV</AvatarFallback>
+                <AvatarFallback className="bg-gray-200">DV</AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-saas-grey-800 italic mb-3">"As a game developer, I appreciate the attention to detail in the PIRATE GAMING platform. It showcases our games beautifully."</p>
-                <p className="text-saas-grey-600 font-medium">Dean V, Full Time Content Creator</p>
+                <p className="text-black italic mb-3">"As a game developer, I appreciate the attention to detail in the PIRATE GAMING platform. It showcases our games beautifully."</p>
+                <p className="text-gray-600 font-medium">Dean V, Full Time Content Creator</p>
               </div>
             </div>
           </div>
