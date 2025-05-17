@@ -10,6 +10,7 @@ const Gotcha = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showImage, setShowImage] = useState(false);
+  const [showChatBubble, setShowChatBubble] = useState(false);
   
   useEffect(() => {
     if (!isAuthenticated) {
@@ -18,6 +19,13 @@ const Gotcha = () => {
       // Delay showing the image for a more dramatic effect
       const timer = setTimeout(() => {
         setShowImage(true);
+        
+        // Add delay for chat bubble to appear after image animation completes
+        const chatTimer = setTimeout(() => {
+          setShowChatBubble(true);
+        }, 1500); // Display chat bubble 1.5s after image appears
+        
+        return () => clearTimeout(chatTimer);
       }, 1000);
       
       return () => clearTimeout(timer);
@@ -84,7 +92,7 @@ const Gotcha = () => {
           }}
           className="absolute bottom-24 right-8 md:right-16 lg:right-24 z-20"
         >
-          <div className="rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105">
+          <div className="rounded-full overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300 transform hover:scale-105 relative">
             <img 
               src="/lovable-uploads/10a05905-3893-4a2d-b626-9d976bb16378.png" 
               alt="Pirate Captain" 
@@ -94,6 +102,23 @@ const Gotcha = () => {
                 boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
               }}
             />
+            
+            {/* Chat bubble */}
+            {showChatBubble && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className="absolute left-0 bottom-full mb-2 transform -translate-x-1/2 max-w-52"
+              >
+                <div className="bg-black text-white p-3 rounded-xl rounded-br-none shadow-lg relative text-sm md:text-base font-satoshi">
+                  <p className="font-medium">
+                    You should've subscribed, you dickhead!
+                  </p>
+                  <div className="absolute bottom-0 right-0 w-4 h-4 bg-black transform translate-x-1/2 translate-y-1/3 rotate-45"></div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       )}
