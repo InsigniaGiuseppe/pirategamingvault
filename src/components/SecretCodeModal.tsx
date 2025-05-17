@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Shield, X, Ship } from 'lucide-react';
 import ConfirmationModal from './ConfirmationModal';
+import ShipAnimation from './ShipAnimation';
 
 interface SecretCodeModalProps {
   isOpen: boolean;
@@ -175,10 +176,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             
             <div className="relative mb-4">
               <Progress value={progress} className="h-2" />
-              <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">
-                <Ship className={`h-6 w-6 text-black absolute -top-2 ${progress < 100 ? 'animate-ship-sailing' : ''}`} 
-                      style={{ left: `${progress}%`, transform: 'translateX(-50%)' }} />
-              </div>
+              <ShipAnimation />
             </div>
             
             <p className="text-sm text-gray-600 mt-1">{progress.toFixed(0)}% Complete</p>

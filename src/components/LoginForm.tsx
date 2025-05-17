@@ -27,6 +27,14 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-white rounded-xl shadow-saas">
       <div className="text-center mb-6">
+        <div className="flex justify-center mb-4">
+          <img 
+            src="/lovable-uploads/e658c565-6755-4834-9495-f23f5cbac18c.png" 
+            alt="Pirate Gaming Logo" 
+            className="h-16"
+            style={{ filter: 'brightness(0)' }}
+          />
+        </div>
         <h2 className="text-2xl font-bold text-black mb-2 font-heading">Welcome to PIRATE GAMING</h2>
         <p className="text-gray-600">Enter your credentials to access your vault</p>
       </div>

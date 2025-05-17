@@ -24,8 +24,8 @@ const Dashboard = () => {
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
-          {/* Further reduced hero section height by another 30% */}
-          <div className="h-[15vh] relative">
+          {/* Increased hero section height by 15% */}
+          <div className="h-[17.25vh] relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
             
             <img
@@ -35,14 +35,24 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-white"></div>
             
-            {/* Increased header size */}
-            <div className="absolute bottom-0 left-0 p-4 md:p-8 animate-fade-up">
-              <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
-                Welcome to the PIRATE GAMING VAULT
-              </h1>
-              <p className="text-base md:text-xl text-gray-600 mb-4 max-w-md">
-                Access our private collection of digital adventures
-              </p>
+            {/* Added proper positioning to prevent text hiding under header */}
+            <div className="absolute bottom-0 left-0 p-4 md:p-8 pt-12 animate-fade-up">
+              <div className="flex items-center gap-3 mb-4">
+                <img 
+                  src="/lovable-uploads/e658c565-6755-4834-9495-f23f5cbac18c.png" 
+                  alt="Pirate Gaming Logo" 
+                  className="h-[42px]"
+                  style={{ filter: 'brightness(0)' }}
+                />
+                <div className="flex flex-col">
+                  <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
+                    Welcome to the PIRATE GAMING VAULT
+                  </h1>
+                  <p className="text-base md:text-xl text-gray-600 mb-4 max-w-md">
+                    Access our private collection of digital adventures
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
