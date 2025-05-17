@@ -175,25 +175,25 @@ const Index = () => {
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
             <AlertDialogContent className="parchment">
               <AlertDialogHeader>
-                <AlertDialogTitle className="text-pirate-secondary text-xl flex items-center justify-center gap-2">
+                <AlertDialogTitle className="text-pirate-secondary text-xl flex items-center justify-center gap-2 mb-2">
                   <Compass className="text-pirate-action h-6 w-6" />
                   <span>We've hit the doldrums!</span>
                 </AlertDialogTitle>
-                <AlertDialogDescription className="text-pirate-secondary font-medium">
+                <AlertDialogDescription className="text-black font-medium text-base">
                   What shall we do, matey?
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
+              <AlertDialogFooter className="mt-4 flex flex-col sm:flex-row gap-3">
                 <AlertDialogCancel 
                   onClick={cancelLogin}
-                  className="border-pirate-accent text-pirate-secondary hover:bg-pirate-accent/10"
+                  className="border-pirate-accent text-pirate-secondary hover:bg-pirate-accent/10 font-medium order-2 sm:order-1"
                   disabled={loginAttempts >= 3}
                 >
                   GO BACK TO LOGIN
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={resumeLoading}
-                  className="bg-pirate-action text-pirate-text border-pirate-accent hover:bg-pirate-action/80"
+                  className="bg-pirate-action text-white border-pirate-accent hover:bg-pirate-action/80 font-medium order-1 sm:order-2"
                 >
                   CONTINUE
                 </AlertDialogAction>
@@ -205,12 +205,12 @@ const Index = () => {
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50">
               <div className="parchment p-6 max-w-md text-center">
                 <h3 className="text-xl font-cinzel text-pirate-secondary mb-3">Persistent squalls detected!</h3>
-                <p className="text-pirate-secondary font-medium mb-4">
+                <p className="text-black font-medium mb-4">
                   Please hail Pirate Gaming Support for assistance!
                 </p>
                 <button 
                   onClick={resumeLoading} 
-                  className="mt-2 px-4 py-2 bg-pirate-action text-pirate-text border border-pirate-accent rounded shadow-pirate hover:bg-pirate-action/80"
+                  className="mt-2 px-4 py-2 bg-pirate-action text-white border border-pirate-accent rounded shadow-pirate hover:bg-pirate-action/80 font-medium"
                 >
                   CONTINUE ANYWAY
                 </button>
