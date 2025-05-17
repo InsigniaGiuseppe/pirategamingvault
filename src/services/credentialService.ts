@@ -89,7 +89,7 @@ export const verifyAuthCode = (username: string, authCode: string): boolean => {
   return credential ? credential.authCode === authCode : false;
 };
 
-// Add a new credential
+// Add a new credential (for regular users, not admins)
 export const addCredential = (username: string, password: string, authCode?: string): Credential => {
   const creds = getCredentials();
   

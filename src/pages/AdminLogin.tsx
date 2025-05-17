@@ -102,10 +102,6 @@ const AdminLogin = () => {
             {isLoading ? 'Authenticating...' : 'Access Admin Panel'}
           </Button>
         </form>
-
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">Available logins: admin123/admin123, giuseppe/GIUSEPPE</p>
-        </div>
       </div>
     </div>
   );

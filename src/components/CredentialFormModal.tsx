@@ -94,7 +94,7 @@ const CredentialFormModal = ({
       <DialogContent className="bg-white rounded-xl shadow-saas border-none max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-black text-center">
-            {credential ? 'Edit Credential' : 'New Credential'}
+            {credential ? 'Edit User Credential' : 'New User Credential'}
           </DialogTitle>
           <button 
             onClick={onClose}
@@ -174,7 +174,7 @@ const CredentialFormModal = ({
               type="submit" 
               className="bg-white text-black border-2 border-black hover:bg-black hover:text-white"
             >
-              {credential ? 'Update Credential' : 'Create Credential'}
+              {credential ? 'Update User Credential' : 'Create User Credential'}
             </Button>
             
             <Button 
