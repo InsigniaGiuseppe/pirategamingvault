@@ -26,7 +26,7 @@ const GameTile = ({ game }: GameTileProps) => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
             
-            <div className="absolute top-3 left-3 bg-saas-teal/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
+            <div className="absolute top-3 left-3 bg-saas-lavender/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
               <Tag size={12} className="mr-1" />
               {game.title}
             </div>

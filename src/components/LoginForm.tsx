@@ -42,7 +42,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               placeholder="Enter your username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-teal focus:ring-saas-teal"
+              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
               required
             />
           </div>
@@ -51,7 +51,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium text-saas-text-headline flex justify-between items-center">
             <span>Password</span>
-            <a href="#" className="text-saas-teal text-xs hover:underline">Forgot password?</a>
+            <a href="#" className="text-saas-lavender text-xs hover:underline">Forgot password?</a>
           </label>
           <div className="relative">
             <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-saas-grey-500" />
@@ -61,7 +61,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-teal focus:ring-saas-teal"
+              className="bg-white border-saas-grey-200 text-saas-text-body pl-10 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
               required
             />
           </div>
@@ -69,15 +69,15 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         
         <Button 
           type="submit" 
-          className="bg-saas-teal text-white w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium shadow-saas-primary hover:shadow-saas-hover"
+          className="bg-saas-lavender text-white w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium shadow-saas-primary hover:shadow-saas-hover"
         >
           <LogIn size={18} />
-          SIGN IN TO YOUR VAULT
+          Sign in to your vault
         </Button>
       </form>
       
       <div className="mt-8 text-sm text-saas-text-body text-center">
-        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-saas-teal hover:underline">Join Pirate Gaming Discord</a> for access.</p>
+        <p>No credentials? <a href="https://discord.gg/cZ7MfkNH" className="text-saas-lavender hover:underline">Join Pirate Gaming Discord</a> for access.</p>
       </div>
     </div>
   );

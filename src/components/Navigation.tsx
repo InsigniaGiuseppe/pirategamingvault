@@ -22,7 +22,7 @@ const Navigation = () => {
               className="h-[42px]" 
             />
             <div className="flex flex-col items-start">
-              <span className="text-saas-teal font-bold text-xl font-heading">PIRATE GAMING</span>
+              <span className="text-saas-lavender font-bold text-xl font-heading">PIRATE GAMING</span>
               <span className="text-saas-grey-400 text-xs -mt-1">VAULT</span>
             </div>
           </Link>
@@ -31,14 +31,14 @@ const Navigation = () => {
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-8">
           <div className="relative group">
-            <button className="flex items-center gap-1 text-saas-white hover:text-saas-teal transition-colors py-2">
+            <button className="flex items-center gap-1 text-saas-white hover:text-saas-lavender transition-colors py-2">
               Products <ChevronDown size={16} className="ml-1 text-saas-grey-400" />
             </button>
             <div className="absolute top-full left-0 bg-white rounded-md shadow-saas p-4 min-w-[280px] hidden group-hover:block animate-fade-in">
               <div className="grid grid-cols-1 gap-2">
                 <a href="#" className="p-2 hover:bg-saas-grey-100 rounded flex items-start gap-3">
-                  <div className="bg-saas-teal/10 p-2 rounded">
-                    <Settings size={18} className="text-saas-teal" />
+                  <div className="bg-saas-lavender/10 p-2 rounded">
+                    <Settings size={18} className="text-saas-lavender" />
                   </div>
                   <div>
                     <p className="font-medium text-saas-navy">Game Library</p>
@@ -46,8 +46,8 @@ const Navigation = () => {
                   </div>
                 </a>
                 <a href="#" className="p-2 hover:bg-saas-grey-100 rounded flex items-start gap-3">
-                  <div className="bg-saas-pink/10 p-2 rounded">
-                    <User size={18} className="text-saas-pink" />
+                  <div className="bg-saas-sage/10 p-2 rounded">
+                    <User size={18} className="text-saas-sage" />
                   </div>
                   <div>
                     <p className="font-medium text-saas-navy">Profile Manager</p>
@@ -59,14 +59,14 @@ const Navigation = () => {
           </div>
           
           <div className="relative group">
-            <button className="flex items-center gap-1 text-saas-white hover:text-saas-teal transition-colors py-2">
+            <button className="flex items-center gap-1 text-saas-white hover:text-saas-lavender transition-colors py-2">
               Resources <ChevronDown size={16} className="ml-1 text-saas-grey-400" />
             </button>
             <div className="absolute top-full left-0 bg-white rounded-md shadow-saas p-4 min-w-[280px] hidden group-hover:block animate-fade-in">
               <div className="grid grid-cols-1 gap-2">
                 <a href="#" className="p-2 hover:bg-saas-grey-100 rounded flex items-start gap-3">
-                  <div className="bg-saas-teal/10 p-2 rounded">
-                    <HelpCircle size={18} className="text-saas-teal" />
+                  <div className="bg-saas-lavender/10 p-2 rounded">
+                    <HelpCircle size={18} className="text-saas-lavender" />
                   </div>
                   <div>
                     <p className="font-medium text-saas-navy">Support Center</p>
@@ -74,8 +74,8 @@ const Navigation = () => {
                   </div>
                 </a>
                 <a href="https://discord.gg/cZ7MfkNH" className="p-2 hover:bg-saas-grey-100 rounded flex items-start gap-3">
-                  <div className="bg-saas-pink/10 p-2 rounded">
-                    <User size={18} className="text-saas-pink" />
+                  <div className="bg-saas-sage/10 p-2 rounded">
+                    <User size={18} className="text-saas-sage" />
                   </div>
                   <div>
                     <p className="font-medium text-saas-navy">Community</p>
@@ -90,17 +90,17 @@ const Navigation = () => {
         <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
-            className="text-saas-white hover:text-saas-pink bg-saas-pink/10 hover:bg-saas-pink/20 border border-saas-pink/30"
+            className="text-saas-white hover:text-saas-sage bg-saas-sage/10 hover:bg-saas-sage/20 border border-saas-sage/30"
             onClick={logout}
           >
             <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
+            SIGN OUT
           </Button>
           
           {/* Mobile menu button */}
           <Button 
             variant="ghost" 
-            className="lg:hidden bg-saas-teal/10 text-saas-teal hover:bg-saas-teal/20 border border-saas-teal/30"
+            className="lg:hidden bg-saas-lavender/10 text-saas-lavender hover:bg-saas-lavender/20 border border-saas-lavender/30"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             <Menu className="h-5 w-5" />
@@ -114,13 +114,13 @@ const Navigation = () => {
           <div className="container mx-auto px-4 py-4 space-y-4">
             <div className="border-b border-saas-grey-800/30 pb-3">
               <p className="text-saas-grey-400 text-sm mb-2">Products</p>
-              <a href="#" className="block py-2 text-saas-white hover:text-saas-teal">Game Library</a>
-              <a href="#" className="block py-2 text-saas-white hover:text-saas-teal">Profile Manager</a>
+              <a href="#" className="block py-2 text-saas-white hover:text-saas-lavender">Game Library</a>
+              <a href="#" className="block py-2 text-saas-white hover:text-saas-lavender">Profile Manager</a>
             </div>
             <div>
               <p className="text-saas-grey-400 text-sm mb-2">Resources</p>
-              <a href="#" className="block py-2 text-saas-white hover:text-saas-teal">Support Center</a>
-              <a href="https://discord.gg/cZ7MfkNH" className="block py-2 text-saas-white hover:text-saas-teal">Community</a>
+              <a href="#" className="block py-2 text-saas-white hover:text-saas-lavender">Support Center</a>
+              <a href="https://discord.gg/cZ7MfkNH" className="block py-2 text-saas-white hover:text-saas-lavender">Community</a>
             </div>
           </div>
         </div>

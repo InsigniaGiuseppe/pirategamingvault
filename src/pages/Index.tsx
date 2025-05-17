@@ -158,7 +158,7 @@ const Index = () => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-saas-lavender-gradient">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-saas-charcoal-gradient">
       <div className="absolute inset-0 bg-saas-lavender-dual-gradient"></div>
       
       {loading ? (
@@ -167,25 +167,24 @@ const Index = () => {
             <img 
               src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
               alt="Pirate Gaming Logo" 
-              className="h-20"
-              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(39, 230, 247, 0.8))' }} 
+              className="h-20 skull-spin"
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 0 10px rgba(124, 124, 255, 0.8))' }} 
             />
-            <div className="absolute inset-0 animate-pulse"></div>
           </div>
           
           {!showDialog && (
-            <h2 className="text-saas-teal text-xl mb-8 font-heading">{loadingMessages[messageIndex]}</h2>
+            <h2 className="text-saas-lavender text-xl mb-8 font-heading">{loadingMessages[messageIndex]}</h2>
           )}
           
           <div className="w-80 mb-6">
-            <Progress value={progress} className="h-2 bg-saas-navy/50 border border-saas-teal/20" indicatorClassName="bg-saas-teal" />
+            <Progress value={progress} className="h-2 bg-saas-navy/50 border border-saas-lavender/20" indicatorClassName="bg-saas-lavender" />
           </div>
 
           <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
             <AlertDialogContent className="bg-white rounded-xl shadow-saas border-none max-w-md">
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-center text-2xl font-bold text-saas-text-headline flex items-center justify-center gap-3 mb-4 font-heading">
-                  <Compass className="text-saas-teal h-6 w-6" />
+                  <Compass className="text-saas-lavender h-6 w-6" />
                   System Anomaly Detected
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-saas-text-body font-medium text-base text-center">
@@ -198,13 +197,13 @@ const Index = () => {
                   className="bg-white text-saas-text-body border border-saas-grey-200 hover:bg-saas-grey-100 hover:text-saas-text-headline order-2 sm:order-1"
                   disabled={loginAttempts >= 3}
                 >
-                  GO BACK TO LOGIN
+                  Return to sign-in
                 </AlertDialogCancel>
                 <AlertDialogAction 
                   onClick={resumeLoading}
-                  className="bg-saas-teal text-saas-white hover:bg-saas-teal/90 shadow-saas-primary order-1 sm:order-2"
+                  className="bg-saas-lavender text-saas-white hover:bg-saas-lavender/90 shadow-saas-primary order-1 sm:order-2"
                 >
-                  CONTINUE
+                  Continue loading
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -213,16 +212,16 @@ const Index = () => {
           {loginAttempts >= 3 && showDialog && (
             <div className="absolute inset-0 bg-saas-navy/35 backdrop-blur-md flex items-center justify-center z-50">
               <div className="bg-white rounded-xl shadow-saas p-8 max-w-md text-center">
-                <AlertTriangle className="text-saas-pink h-12 w-12 mx-auto mb-4" />
-                <h3 className="text-xl font-heading text-saas-text-headline mb-3">Continuous errors detected!</h3>
+                <AlertTriangle className="text-saas-sage h-12 w-12 mx-auto mb-4" />
+                <h3 className="text-xl font-heading text-saas-text-headline mb-3">Continuous errors detected</h3>
                 <p className="text-saas-text-body font-medium mb-6">
-                  Please hail Pirate Gaming Support on Discord for assistance.
+                  Please contact Pirate Gaming Support on Discord for assistance.
                 </p>
                 <button 
                   onClick={resumeLoading} 
-                  className="bg-saas-teal text-white px-6 py-2.5 rounded-md font-medium shadow-saas-primary hover:shadow-saas-hover"
+                  className="bg-saas-lavender text-white px-6 py-2.5 rounded-md font-medium shadow-saas-primary hover:shadow-saas-hover"
                 >
-                  DISMISS
+                  Dismiss
                 </button>
               </div>
             </div>
@@ -236,7 +235,7 @@ const Index = () => {
                 src="/lovable-uploads/e06f6ebd-0d3f-461d-a92e-227b074e5c3c.png" 
                 alt="Pirate Gaming Logo" 
                 className="h-20"
-                style={{ filter: 'drop-shadow(0 0 5px rgba(39, 230, 247, 0.4))' }} 
+                style={{ filter: 'drop-shadow(0 0 5px rgba(124, 124, 255, 0.4))' }} 
               />
             </div>
             <div className="text-center">

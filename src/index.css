@@ -19,16 +19,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 100% 8%;
 
-    --primary: 185 94% 56%;
+    --primary: 240 100% 75%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 322 100% 71%;
+    --secondary: 148 49% 55%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 215 16% 94%;
     --muted-foreground: 215 16% 56%;
 
-    --accent: 185 94% 56%;
+    --accent: 240 100% 75%;
     --accent-foreground: 210 100% 8%;
 
     --destructive: 0 84% 60%;
@@ -36,7 +36,7 @@
 
     --border: 215 16% 94%;
     --input: 215 16% 94%;
-    --ring: 185 94% 56%;
+    --ring: 240 100% 75%;
 
     --radius: 0.5rem;
   }
@@ -67,12 +67,12 @@
   
   /* Updated button classes */
   .saas-button-primary {
-    @apply bg-saas-teal text-white font-medium rounded-md px-6 py-3 shadow-saas-primary
+    @apply bg-saas-lavender text-white font-medium rounded-md px-6 py-3 shadow-saas-primary
     hover:shadow-saas-hover transition-all duration-300;
   }
 
   .saas-button-secondary {
-    @apply bg-saas-pink text-white font-medium rounded-md px-6 py-3
+    @apply bg-saas-sage text-white font-medium rounded-md px-6 py-3
     hover:shadow-saas-secondary transition-all duration-300;
   }
   
@@ -92,7 +92,7 @@
   }
 
   .saas-headline-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-saas-teal to-saas-pink;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-saas-lavender to-saas-sage;
   }
   
   .saas-card {
@@ -106,7 +106,7 @@
   /* Game tiles with enterprise SaaS styling */
   .saas-game-tile {
     @apply relative overflow-hidden rounded-lg shadow-saas transition-all duration-300
-    border border-saas-grey-200 hover:shadow-saas-hover;
+    border border-saas-grey-200 hover:shadow-saas-primary;
   }
 
   /* Legacy classes for backward compatibility during migration */
@@ -127,11 +127,11 @@
   }
   
   .glow-text {
-    @apply text-saas-teal;
+    @apply text-saas-lavender;
   }
   
   .glow-text-secondary {
-    @apply text-saas-pink;
+    @apply text-saas-sage;
   }
   
   .game-tile {
@@ -173,7 +173,7 @@
 
   /* Animated gradient backgrounds */
   .animated-gradient {
-    background: linear-gradient(270deg, #27e6f7, #ff6bcb);
+    background: linear-gradient(270deg, #7C7CFF, #5BBF8A);
     background-size: 200% 200%;
     animation: gradient-shift 15s ease infinite;
   }

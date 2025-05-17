@@ -44,8 +44,8 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             <X size={16} className="text-saas-text-body" />
           </button>
           <DialogTitle className="text-center text-2xl font-bold text-saas-text-headline font-heading flex flex-col items-center gap-3 pb-2">
-            <Shield className="text-saas-teal h-8 w-8 mb-1" />
-            RESTRICTED ACCESS
+            <Shield className="text-saas-lavender h-8 w-8 mb-1" />
+            Restricted Access
           </DialogTitle>
         </DialogHeader>
         
@@ -62,14 +62,14 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
               value={code} 
               onChange={(e) => setCode(e.target.value)}
               placeholder="Enter authorization code"
-              className="bg-white border-saas-grey-200 text-saas-text-headline pl-9 placeholder:text-saas-grey-400 focus:border-saas-teal focus:ring-saas-teal"
+              className="bg-white border-saas-grey-200 text-saas-text-headline pl-9 placeholder:text-saas-grey-400 focus:border-saas-lavender focus:ring-saas-lavender"
             />
           </div>
           
           <div className="flex flex-col space-y-3">
             <Button 
               type="submit" 
-              className="bg-saas-teal text-white w-full py-5 shadow-saas-primary hover:shadow-saas-hover"
+              className="bg-saas-lavender text-white w-full py-5 shadow-saas-primary hover:shadow-saas-hover"
             >
               Authenticate Access
             </Button>

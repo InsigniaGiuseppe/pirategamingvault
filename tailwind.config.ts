@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,9 +23,10 @@ export default {
         saas: {
           navy: "#0d1017",      // Deep navy for backgrounds
           white: "#FFFFFF",     // Pure white for text & sections
-          teal: "#27E6F7",      // Teal for primary CTAs
-          pink: "#FF6BCB",      // Fuchsia-pink for secondary accents
-          lavender: "#E5D8FA",  // New pastel lavender for gradients
+          lavender: "#7C7CFF",  // New primary color (indigo-lavender)
+          sage: "#5BBF8A",      // New secondary color (sage green)
+          pink: "#FF6BCB",      // Legacy fuchsia-pink kept for backward compatibility
+          teal: "#7C7CFF",      // Renamed but points to lavender for backward compatibility
           text: {
             headline: "#111111", // Near-black for headlines
             body: "#444444",     // Dark gray for body text
@@ -42,7 +42,7 @@ export default {
             800: "#3E4C5A",     // Very dark grey
           }
         },
-        // Legacy digital-AI aesthetic colors (kept for backward compatibility)
+        // Legacy colors kept for backward compatibility
         digital: {
           background: "#0d1017", // page background
           panel: "rgba(255,255,255,0.06)", // glass cards & modals
@@ -51,7 +51,6 @@ export default {
           text: "#e6ecf3", // primary copy
           muted: "#8a96ad", // helper text
         },
-        // Legacy pirate colors (kept for backward compatibility during migration)
         pirate: {
           background: "#001426", // weather-worn midnight-blue
           secondary: "#2b1e14", // dark ship-timber brown
@@ -109,8 +108,8 @@ export default {
       boxShadow: {
         'saas': '0 6px 24px rgba(0, 0, 0, 0.06)',
         'saas-hover': '0 8px 32px rgba(0, 0, 0, 0.1)',
-        'saas-primary': '0 0 8px rgba(39, 230, 247, 0.6)',
-        'saas-secondary': '0 0 8px rgba(255, 107, 203, 0.6)',
+        'saas-primary': '0 0 8px rgba(124, 124, 255, 0.45)', // Updated for indigo-lavender
+        'saas-secondary': '0 0 8px rgba(91, 191, 138, 0.45)', // Updated for sage green
         'saas-disabled': '0 2px 4px rgba(0, 0, 0, 0.05)',
         'digital': '0 4px 20px rgba(39, 230, 247, 0.15)',
         'digital-hover': '0 8px 30px rgba(39, 230, 247, 0.3)',
@@ -121,10 +120,11 @@ export default {
       backgroundImage: {
         'saas-gradient': 'linear-gradient(135deg, #0d1017 0%, #1A202C 100%)',
         'saas-light-gradient': 'linear-gradient(135deg, #F5F7FA 0%, #E4E7EB 100%)',
-        'saas-primary-gradient': 'linear-gradient(135deg, #27E6F7 0%, #33B3EC 100%)',
-        'saas-secondary-gradient': 'linear-gradient(135deg, #FF6BCB 0%, #F873DB 100%)',
-        'saas-lavender-gradient': 'radial-gradient(circle at center, rgba(229,216,250,0.4) 0%, #ffffff 80%)',
-        'saas-lavender-dual-gradient': 'radial-gradient(circle at top center, rgba(229,216,250,0.4) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at bottom center, rgba(229,216,250,0.4) 0%, rgba(255,255,255,0) 70%)',
+        'saas-primary-gradient': 'linear-gradient(135deg, #7C7CFF 0%, #6464E0 100%)', // Updated
+        'saas-secondary-gradient': 'linear-gradient(135deg, #5BBF8A 0%, #4AA578 100%)', // Updated
+        'saas-charcoal-gradient': 'radial-gradient(circle at center, rgba(20,20,20,0.12) 0%, #ffffff 80%)', // New charcoal smoke gradient
+        'saas-lavender-gradient': 'radial-gradient(circle at center, rgba(20,20,20,0.12) 0%, #ffffff 80%)', // Updated to charcoal
+        'saas-lavender-dual-gradient': 'radial-gradient(circle at top center, rgba(20,20,20,0.12) 0%, rgba(255,255,255,0) 70%), radial-gradient(circle at bottom center, rgba(20,20,20,0.12) 0%, rgba(255,255,255,0) 70%)', // Updated to charcoal
         'space-gradient': 'linear-gradient(135deg, #0d1017 0%, #141b2d 100%)',
         'digital-glow': 'linear-gradient(135deg, rgba(39, 230, 247, 0.4) 0%, rgba(39, 230, 247, 0) 50%)',
         'digital-panel': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
@@ -177,6 +177,10 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
+        "skull-spin": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -189,6 +193,7 @@ export default {
         "fade-in": "fade-in 0.5s ease-out",
         "fade-out": "fade-out 0.3s ease-out",
         "fade-up": "fade-up 0.4s ease-out",
+        "skull-spin": "skull-spin 1.5s linear infinite",
       },
       borderRadius: {
         'xl': '24px',

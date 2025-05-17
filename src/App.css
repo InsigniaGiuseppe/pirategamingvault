@@ -44,14 +44,14 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-/* Teal glow effect */
+/* Indigo-lavender glow effect */
 .saas-glow {
-  box-shadow: 0 0 8px rgba(39, 230, 247, 0.6);
+  box-shadow: 0 0 8px rgba(124, 124, 255, 0.45);
 }
 
-/* Pink glow effect */
-.saas-glow-pink {
-  box-shadow: 0 0 8px rgba(255, 107, 203, 0.6);
+/* Sage green glow effect */
+.saas-glow-sage {
+  box-shadow: 0 0 8px rgba(91, 191, 138, 0.45);
 }
 
 /* Scroll reveal animation */
@@ -70,11 +70,25 @@
 
 /* Button hover states */
 .saas-button-primary:hover {
-  box-shadow: 0 0 8px rgba(39, 230, 247, 0.6);
+  box-shadow: 0 0 8px rgba(124, 124, 255, 0.45);
 }
 
 .saas-button-secondary:hover {
-  box-shadow: 0 0 8px rgba(255, 107, 203, 0.6);
+  box-shadow: 0 0 8px rgba(91, 191, 138, 0.45);
+}
+
+/* Skull spin animation */
+@keyframes skullSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.skull-spin {
+  animation: skullSpin 1.5s linear infinite;
 }
 
 /* Legacy styles kept for compatibility */
@@ -85,31 +99,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #27e6f7aa);
+  filter: drop-shadow(0 0 2em rgba(124, 124, 255, 0.8));
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #27e6f7aa);
+  filter: drop-shadow(0 0 2em rgba(124, 124, 255, 0.8));
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #e6ecf3;
-}
+/* ... keep existing code (remaining legacy styles) */

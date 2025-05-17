@@ -19,7 +19,7 @@ const Dashboard = () => {
   if (!isAuthenticated) return null;
   
   return (
-    <div className="min-h-screen flex flex-col bg-saas-lavender-gradient">
+    <div className="min-h-screen flex flex-col bg-saas-charcoal-gradient">
       <Navigation />
       
       <main className="flex-grow">
@@ -32,11 +32,11 @@ const Dashboard = () => {
               className="absolute inset-0 w-full h-full object-cover opacity-30"
               alt="Hero background"
             />
-            <div className="absolute inset-0 bg-saas-lavender-gradient"></div>
+            <div className="absolute inset-0 bg-saas-charcoal-gradient"></div>
             
             <div className="absolute bottom-0 left-0 p-6 md:p-12 animate-fade-up">
               <h1 className="text-4xl md:text-6xl font-bold text-saas-text-headline mb-2 font-heading">
-                Digital Gaming Vault
+                PIRATE GAMING VAULT
               </h1>
               <p className="text-xl text-saas-text-body mb-6 max-w-md">
                 Access our private collection of digital adventures
