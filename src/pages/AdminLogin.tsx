@@ -18,13 +18,15 @@ const AdminLogin = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    console.log('Attempting admin login with:', { username });
+    console.log('Attempting admin login with:', { username, password });
 
     setTimeout(() => {
       const credential = verifyCredentials(username, password);
       console.log('Credential check result:', credential);
       
-      if (credential && (credential.username === 'Dannehsbum' || credential.username === 'GIUSEPPE')) {
+      if (credential && credential.username && 
+          (credential.username.toUpperCase() === 'GIUSEPPE' || 
+           credential.username === 'Dannehsbum')) {
         // Admin login successful
         localStorage.setItem('pirateAdminLoggedIn', 'true');
         toast({
