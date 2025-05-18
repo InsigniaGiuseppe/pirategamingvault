@@ -2,10 +2,13 @@
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
-import { Tag, Info, Lock, Coins } from 'lucide-react';
+import { Tag, Info, Lock, Coins, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
+
+// Revolut payment link
+const PAYMENT_LINK = "https://checkout.revolut.com/pay/4b623f7a-5dbc-400c-9291-ff34c4258654";
 
 interface GameTileProps {
   game: Game;
@@ -25,10 +28,19 @@ const GameTile = ({ game }: GameTileProps) => {
     e.stopPropagation();
     
     if (!canAfford) {
+      // Show payment option if they don't have enough coins
       toast({
-        variant: "destructive",
         title: "Not Enough Coins",
-        description: `You need ${game.coinCost - pirateCoins} more Pirate Coins to unlock this game.`
+        description: `You can purchase more coins or subscribe to unlock games.`,
+        action: (
+          <Button 
+            size="sm"
+            onClick={() => window.open(PAYMENT_LINK, '_blank')}
+          >
+            <ExternalLink size={14} className="mr-1" />
+            Pay Now
+          </Button>
+        )
       });
       return;
     }
@@ -122,6 +134,15 @@ const GameTile = ({ game }: GameTileProps) => {
       toast({
         title: "Game Locked",
         description: `This game costs ${game.coinCost} Pirate Coins to unlock.`,
+        action: (
+          <Button 
+            size="sm"
+            onClick={() => window.open(PAYMENT_LINK, '_blank')}
+          >
+            <ExternalLink size={14} className="mr-1" />
+            Get Coins
+          </Button>
+        )
       });
     }
   };
@@ -129,39 +150,51 @@ const GameTile = ({ game }: GameTileProps) => {
   return (
     <>
       <div 
-        className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-80' : ''}`}
+        className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-90' : ''}`}
         onClick={handleGameClick}
       >
-        <div className="bg-white rounded-lg shadow-saas overflow-hidden hover:shadow-saas-hover transition-shadow duration-300">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
           <div className="relative h-full">
-            <img 
-              src={imageSource} 
-              alt={game.title}
-              className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-[0.7]' : ''} group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-200`}
-              onError={(e) => {
-                // Fall back to picsum if the image fails to load
-                const target = e.target as HTMLImageElement;
-                if (!target.src.includes('picsum.photos')) {
-                  target.src = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
-                }
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent"></div>
+            {/* Game image with conditional styling for locked games */}
+            <div className="relative">
+              <img 
+                src={imageSource} 
+                alt={game.title}
+                className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-75' : ''} transition-all duration-200`}
+                onError={(e) => {
+                  // Fall back to picsum if the image fails to load
+                  const target = e.target as HTMLImageElement;
+                  if (!target.src.includes('picsum.photos')) {
+                    target.src = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
+                  }
+                }}
+              />
+              
+              {/* Lock overlay for locked games */}
+              {!isUnlocked && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
+                  <Lock size={32} className="text-white opacity-80" />
+                </div>
+              )}
+            </div>
             
+            {/* Game title badge */}
             <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
               <Tag size={12} className="mr-1" />
               {game.title}
             </div>
             
-            {game.coinCost > 0 && !isUnlocked && (
+            {/* Coin cost badge */}
+            {game.coinCost > 0 && (
               <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
                 <Coins size={12} className="mr-1 text-yellow-500" />
                 {game.coinCost}
               </div>
             )}
             
-            <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center">
-              <span className="text-black text-sm font-medium truncate">{game.title}</span>
+            {/* Game info footer */}
+            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
+              <span className="text-white text-sm font-medium truncate">{game.title}</span>
               {!isUnlocked ? (
                 <Button 
                   onClick={handleUnlock}
@@ -174,7 +207,7 @@ const GameTile = ({ game }: GameTileProps) => {
                   <span>{isUnlocking ? '...' : 'Unlock'}</span>
                 </Button>
               ) : (
-                <div className="bg-gray-100 text-black rounded-full w-6 h-6 flex items-center justify-center">
+                <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center">
                   <Info size={14} />
                 </div>
               )}

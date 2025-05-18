@@ -6,22 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Award, Gift, Star } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Revolut payment link
+const PAYMENT_LINK = "https://checkout.revolut.com/pay/4b623f7a-5dbc-400c-9291-ff34c4258654";
+
 const SupportSection = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('premium');
 
   const handleSubscribe = (tier: string) => {
+    // Open Revolut checkout in new tab
+    window.open(PAYMENT_LINK, '_blank');
+    
     toast({
-      title: "Coming Soon",
-      description: `${tier} subscription will be available soon!`,
+      title: "Redirecting to payment",
+      description: `You'll be redirected to complete your ${tier} subscription.`,
       duration: 3000,
     });
   };
 
   const handleDonate = (amount: string) => {
+    // Open Revolut checkout in new tab
+    window.open(PAYMENT_LINK, '_blank');
+    
     toast({
-      title: "Donation System",
-      description: `Thank you for your interest! $${amount} donation will be available soon.`,
+      title: "Redirecting to payment",
+      description: `Thank you for your $${amount} donation!`,
       duration: 3000,
     });
   };

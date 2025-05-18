@@ -2,7 +2,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { games } from '@/data/games';
 import GameTile from './GameTile';
-import { ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { useState } from 'react';
 import { 
@@ -12,17 +12,27 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
+import { Button } from "./ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 const GameGrid = () => {
-  const [showAllGames, setShowAllGames] = useState(false);
   const { checkIfGameUnlocked } = useAuth();
   
-  // Filter games to show first 8 for the featured section
+  // Group games by category
+  const actionGames = games.filter(game => game.category === 'action');
+  const adventureGames = games.filter(game => game.category === 'adventure');
+  const rpgStrategyGames = games.filter(game => 
+    game.category === 'rpg' || game.category === 'strategy'
+  );
+  const otherGames = games.filter(game => 
+    !['action', 'adventure', 'rpg', 'strategy'].includes(game.category || '')
+  );
+  
+  // Create featured games section (first 8 games)
   const featuredGames = games.slice(0, 8);
   
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-4 py-8">
       {/* Featured Collection section */}
       <div className="mb-16">
         <div className="flex items-center justify-between mb-8">
@@ -30,108 +40,123 @@ const GameGrid = () => {
             <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
             <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Featured Collection</h2>
           </div>
-          <button 
-            onClick={() => setShowAllGames(!showAllGames)} 
-            className="flex items-center text-gray-500 hover:text-black transition-colors text-sm font-medium"
-          >
-            {showAllGames ? 'Hide All' : 'View All'} <ChevronRight size={16} className="ml-1" />
-          </button>
         </div>
         
-        {/* Featured Games - Horizontal Scrolling */}
-        <ScrollArea className="w-full whitespace-nowrap pb-4">
-          <div className="inline-flex gap-6 px-1">
+        {/* Featured Games - Netflix Style Carousel */}
+        <Carousel className="w-full">
+          <CarouselContent>
             {featuredGames.map((game) => (
-              <div key={game.id} className="w-[200px] inline-block">
+              <CarouselItem key={game.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
                 <GameTile game={game} />
-              </div>
+              </CarouselItem>
             ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-1">
+            <ChevronLeft className="h-4 w-4" />
+          </CarouselPrevious>
+          <CarouselNext className="right-1">
+            <ChevronRight className="h-4 w-4" />
+          </CarouselNext>
+        </Carousel>
+      </div>
+
+      {/* Game Categories - Netflix Style Layout */}
+      <div className="space-y-16">
+        {actionGames.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">Action Games</h3>
+            </div>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {actionGames.map((game) => (
+                  <CarouselItem key={game.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <GameTile game={game} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-1">
+                <ChevronLeft className="h-4 w-4" />
+              </CarouselPrevious>
+              <CarouselNext className="right-1">
+                <ChevronRight className="h-4 w-4" />
+              </CarouselNext>
+            </Carousel>
           </div>
-        </ScrollArea>
+        )}
 
-        {/* Full Game Collection (Netflix-style) - Shows when View All is clicked */}
-        {showAllGames && (
-          <div className="fixed inset-0 bg-white z-50 p-6 overflow-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">All Games</h2>
-              <button 
-                onClick={() => setShowAllGames(false)}
-                className="p-2 hover:bg-gray-100 rounded-full"
-              >
-                <X size={24} />
-              </button>
+        {adventureGames.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">Adventure Games</h3>
             </div>
-            
-            <div className="space-y-12">
-              {/* Group games by category */}
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold">Action Games</h3>
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {games.filter(game => game.category === 'action').map((game) => (
-                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
-                        <GameTile game={game} />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-1" />
-                  <CarouselNext className="right-1" />
-                </Carousel>
-              </div>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {adventureGames.map((game) => (
+                  <CarouselItem key={game.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <GameTile game={game} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-1">
+                <ChevronLeft className="h-4 w-4" />
+              </CarouselPrevious>
+              <CarouselNext className="right-1">
+                <ChevronRight className="h-4 w-4" />
+              </CarouselNext>
+            </Carousel>
+          </div>
+        )}
 
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold">Adventure Games</h3>
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {games.filter(game => game.category === 'adventure').map((game) => (
-                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
-                        <GameTile game={game} />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-1" />
-                  <CarouselNext className="right-1" />
-                </Carousel>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold">RPG & Strategy</h3>
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {games.filter(game => game.category === 'rpg' || game.category === 'strategy').map((game) => (
-                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
-                        <GameTile game={game} />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-1" />
-                  <CarouselNext className="right-1" />
-                </Carousel>
-              </div>
-
-              <div className="space-y-6">
-                <h3 className="text-xl font-semibold">Other Games</h3>
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {games.filter(game => 
-                      !['action', 'adventure', 'rpg', 'strategy'].includes(game.category || '')
-                    ).map((game) => (
-                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
-                        <GameTile game={game} />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-1" />
-                  <CarouselNext className="right-1" />
-                </Carousel>
-              </div>
+        {rpgStrategyGames.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">RPG & Strategy</h3>
             </div>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {rpgStrategyGames.map((game) => (
+                  <CarouselItem key={game.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <GameTile game={game} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-1">
+                <ChevronLeft className="h-4 w-4" />
+              </CarouselPrevious>
+              <CarouselNext className="right-1">
+                <ChevronRight className="h-4 w-4" />
+              </CarouselNext>
+            </Carousel>
+          </div>
+        )}
+
+        {otherGames.length > 0 && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold">Other Games</h3>
+            </div>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {otherGames.map((game) => (
+                  <CarouselItem key={game.id} className="basis-1/2 md:basis-1/3 lg:basis-1/4">
+                    <GameTile game={game} />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-1">
+                <ChevronLeft className="h-4 w-4" />
+              </CarouselPrevious>
+              <CarouselNext className="right-1">
+                <ChevronRight className="h-4 w-4" />
+              </CarouselNext>
+            </Carousel>
           </div>
         )}
       </div>
       
-      {/* Social proof section with left-aligned heading */}
-      <div className="mb-16">
+      {/* Social proof section */}
+      <div className="mt-24 mb-16">
         <div className="flex items-start justify-between mb-8">
           <div>
             <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">02 / Testimonials</span>

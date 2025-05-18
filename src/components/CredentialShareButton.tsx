@@ -1,9 +1,12 @@
 
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Database } from 'lucide-react';
+import { Database, ExternalLink } from 'lucide-react';
 import CredentialSharingModal from '@/components/CredentialSharingModal';
 import { useToast } from '@/hooks/use-toast';
+
+// Revolut payment link
+const PAYMENT_LINK = "https://checkout.revolut.com/pay/4b623f7a-5dbc-400c-9291-ff34c4258654";
 
 const CredentialShareButton = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +20,7 @@ const CredentialShareButton = () => {
     });
   };
 
-  // Component is now empty as we've removed the Import Credentials button
+  // Component is empty as specified in the original file
   return null;
 };
 
