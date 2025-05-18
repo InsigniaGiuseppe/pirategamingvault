@@ -17,24 +17,8 @@ const CredentialShareButton = () => {
     });
   };
 
-  return (
-    <>
-      <Button 
-        onClick={() => setIsOpen(true)}
-        variant="outline" 
-        className="flex gap-2 items-center text-xs py-1 px-3 h-auto border border-gray-300 bg-white/50"
-      >
-        <Database size={12} />
-        Import Credentials
-      </Button>
-
-      <CredentialSharingModal 
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        onImportSuccess={handleImportSuccess}
-      />
-    </>
-  );
+  // Component is now empty as we've removed the Import Credentials button
+  return null;
 };
 
 export default CredentialShareButton;

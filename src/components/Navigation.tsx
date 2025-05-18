@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Menu, User, Settings, HelpCircle, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import PirateCoinsDisplay from '@/components/PirateCoinsDisplay';
 
 const Navigation = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, currentUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!isAuthenticated) return null;
@@ -95,6 +96,14 @@ const Navigation = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* User info & coins */}
+          <div className="mr-4 hidden md:flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">{currentUser}</span>
+            </div>
+            <PirateCoinsDisplay />
+          </div>
+          
           <Button 
             variant="outline" 
             className="text-black border-2 border-black hover:bg-black hover:text-white"
@@ -119,6 +128,13 @@ const Navigation = () => {
       {mobileMenuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-200 animate-fade-in">
           <div className="container mx-auto px-4 py-4 space-y-4">
+            <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+              <div className="text-sm">
+                <div className="font-medium">{currentUser}</div>
+              </div>
+              <PirateCoinsDisplay size="small" />
+            </div>
+            
             <div className="border-b border-gray-200 pb-3">
               <p className="text-gray-500 text-sm mb-2">Products</p>
               <a href="#" className="block py-2 text-black hover:text-gray-700">Game Library</a>

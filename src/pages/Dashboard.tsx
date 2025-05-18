@@ -6,6 +6,9 @@ import { Toaster } from '@/components/ui/sonner';
 import Navigation from '@/components/Navigation';
 import GameGrid from '@/components/GameGrid';
 import Footer from '@/components/Footer';
+import SupportSection from '@/components/SupportSection';
+import EarnPirateCoins from '@/components/EarnPirateCoins';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -25,7 +28,6 @@ const Dashboard = () => {
       
       <main className="flex-grow">
         <div className="relative overflow-hidden">
-          {/* Increased hero section height by 20% */}
           <div className="h-[20vh] relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white"></div>
             
@@ -36,7 +38,6 @@ const Dashboard = () => {
             />
             <div className="absolute inset-0 bg-white"></div>
             
-            {/* Adjusted position of subtitle by reducing translate-y to avoid cutoff */}
             <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/3 p-4 md:p-8 animate-fade-up text-center">
               <div className="flex flex-col items-center">
                 <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
@@ -50,7 +51,27 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <GameGrid />
+        <div className="container mx-auto p-4">
+          <Tabs defaultValue="games" className="w-full mb-6">
+            <TabsList className="grid grid-cols-3 mb-8">
+              <TabsTrigger value="games">Games</TabsTrigger>
+              <TabsTrigger value="earn">Earn Coins</TabsTrigger>
+              <TabsTrigger value="support">Support Us</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="games">
+              <GameGrid />
+            </TabsContent>
+            
+            <TabsContent value="earn">
+              <EarnPirateCoins />
+            </TabsContent>
+            
+            <TabsContent value="support">
+              <SupportSection />
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
       <Footer />
