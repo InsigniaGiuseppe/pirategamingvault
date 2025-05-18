@@ -6,7 +6,7 @@ export interface Game {
   isPiratePun: boolean;
   coinCost: number;
   unlocked: boolean;
-  category?: string; // Adding the optional category property
+  category?: string;
 }
 
 export const games: Game[] = [
@@ -204,127 +204,262 @@ export const games: Game[] = [
   },
   {
     id: "22",
-    title: "Pirates: Legend of the Black Buccaneer",
-    imgSrc: "https://cdn.mobygames.com/covers/4212203-pirates-legend-of-the-black-buccaneer-playstation-2-front-cover.jpg",
+    title: "Call of Duty: Modern Warfare 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/5/51/Call_of_Duty_Modern_Warfare_II_Key_Art.jpg",
     isPiratePun: false,
-    coinCost: 14,
+    coinCost: 30,
     unlocked: false,
-    category: "action"
+    category: "fps"
   },
   {
     id: "23",
-    title: "Raven's Cry",
-    imgSrc: "https://upload.wikimedia.org/wikipedia/en/c/cb/Raven%27s_Cry_cover_art.jpg",
+    title: "Battlefield 2042",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/e/ec/Battlefield_2042_cover_art.jpg",
     isPiratePun: false,
-    coinCost: 21,
+    coinCost: 25,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "24",
+    title: "Apex Legends",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/d/db/Apex_legends_cover.jpg",
+    isPiratePun: false,
+    coinCost: 0,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "25",
+    title: "PUBG: Battlegrounds",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/e/e9/Playerunknown%27s_Battlegrounds_Steam_Logo.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "26",
+    title: "Halo Infinite",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/1/13/Halo_Infinite.png",
+    isPiratePun: false,
+    coinCost: 35,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "27",
+    title: "Destiny 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/0/05/Destiny_2_artwork.jpg",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "28",
+    title: "Warframe",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/b/bd/Warframe_Cover_Art.png",
+    isPiratePun: false,
+    coinCost: 0,
     unlocked: false,
     category: "action"
   },
   {
-    id: "24",
-    title: "Pirates: Tides of Fortune",
-    imgSrc: "https://www.mmogames.com/wp-content/uploads/2012/05/pirates-tides-of-fortune-logo.jpg",
+    id: "29",
+    title: "Rainbow Six Siege",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/4/47/Tom_Clancy%27s_Rainbow_Six_Siege_cover_art.jpg",
     isPiratePun: false,
-    coinCost: 23,
+    coinCost: 22,
     unlocked: false,
-    category: "strategy"
+    category: "fps"
   },
   {
-    id: "25",
-    title: "Tortuga: A Pirate's Tale",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/1728650/header.jpg",
+    id: "30",
+    title: "Escape from Tarkov",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/5/5e/Escape_from_Tarkov_cover_art.jpg",
     isPiratePun: false,
-    coinCost: 31,
+    coinCost: 40,
     unlocked: false,
-    category: "strategy"
+    category: "fps"
   },
   {
-    id: "26",
-    title: "Naval Action",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/311310/header.jpg",
+    id: "31",
+    title: "Titanfall 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/3/3b/Titanfall_2.jpg",
     isPiratePun: false,
-    coinCost: 38,
+    coinCost: 18,
     unlocked: false,
-    category: "simulation"
+    category: "fps"
   },
   {
-    id: "27",
-    title: "Blood & Gold: Caribbean!",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/413710/header.jpg",
+    id: "32",
+    title: "Far Cry 6",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/3/35/Far_cry_6_cover.jpg",
     isPiratePun: false,
-    coinCost: 17,
+    coinCost: 32,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "33",
+    title: "The Division 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/a/af/The_Division_2_art.jpg",
+    isPiratePun: false,
+    coinCost: 24,
+    unlocked: false,
+    category: "action"
+  },
+  {
+    id: "34",
+    title: "Metro Exodus",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/a/af/Metro_exodus_cover.jpeg",
+    isPiratePun: false,
+    coinCost: 26,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "35",
+    title: "Valorant",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/commons/f/fc/Valorant_logo_-_pink_color_version.svg",
+    isPiratePun: false,
+    coinCost: 0,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "36",
+    title: "CS:GO",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/6/6e/CS2_Cover_Art.jpg",
+    isPiratePun: false,
+    coinCost: 0,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "37",
+    title: "Payday 3",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/9/9e/Payday_3_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 28,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "38",
+    title: "Ghost Recon: Wildlands",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/b/b9/Ghost_Recon_Wildlands_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "action"
+  },
+  {
+    id: "39",
+    title: "Hunt: Showdown",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/5/5b/Hunt_Showdown_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 30,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "40",
+    title: "Borderlands 3",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/9/91/Borderlands_3_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 25,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "41",
+    title: "Left 4 Dead 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/b/ba/Left4Dead2.jpg",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "42",
+    title: "Insurgency: Sandstorm",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/6/69/Insurgency_Sandstorm_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 18,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "43",
+    title: "Once Human",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2139460/header.jpg",
+    isPiratePun: false,
+    coinCost: 40,
+    unlocked: false,
+    category: "survival"
+  },
+  {
+    id: "44",
+    title: "Valheim",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/7/77/Valheim_2021_logo.jpg",
+    isPiratePun: false,
+    coinCost: 22,
+    unlocked: false,
+    category: "survival"
+  },
+  {
+    id: "45",
+    title: "Rust",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg",
+    isPiratePun: false,
+    coinCost: 28,
+    unlocked: false,
+    category: "survival"
+  },
+  {
+    id: "46",
+    title: "Baldur's Gate 3",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/b/b2/Baldurs_Gate_3_cover_art.jpg",
+    isPiratePun: false,
+    coinCost: 45,
     unlocked: false,
     category: "rpg"
   },
   {
-    id: "28",
-    title: "Abandon Ship",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/551860/header.jpg",
+    id: "47",
+    title: "Minecraft",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/5/51/Minecraft_cover.png",
     isPiratePun: false,
-    coinCost: 29,
+    coinCost: 20,
     unlocked: false,
-    category: "adventure"
+    category: "sandbox"
   },
   {
-    id: "29",
-    title: "The Pirate: Caribbean Hunt",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/512470/header.jpg",
+    id: "48",
+    title: "Elden Ring",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/5/5e/Elden_Ring_Box_art.jpg",
     isPiratePun: false,
-    coinCost: 13,
+    coinCost: 50,
     unlocked: false,
-    category: "simulation"
+    category: "rpg"
   },
   {
-    id: "30",
-    title: "Salt 2: Shores of Gold",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/1284100/header.jpg",
-    isPiratePun: false,
-    coinCost: 27,
-    unlocked: false,
-    category: "adventure"
-  },
-  {
-    id: "31",
-    title: "Corsairs Legacy",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/1546740/header.jpg",
+    id: "49",
+    title: "Cyberpunk 2077",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/9/9f/Cyberpunk_2077_box_art.jpg",
     isPiratePun: false,
     coinCost: 40,
     unlocked: false,
-    category: "action"
+    category: "rpg"
   },
   {
-    id: "32",
-    title: "Pirates of Black Cove",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/49330/header.jpg",
+    id: "50",
+    title: "Red Dead Redemption 2",
+    imgSrc: "https://upload.wikimedia.org/wikipedia/en/4/44/Red_Dead_Redemption_II.jpg",
     isPiratePun: false,
-    coinCost: 11,
-    unlocked: false,
-    category: "strategy"
-  },
-  {
-    id: "33",
-    title: "Freebooter",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/1719460/header.jpg",
-    isPiratePun: false,
-    coinCost: 33,
-    unlocked: false,
-    category: "adventure"
-  },
-  {
-    id: "34",
-    title: "Port of Call",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/1783340/header.jpg",
-    isPiratePun: false,
-    coinCost: 36,
-    unlocked: false,
-    category: "simulation"
-  },
-  {
-    id: "35",
-    title: "Buccaneer: The Pursuit of Infamy",
-    imgSrc: "https://cdn.akamai.steamstatic.com/steam/apps/23100/header.jpg",
-    isPiratePun: false,
-    coinCost: 18,
+    coinCost: 45,
     unlocked: false,
     category: "action"
   }

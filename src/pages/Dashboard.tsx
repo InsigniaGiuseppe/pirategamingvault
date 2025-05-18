@@ -8,7 +8,9 @@ import GameGrid from '@/components/GameGrid';
 import Footer from '@/components/Footer';
 import SupportSection from '@/components/SupportSection';
 import EarnPirateCoins from '@/components/EarnPirateCoins';
+import TransactionHistory from '@/components/TransactionHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Gamepad2, Coins, Heart, History } from 'lucide-react';
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
@@ -53,10 +55,23 @@ const Dashboard = () => {
         
         <div className="container mx-auto p-4">
           <Tabs defaultValue="games" className="w-full mb-6">
-            <TabsList className="grid grid-cols-3 mb-8">
-              <TabsTrigger value="games">Games</TabsTrigger>
-              <TabsTrigger value="earn">Earn Coins</TabsTrigger>
-              <TabsTrigger value="support">Support Us</TabsTrigger>
+            <TabsList className="grid grid-cols-4 mb-8">
+              <TabsTrigger value="games" className="flex items-center gap-2">
+                <Gamepad2 size={18} />
+                <span>Games</span>
+              </TabsTrigger>
+              <TabsTrigger value="earn" className="flex items-center gap-2">
+                <Coins size={18} className="text-yellow-500" />
+                <span>Earn Coins</span>
+              </TabsTrigger>
+              <TabsTrigger value="support" className="flex items-center gap-2">
+                <Heart size={18} />
+                <span>Support Us</span>
+              </TabsTrigger>
+              <TabsTrigger value="transactions" className="flex items-center gap-2">
+                <History size={18} />
+                <span>My Transactions</span>
+              </TabsTrigger>
             </TabsList>
             
             <TabsContent value="games">
@@ -69,6 +84,10 @@ const Dashboard = () => {
             
             <TabsContent value="support">
               <SupportSection />
+            </TabsContent>
+            
+            <TabsContent value="transactions">
+              <TransactionHistory />
             </TabsContent>
           </Tabs>
         </div>
