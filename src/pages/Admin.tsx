@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -58,6 +57,9 @@ const Admin = () => {
   const [coinAction, setCoinAction] = useState<'add' | 'remove'>('add');
   const [coinReason, setCoinReason] = useState<string>('');
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [isVideoManagerOpen, setIsVideoManagerOpen] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<any>(null);
+  const [videoList, setVideoList] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -74,6 +76,9 @@ const Admin = () => {
     
     // Load all transactions
     loadAllTransactions();
+    
+    // Load videos for Watch & Earn
+    loadVideos();
   }, [navigate]);
 
   const loadCredentials = () => {
@@ -112,6 +117,73 @@ const Admin = () => {
     // Sort by timestamp, newest first
     transactions.sort((a, b) => b.timestamp - a.timestamp);
     setAllTransactions(transactions);
+  };
+
+  const loadVideos = () => {
+    // Get videos from localStorage, or initialize with default values
+    const savedVideos = localStorage.getItem('watchEarnVideos');
+    if (savedVideos) {
+      try {
+        setVideoList(JSON.parse(savedVideos));
+      } catch (e) {
+        console.error('Error parsing videos', e);
+        initializeDefaultVideos();
+      }
+    } else {
+      initializeDefaultVideos();
+    }
+  };
+  
+  const initializeDefaultVideos = () => {
+    const defaultVideos = [
+      {
+        id: '1',
+        type: 'twitch',
+        title: 'Epic Boss Battle in Elden Ring',
+        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+        duration: '225', // 3min 45sec
+        durationDisplay: '3:45',
+        reward: 15,
+        url: 'https://twitch.tv/dannehsbum',
+        embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
+      },
+      {
+        id: '2',
+        type: 'youtube',
+        title: 'Ultimate Guide to Palworld',
+        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+        duration: '320', // 5min 20sec
+        durationDisplay: '5:20',
+        reward: 25,
+        url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
+        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      },
+      {
+        id: '3',
+        type: 'twitch',
+        title: 'First Look at New DLC',
+        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+        duration: '150', // 2min 30sec
+        durationDisplay: '2:30',
+        reward: 10,
+        url: 'https://twitch.tv/dannehsbum',
+        embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
+      },
+      {
+        id: '4',
+        type: 'youtube',
+        title: 'Secret Easter Eggs in Starfield',
+        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+        duration: '255', // 4min 15sec
+        durationDisplay: '4:15',
+        reward: 20,
+        url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
+        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      }
+    ];
+    
+    setVideoList(defaultVideos);
+    localStorage.setItem('watchEarnVideos', JSON.stringify(defaultVideos));
   };
 
   const handleToggleStatus = (id: string) => {
@@ -196,15 +268,15 @@ const Admin = () => {
   const handleModifyCoins = () => {
     if (!selectedUser) return;
     
-    // Get user's current coin balance
-    const currentCoins = parseInt(localStorage.getItem(`${selectedUser}_coins`) || '0');
+    // Get user's current coin balance from localStorage
+    const currentCoins = parseInt(localStorage.getItem(`pirateCoins`) || '0');
     
     // Calculate new balance
     const amount = coinAction === 'add' ? coinAmount : -coinAmount;
     const newBalance = Math.max(0, currentCoins + amount);
     
     // Update user's coin balance in localStorage
-    localStorage.setItem(`${selectedUser}_coins`, newBalance.toString());
+    localStorage.setItem(`pirateCoins`, newBalance.toString());
     
     // Add transaction record
     const transaction = {
@@ -216,11 +288,11 @@ const Admin = () => {
     };
     
     // Get existing transactions
-    const existingTransactions = JSON.parse(localStorage.getItem(`${selectedUser}_transactions`) || '[]');
+    const existingTransactions = JSON.parse(localStorage.getItem(`pirateTransactions`) || '[]');
     
     // Add new transaction
     const updatedTransactions = [...existingTransactions, transaction];
-    localStorage.setItem(`${selectedUser}_transactions`, JSON.stringify(updatedTransactions));
+    localStorage.setItem(`pirateTransactions`, JSON.stringify(updatedTransactions));
     
     // Refresh data
     loadAllTransactions();
@@ -230,6 +302,43 @@ const Admin = () => {
     toast({
       title: 'Coins Updated',
       description: `${coinAction === 'add' ? 'Added' : 'Removed'} ${coinAmount} coins ${coinAction === 'add' ? 'to' : 'from'} ${selectedUser}'s account.`,
+    });
+  };
+  
+  const handleEditVideo = (video: any) => {
+    setEditingVideo({...video});
+    setIsVideoManagerOpen(true);
+  };
+  
+  const handleSaveVideo = () => {
+    if (!editingVideo) return;
+    
+    // If it's a new video, add it to the list
+    if (!editingVideo.id) {
+      const newVideo = {
+        ...editingVideo,
+        id: crypto.randomUUID()
+      };
+      
+      const updatedVideos = [...videoList, newVideo];
+      setVideoList(updatedVideos);
+      localStorage.setItem('watchEarnVideos', JSON.stringify(updatedVideos));
+    } else {
+      // Update existing video
+      const updatedVideos = videoList.map(video => 
+        video.id === editingVideo.id ? editingVideo : video
+      );
+      
+      setVideoList(updatedVideos);
+      localStorage.setItem('watchEarnVideos', JSON.stringify(updatedVideos));
+    }
+    
+    // Close dialog and notify
+    setIsVideoManagerOpen(false);
+    setEditingVideo(null);
+    toast({
+      title: 'Video Updated',
+      description: 'The video has been updated successfully.',
     });
   };
 
@@ -284,6 +393,7 @@ const Admin = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="credentials">User Credentials</TabsTrigger>
             <TabsTrigger value="transactions">Transaction History</TabsTrigger>
+            <TabsTrigger value="videos">Watch & Earn Videos</TabsTrigger>
           </TabsList>
           
           <TabsContent value="credentials">
@@ -455,6 +565,68 @@ const Admin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+          
+          <TabsContent value="videos">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-bold">Watch & Earn Videos</h2>
+                  <Button 
+                    onClick={() => {
+                      setEditingVideo({
+                        type: 'youtube',
+                        title: '',
+                        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+                        duration: '180',
+                        durationDisplay: '3:00',
+                        reward: 15,
+                        url: '',
+                        embedUrl: ''
+                      });
+                      setIsVideoManagerOpen(true);
+                    }}
+                    className="bg-white text-black border-2 border-black hover:bg-black hover:text-white"
+                  >
+                    <Plus size={18} className="mr-2" />
+                    Add New Video
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {videoList.map(video => (
+                    <Card key={video.id} className="overflow-hidden">
+                      <div className="relative h-36">
+                        <img 
+                          src={video.thumbnail} 
+                          alt={video.title} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                          {video.durationDisplay}
+                        </div>
+                        <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
+                          {video.type === 'twitch' ? 'Twitch' : 'YouTube'}
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium mb-1 line-clamp-1">{video.title}</h3>
+                        <div className="flex items-center text-sm text-gray-600 mb-3">
+                          <Coins size={14} className="text-yellow-500 mr-1" />
+                          <span>{video.reward} coins</span>
+                        </div>
+                        <Button 
+                          onClick={() => handleEditVideo(video)}
+                          className="w-full bg-white border text-black hover:bg-gray-50"
+                        >
+                          Edit Video
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -528,6 +700,137 @@ const Admin = () => {
             >
               <Coins size={16} className="mr-2" />
               Confirm {coinAction === 'add' ? 'Add' : 'Remove'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* New Dialog for Video Management */}
+      <Dialog open={isVideoManagerOpen} onOpenChange={setIsVideoManagerOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingVideo && editingVideo.id ? 'Edit Video' : 'Add New Video'}</DialogTitle>
+            <DialogDescription>
+              Update the details for this Watch & Earn video.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingVideo && (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="video-title">Title</Label>
+                <Input
+                  id="video-title"
+                  value={editingVideo.title}
+                  onChange={(e) => setEditingVideo({...editingVideo, title: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="video-type">Video Type</Label>
+                <select
+                  id="video-type"
+                  value={editingVideo.type}
+                  onChange={(e) => setEditingVideo({...editingVideo, type: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="youtube">YouTube</option>
+                  <option value="twitch">Twitch</option>
+                </select>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="video-url">Video URL</Label>
+                <Input
+                  id="video-url"
+                  value={editingVideo.url}
+                  onChange={(e) => {
+                    const url = e.target.value;
+                    let embedUrl = '';
+                    
+                    // Auto-generate embed URL based on video type and URL
+                    if (editingVideo.type === 'youtube') {
+                      const videoId = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|$)/)?.[1];
+                      if (videoId) {
+                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                      }
+                    } else if (editingVideo.type === 'twitch') {
+                      const channelName = url.split('/').pop();
+                      if (channelName) {
+                        embedUrl = `https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}`;
+                      }
+                    }
+                    
+                    setEditingVideo({
+                      ...editingVideo, 
+                      url,
+                      embedUrl: embedUrl || editingVideo.embedUrl
+                    });
+                  }}
+                  placeholder={editingVideo.type === 'youtube' ? 'https://youtube.com/watch?v=VIDEO_ID' : 'https://twitch.tv/username'}
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="video-embed">Embed URL (auto-generated)</Label>
+                <Input
+                  id="video-embed"
+                  value={editingVideo.embedUrl}
+                  onChange={(e) => setEditingVideo({...editingVideo, embedUrl: e.target.value})}
+                  placeholder={editingVideo.type === 'youtube' ? 'https://www.youtube.com/embed/VIDEO_ID' : 'https://player.twitch.tv/?channel=username&parent=yourdomain.com'}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="video-duration">Duration (seconds)</Label>
+                  <Input
+                    id="video-duration"
+                    type="number"
+                    value={editingVideo.duration}
+                    onChange={(e) => {
+                      const duration = parseInt(e.target.value) || 0;
+                      const minutes = Math.floor(duration / 60);
+                      const seconds = duration % 60;
+                      const durationDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                      
+                      setEditingVideo({
+                        ...editingVideo, 
+                        duration: e.target.value,
+                        durationDisplay
+                      });
+                    }}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="video-reward">Coin Reward</Label>
+                  <Input
+                    id="video-reward"
+                    type="number"
+                    value={editingVideo.reward}
+                    onChange={(e) => setEditingVideo({...editingVideo, reward: parseInt(e.target.value) || 0})}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="video-thumbnail">Thumbnail URL</Label>
+                <Input
+                  id="video-thumbnail"
+                  value={editingVideo.thumbnail}
+                  onChange={(e) => setEditingVideo({...editingVideo, thumbnail: e.target.value})}
+                />
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsVideoManagerOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveVideo}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

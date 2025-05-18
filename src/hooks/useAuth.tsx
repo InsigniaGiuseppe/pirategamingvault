@@ -41,29 +41,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Check if user is logged in from localStorage
     const loggedIn = localStorage.getItem('pirateLoggedIn') === 'true';
     const username = localStorage.getItem('pirateUsername');
-    const coins = localStorage.getItem('pirateCoins');
-    const savedTransactions = localStorage.getItem('pirateTransactions');
-    const savedUnlockedGames = localStorage.getItem('unlockedGames');
     
-    setIsAuthenticated(loggedIn);
-    setCurrentUser(username);
-    setPirateCoins(coins ? parseInt(coins) : 0);
-    
-    if (savedTransactions) {
-      try {
-        setTransactions(JSON.parse(savedTransactions));
-      } catch (e) {
-        console.error('Error parsing transactions', e);
-        setTransactions([]);
+    if (loggedIn && username) {
+      setIsAuthenticated(loggedIn);
+      setCurrentUser(username);
+      
+      // Load user's coin balance
+      const coins = localStorage.getItem('pirateCoins');
+      setPirateCoins(coins ? parseInt(coins) : 0);
+      
+      // Load user's transaction history
+      const savedTransactions = localStorage.getItem('pirateTransactions');
+      if (savedTransactions) {
+        try {
+          setTransactions(JSON.parse(savedTransactions));
+        } catch (e) {
+          console.error('Error parsing transactions', e);
+          setTransactions([]);
+        }
       }
-    }
-    
-    if (savedUnlockedGames) {
-      try {
-        setUnlockedGames(JSON.parse(savedUnlockedGames));
-      } catch (e) {
-        console.error('Error parsing unlocked games', e);
-        setUnlockedGames([]);
+      
+      // Load user's unlocked games
+      const savedUnlockedGames = localStorage.getItem('unlockedGames');
+      if (savedUnlockedGames) {
+        try {
+          setUnlockedGames(JSON.parse(savedUnlockedGames));
+        } catch (e) {
+          console.error('Error parsing unlocked games', e);
+          setUnlockedGames(['1', '2', '3', '4']); // Default to first 4 games
+        }
+      } else {
+        setUnlockedGames(['1', '2', '3', '4']); // Default to first 4 games
       }
     }
   }, []);
@@ -75,29 +83,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (credential) {
       localStorage.setItem('pirateLoggedIn', 'true');
       localStorage.setItem('pirateUsername', username);
-      localStorage.setItem('pirateCoins', '50'); // Start with 50 coins for new users
+      
+      // Initialize or load coin balance
+      const existingCoins = localStorage.getItem('pirateCoins');
+      if (!existingCoins) {
+        localStorage.setItem('pirateCoins', '50'); // Start with 50 coins for new users
+        setPirateCoins(50);
+      } else {
+        setPirateCoins(parseInt(existingCoins));
+      }
+      
       setIsAuthenticated(true);
       setCurrentUser(username);
-      setPirateCoins(50);
       
-      // Initialize empty arrays
-      setTransactions([{
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        amount: 50,
-        description: 'Welcome bonus',
-        type: 'admin'
-      }]);
-      localStorage.setItem('pirateTransactions', JSON.stringify([{
-        id: crypto.randomUUID(),
-        timestamp: Date.now(),
-        amount: 50,
-        description: 'Welcome bonus',
-        type: 'admin'
-      }]));
+      // Initialize or load transaction history
+      const existingTransactions = localStorage.getItem('pirateTransactions');
+      if (!existingTransactions) {
+        const initialTransaction = [{
+          id: crypto.randomUUID(),
+          timestamp: Date.now(),
+          amount: 50,
+          description: 'Welcome bonus',
+          type: 'admin'
+        }];
+        setTransactions(initialTransaction);
+        localStorage.setItem('pirateTransactions', JSON.stringify(initialTransaction));
+      } else {
+        try {
+          setTransactions(JSON.parse(existingTransactions));
+        } catch (e) {
+          console.error('Error parsing transactions', e);
+          setTransactions([]);
+        }
+      }
       
-      setUnlockedGames(['1', '2', '3', '4']); // First 4 games are free
-      localStorage.setItem('unlockedGames', JSON.stringify(['1', '2', '3', '4']));
+      // Initialize or load unlocked games
+      const existingUnlockedGames = localStorage.getItem('unlockedGames');
+      if (!existingUnlockedGames) {
+        setUnlockedGames(['1', '2', '3', '4']); // First 4 games are free
+        localStorage.setItem('unlockedGames', JSON.stringify(['1', '2', '3', '4']));
+      } else {
+        try {
+          setUnlockedGames(JSON.parse(existingUnlockedGames));
+        } catch (e) {
+          console.error('Error parsing unlocked games', e);
+          setUnlockedGames(['1', '2', '3', '4']);
+        }
+      }
       
       navigate('/dashboard');
     } else {
@@ -145,8 +177,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     localStorage.removeItem('pirateLoggedIn');
-    localStorage.removeItem('pirateUsername');
-    localStorage.removeItem('pirateCoins');
+    // We won't remove the other items so they persist between sessions
     setIsAuthenticated(false);
     setCurrentUser(null);
     setPirateCoins(0);

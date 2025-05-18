@@ -1,6 +1,6 @@
 
-import { useState, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useRef, useEffect } from 'react';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Twitch, Youtube, Clock, Coins, Play, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,61 +19,87 @@ interface VideoItem {
   embedUrl: string;
 }
 
-const SAMPLE_VIDEOS: VideoItem[] = [
-  {
-    id: '1',
-    type: 'twitch',
-    title: 'Epic Boss Battle in Elden Ring',
-    thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-    duration: '225', // 3min 45sec
-    durationDisplay: '3:45',
-    reward: 15,
-    url: 'https://twitch.tv/dannehsbum',
-    embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-  },
-  {
-    id: '2',
-    type: 'youtube',
-    title: 'Ultimate Guide to Palworld',
-    thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-    duration: '320', // 5min 20sec
-    durationDisplay: '5:20',
-    reward: 25,
-    url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-  },
-  {
-    id: '3',
-    type: 'twitch',
-    title: 'First Look at New DLC',
-    thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-    duration: '150', // 2min 30sec
-    durationDisplay: '2:30',
-    reward: 10,
-    url: 'https://twitch.tv/dannehsbum',
-    embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-  },
-  {
-    id: '4',
-    type: 'youtube',
-    title: 'Secret Easter Eggs in Starfield',
-    thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-    duration: '255', // 4min 15sec
-    durationDisplay: '4:15',
-    reward: 20,
-    url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-    embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-  }
-];
-
 const EarnPirateCoins = () => {
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
   const [activeVideo, setActiveVideo] = useState<VideoItem | null>(null);
   const [watchProgress, setWatchProgress] = useState<number>(0);
   const [isWatching, setIsWatching] = useState<boolean>(false);
-  const { addPirateCoins } = useAuth();
+  const [videos, setVideos] = useState<VideoItem[]>([]);
+  const { addPirateCoins, currentUser } = useAuth();
   const { toast } = useToast();
   const progressInterval = useRef<number | null>(null);
+
+  useEffect(() => {
+    // Load videos from localStorage
+    const savedVideos = localStorage.getItem('watchEarnVideos');
+    if (savedVideos) {
+      try {
+        setVideos(JSON.parse(savedVideos));
+      } catch (e) {
+        console.error('Error parsing videos', e);
+        // Use default videos if there's an error
+        setVideos([
+          {
+            id: '1',
+            type: 'twitch',
+            title: 'Epic Boss Battle in Elden Ring',
+            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+            duration: '225', // 3min 45sec
+            durationDisplay: '3:45',
+            reward: 15,
+            url: 'https://twitch.tv/dannehsbum',
+            embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
+          },
+          {
+            id: '2',
+            type: 'youtube',
+            title: 'Ultimate Guide to Palworld',
+            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+            duration: '320', // 5min 20sec
+            durationDisplay: '5:20',
+            reward: 25,
+            url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
+            embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+          },
+          {
+            id: '3',
+            type: 'twitch',
+            title: 'First Look at New DLC',
+            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+            duration: '150', // 2min 30sec
+            durationDisplay: '2:30',
+            reward: 10,
+            url: 'https://twitch.tv/dannehsbum',
+            embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
+          },
+          {
+            id: '4',
+            type: 'youtube',
+            title: 'Secret Easter Eggs in Starfield',
+            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+            duration: '255', // 4min 15sec
+            durationDisplay: '4:15',
+            reward: 20,
+            url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
+            embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+          }
+        ]);
+      }
+    }
+    
+    // Load watched videos from localStorage for the current user
+    if (currentUser) {
+      const watchedVideosStr = localStorage.getItem(`${currentUser}_watchedVideos`);
+      if (watchedVideosStr) {
+        try {
+          const watchedIds = JSON.parse(watchedVideosStr);
+          setWatchedVideos(new Set(watchedIds));
+        } catch (e) {
+          console.error('Error parsing watched videos', e);
+        }
+      }
+    }
+  }, [currentUser]);
 
   // Handle starting to watch video
   const handleWatchVideo = (video: VideoItem) => {
@@ -118,12 +144,19 @@ const EarnPirateCoins = () => {
   // Mark video as complete and award coins
   const completeVideo = (video: VideoItem) => {
     if (!watchedVideos.has(video.id)) {
-      addPirateCoins(video.reward);
+      // Add pirate coins
+      addPirateCoins(video.reward, `Watched ${video.title}`);
       
-      // Update watched videos list
+      // Update watched videos list in local state
       const newWatched = new Set(watchedVideos);
       newWatched.add(video.id);
       setWatchedVideos(newWatched);
+      
+      // Save watched videos to localStorage
+      if (currentUser) {
+        const watchedArray = Array.from(newWatched);
+        localStorage.setItem(`${currentUser}_watchedVideos`, JSON.stringify(watchedArray));
+      }
       
       // Show success message
       toast({
@@ -199,7 +232,7 @@ const EarnPirateCoins = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {SAMPLE_VIDEOS.map((video) => (
+          {videos.map((video) => (
             <Card key={video.id} className="overflow-hidden bg-white shadow-saas">
               <div className="relative">
                 <img 

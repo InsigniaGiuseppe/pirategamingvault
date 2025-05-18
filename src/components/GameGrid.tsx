@@ -2,10 +2,25 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { games } from '@/data/games';
 import GameTile from './GameTile';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { useState } from 'react';
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+import { useAuth } from "@/hooks/useAuth";
 
 const GameGrid = () => {
+  const [showAllGames, setShowAllGames] = useState(false);
+  const { checkIfGameUnlocked } = useAuth();
+  
+  // Filter games to show first 8 for the featured section
+  const featuredGames = games.slice(0, 8);
+  
   return (
     <div className="container mx-auto px-4 py-12">
       {/* Featured Collection section */}
@@ -15,20 +30,104 @@ const GameGrid = () => {
             <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
             <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Featured Collection</h2>
           </div>
-          <a href="#" className="flex items-center text-gray-500 hover:text-black transition-colors text-sm font-medium">
-            View all <ChevronRight size={16} className="ml-1" />
-          </a>
+          <button 
+            onClick={() => setShowAllGames(!showAllGames)} 
+            className="flex items-center text-gray-500 hover:text-black transition-colors text-sm font-medium"
+          >
+            {showAllGames ? 'Hide All' : 'View All'} <ChevronRight size={16} className="ml-1" />
+          </button>
         </div>
         
+        {/* Featured Games - Horizontal Scrolling */}
         <ScrollArea className="w-full whitespace-nowrap pb-4">
           <div className="inline-flex gap-6 px-1">
-            {games.map((game) => (
+            {featuredGames.map((game) => (
               <div key={game.id} className="w-[200px] inline-block">
                 <GameTile game={game} />
               </div>
             ))}
           </div>
         </ScrollArea>
+
+        {/* Full Game Collection (Netflix-style) - Shows when View All is clicked */}
+        {showAllGames && (
+          <div className="fixed inset-0 bg-white z-50 p-6 overflow-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">All Games</h2>
+              <button 
+                onClick={() => setShowAllGames(false)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-12">
+              {/* Group games by category */}
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold">Action Games</h3>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {games.filter(game => game.category === 'action').map((game) => (
+                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
+                        <GameTile game={game} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-1" />
+                  <CarouselNext className="right-1" />
+                </Carousel>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold">Adventure Games</h3>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {games.filter(game => game.category === 'adventure').map((game) => (
+                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
+                        <GameTile game={game} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-1" />
+                  <CarouselNext className="right-1" />
+                </Carousel>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold">RPG & Strategy</h3>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {games.filter(game => game.category === 'rpg' || game.category === 'strategy').map((game) => (
+                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
+                        <GameTile game={game} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-1" />
+                  <CarouselNext className="right-1" />
+                </Carousel>
+              </div>
+
+              <div className="space-y-6">
+                <h3 className="text-xl font-semibold">Other Games</h3>
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {games.filter(game => 
+                      !['action', 'adventure', 'rpg', 'strategy'].includes(game.category || '')
+                    ).map((game) => (
+                      <CarouselItem key={game.id} className="basis-1/4 md:basis-1/5 lg:basis-1/6">
+                        <GameTile game={game} />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-1" />
+                  <CarouselNext className="right-1" />
+                </Carousel>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Social proof section with left-aligned heading */}
