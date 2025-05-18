@@ -1,7 +1,11 @@
+
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
-import { Tag, Info } from 'lucide-react';
+import { Tag, Info, Lock, Coins } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from './ui/button';
 
 interface GameTileProps {
   game: Game;
@@ -9,6 +13,57 @@ interface GameTileProps {
 
 const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const { pirateCoins, addPirateCoins } = useAuth();
+  const { toast } = useToast();
+  
+  // Check if user can afford to unlock this game
+  const canAfford = pirateCoins >= game.coinCost;
+  
+  // Function to handle game unlocking with coins
+  const handleUnlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!canAfford) {
+      toast({
+        variant: "destructive",
+        title: "Not Enough Coins",
+        description: `You need ${game.coinCost - pirateCoins} more Pirate Coins to unlock this game.`
+      });
+      return;
+    }
+    
+    setIsUnlocking(true);
+    
+    // Simulate unlock process
+    setTimeout(() => {
+      // Deduct coins
+      addPirateCoins(-game.coinCost);
+      
+      // Update local storage to mark this game as unlocked
+      const unlockedGames = JSON.parse(localStorage.getItem('unlockedGames') || '[]');
+      unlockedGames.push(game.id);
+      localStorage.setItem('unlockedGames', JSON.stringify(unlockedGames));
+      
+      // Update UI
+      game.unlocked = true;
+      setIsUnlocking(false);
+      
+      toast({
+        title: "Game Unlocked!",
+        description: `You've successfully unlocked ${game.title}.`
+      });
+    }, 1000);
+  };
+  
+  // Check if this game is unlocked in local storage
+  const checkIfUnlocked = () => {
+    if (game.coinCost === 0) return true; // Free games are always unlocked
+    const unlockedGames = JSON.parse(localStorage.getItem('unlockedGames') || '[]');
+    return game.unlocked || unlockedGames.includes(game.id);
+  };
+  
+  const isUnlocked = checkIfUnlocked();
 
   // Updated map of game titles to their corresponding image sources
   const gameImageMap: { [key: string]: string } = {
@@ -60,18 +115,29 @@ const GameTile = ({ game }: GameTileProps) => {
   // Get the appropriate image source
   const imageSource = getImageSource(game);
 
+  const handleGameClick = () => {
+    if (isUnlocked) {
+      setShowModal(true);
+    } else {
+      toast({
+        title: "Game Locked",
+        description: `This game costs ${game.coinCost} Pirate Coins to unlock.`,
+      });
+    }
+  };
+
   return (
     <>
       <div 
-        className="relative cursor-pointer group transition-transform duration-200 hover:scale-105"
-        onClick={() => setShowModal(true)}
+        className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-80' : ''}`}
+        onClick={handleGameClick}
       >
         <div className="bg-white rounded-lg shadow-saas overflow-hidden hover:shadow-saas-hover transition-shadow duration-300">
           <div className="relative h-full">
             <img 
               src={imageSource} 
               alt={game.title}
-              className="w-full h-full aspect-[16/9] object-cover rounded-t-lg grayscale brightness-[0.7] group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-200"
+              className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-[0.7]' : ''} group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-200`}
               onError={(e) => {
                 // Fall back to picsum if the image fails to load
                 const target = e.target as HTMLImageElement;
@@ -87,11 +153,31 @@ const GameTile = ({ game }: GameTileProps) => {
               {game.title}
             </div>
             
+            {game.coinCost > 0 && !isUnlocked && (
+              <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
+                <Coins size={12} className="mr-1 text-yellow-500" />
+                {game.coinCost}
+              </div>
+            )}
+            
             <div className="absolute bottom-0 left-0 right-0 p-3 flex justify-between items-center">
               <span className="text-black text-sm font-medium truncate">{game.title}</span>
-              <div className="bg-gray-100 text-black rounded-full w-6 h-6 flex items-center justify-center">
-                <Info size={14} />
-              </div>
+              {!isUnlocked ? (
+                <Button 
+                  onClick={handleUnlock}
+                  size="sm"
+                  variant="outline"
+                  disabled={!canAfford || isUnlocking}
+                  className="h-7 rounded-full px-2 flex items-center gap-1 bg-white/90 border-yellow-500 text-black"
+                >
+                  <Lock size={12} className="text-yellow-500" />
+                  <span>{isUnlocking ? '...' : 'Unlock'}</span>
+                </Button>
+              ) : (
+                <div className="bg-gray-100 text-black rounded-full w-6 h-6 flex items-center justify-center">
+                  <Info size={14} />
+                </div>
+              )}
             </div>
           </div>
         </div>

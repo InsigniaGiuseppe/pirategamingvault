@@ -1,4 +1,5 @@
 
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { games } from '@/data/games';
 import GameTile from './GameTile';
 import { ChevronRight } from 'lucide-react';
@@ -19,11 +20,15 @@ const GameGrid = () => {
           </a>
         </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {games.map((game) => (
-            <GameTile key={game.id} game={game} />
-          ))}
-        </div>
+        <ScrollArea className="w-full whitespace-nowrap pb-4">
+          <div className="inline-flex gap-6 px-1">
+            {games.map((game) => (
+              <div key={game.id} className="w-[200px] inline-block">
+                <GameTile game={game} />
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
       
       {/* Social proof section with left-aligned heading */}

@@ -1,12 +1,14 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { Coins } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PirateCoinsDisplayProps {
   size?: "small" | "medium" | "large";
+  showTooltip?: boolean;
 }
 
-const PirateCoinsDisplay = ({ size = "medium" }: PirateCoinsDisplayProps) => {
+const PirateCoinsDisplay = ({ size = "medium", showTooltip = true }: PirateCoinsDisplayProps) => {
   const { pirateCoins } = useAuth();
   
   const containerClasses = {
@@ -20,13 +22,30 @@ const PirateCoinsDisplay = ({ size = "medium" }: PirateCoinsDisplayProps) => {
     medium: 16,
     large: 20
   };
-  
-  return (
-    <div className={containerClasses[size]}>
+
+  const displayElement = (
+    <div className={`${containerClasses[size]} hover:scale-105 transition-transform`}>
       <Coins size={iconSizes[size]} className="text-yellow-500" />
       <span className="font-medium">{pirateCoins}</span>
     </div>
   );
+  
+  if (showTooltip) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {displayElement}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Your Pirate Coin balance</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+  
+  return displayElement;
 };
 
 export default PirateCoinsDisplay;
