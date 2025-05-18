@@ -1,4 +1,3 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { verifyCredentials } from '@/services/credentialService';
@@ -104,7 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           timestamp: Date.now(),
           amount: 50,
           description: 'Welcome bonus',
-          type: 'admin'
+          type: 'admin' as const
         }];
         setTransactions(initialTransaction);
         localStorage.setItem('pirateTransactions', JSON.stringify(initialTransaction));
@@ -189,13 +188,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setPirateCoins(newTotal);
     localStorage.setItem('pirateCoins', newTotal.toString());
     
-    // Add transaction record
+    // Add transaction record with proper type assertion
+    const transactionType: 'earn' | 'spend' | 'admin' = 
+      amount > 0 
+        ? (description.includes('admin') ? 'admin' : 'earn') 
+        : 'spend';
+    
     const transaction: Transaction = {
       id: crypto.randomUUID(),
       timestamp: Date.now(),
       amount: amount,
       description: description || (amount > 0 ? 'Earned coins' : 'Spent coins'),
-      type: amount > 0 ? (description.includes('admin') ? 'admin' : 'earn') : 'spend'
+      type: transactionType
     };
     
     const updatedTransactions = [...transactions, transaction];

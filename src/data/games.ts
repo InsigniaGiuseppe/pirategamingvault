@@ -6,6 +6,7 @@ export interface Game {
   isPiratePun: boolean;
   coinCost: number;
   unlocked: boolean;
+  category?: string; // Adding the optional category property
 }
 
 export const games: Game[] = [
