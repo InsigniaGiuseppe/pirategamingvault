@@ -15,7 +15,13 @@ export interface Credential {
 const initializeCredStore = (): Credential[] => {
   const existingStore = localStorage.getItem('pirateCreds');
   if (existingStore) {
-    return JSON.parse(existingStore);
+    try {
+      return JSON.parse(existingStore);
+    } catch (error) {
+      console.error('Error parsing credentials from localStorage:', error);
+      // If the stored data is corrupted, start fresh
+      localStorage.removeItem('pirateCreds');
+    }
   }
   
   // Create initial admin accounts
@@ -109,6 +115,8 @@ export const addCredential = (username: string, password: string, authCode?: str
   
   creds.push(newCredential);
   localStorage.setItem('pirateCreds', JSON.stringify(creds));
+  console.log('Added new credential:', newCredential);
+  console.log('Updated credentials list:', creds);
   
   return newCredential;
 };
@@ -163,13 +171,13 @@ export const exportCredentialsAsCSV = (): string => {
   return headers + rows;
 };
 
-// NEW: Export credentials as JSON
+// Export credentials as JSON
 export const exportCredentialsAsJSON = (): string => {
   const creds = getCredentials();
   return JSON.stringify(creds, null, 2);
 };
 
-// NEW: Import credentials from JSON
+// Import credentials from JSON
 export const importCredentialsFromJSON = (jsonString: string): boolean => {
   try {
     const importedCreds = JSON.parse(jsonString);

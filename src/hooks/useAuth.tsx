@@ -1,6 +1,7 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { verifyCredentials } from '@/services/credentialService';
+import { verifyCredentials, addCredential } from '@/services/credentialService';
 import { useToast } from '@/hooks/use-toast';
 
 interface Transaction {
@@ -142,8 +143,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = (username: string, password: string) => {
     try {
-      // Check if username already exists
+      // Check if username exists by attempting to verify credentials
       const existingCred = verifyCredentials(username, password);
+      
       if (existingCred) {
         toast({
           variant: "destructive",
@@ -153,19 +155,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // Add new credential
-      import('@/services/credentialService').then(({ addCredential }) => {
-        addCredential(username, password);
-        
-        // Auto login after registration
-        login(username, password);
-        
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to Pirate Gaming!"
-        });
+      // Add new credential directly without dynamic import
+      const newUser = addCredential(username, password);
+      console.log('New user registered:', newUser);
+      
+      // Auto login after registration
+      login(username, password);
+      
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to Pirate Gaming!"
       });
     } catch (error) {
+      console.error('Registration error:', error);
       toast({
         variant: "destructive",
         title: "Registration Failed",
