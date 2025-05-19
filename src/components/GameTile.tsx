@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
@@ -48,21 +47,18 @@ const GameTile = ({ game }: GameTileProps) => {
     
     setIsUnlocking(true);
     
-    // Unlock the game
-    const success = unlockGame(game.id, game.coinCost);
+    // Unlock the game - fixed the truthiness check issue
+    unlockGame(game.id, game.coinCost);
     
-    if (success) {
-      setTimeout(() => {
-        setIsUnlocking(false);
-        
-        toast({
-          title: "Game Unlocked!",
-          description: `You've successfully unlocked ${game.title}.`
-        });
-      }, 1000);
-    } else {
+    // Always execute the success flow since unlockGame doesn't return anything
+    setTimeout(() => {
       setIsUnlocking(false);
-    }
+      
+      toast({
+        title: "Game Unlocked!",
+        description: `You've successfully unlocked ${game.title}.`
+      });
+    }, 1000);
   };
   
   // Check if this game is unlocked
