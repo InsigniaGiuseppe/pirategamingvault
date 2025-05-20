@@ -9,6 +9,7 @@ export interface Game {
   coinCost: number;
   category?: string;
   created_at?: string;
+  unlocked?: boolean; // Added this property to match the Game interface in games.ts
 }
 
 // Fetch all games from Supabase
@@ -29,7 +30,8 @@ export const fetchGames = async (): Promise<Game[]> => {
     imgSrc: game.img_src,
     isPiratePun: game.is_pirate_pun,
     coinCost: game.coin_cost,
-    category: game.category
+    category: game.category,
+    unlocked: ['1', '2', '3', '4'].includes(game.id) // First four games are always unlocked
   }));
 };
 

@@ -23,7 +23,13 @@ const GameGrid = () => {
     const loadGames = async () => {
       try {
         const fetchedGames = await getGames();
-        setGames(fetchedGames);
+        // Convert the games from gamesData.ts format to games.ts format
+        const formattedGames = fetchedGames.map(game => ({
+          ...game,
+          unlocked: ['1', '2', '3', '4'].includes(game.id) || false
+        })) as Game[];
+        
+        setGames(formattedGames);
       } catch (error) {
         console.error('Error loading games:', error);
       } finally {

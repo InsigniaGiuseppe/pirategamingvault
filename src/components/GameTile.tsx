@@ -48,7 +48,7 @@ const GameTile = ({ game }: GameTileProps) => {
     
     setIsUnlocking(true);
     
-    // Unlock the game using Supabase
+    // Fixed the void expression issue by storing the return value
     const success = await unlockGame(game.id, game.coinCost);
     
     setTimeout(() => {

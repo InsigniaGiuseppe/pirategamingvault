@@ -9,6 +9,7 @@ export interface Game {
   isPiratePun?: boolean;
   coinCost: number;
   category?: string;
+  unlocked?: boolean; // Added this property to match the Game interface in games.ts
 }
 
 // This function will fetch games from Supabase and fallback to local games if needed
@@ -17,7 +18,10 @@ export const getGames = async (): Promise<Game[]> => {
     const supabaseGames = await fetchGames();
     
     if (supabaseGames.length > 0) {
-      return supabaseGames;
+      return supabaseGames.map(game => ({
+        ...game,
+        unlocked: ['1', '2', '3', '4'].includes(game.id) // First four games are always unlocked
+      }));
     }
     
     // Fall back to local games with updated coin costs
