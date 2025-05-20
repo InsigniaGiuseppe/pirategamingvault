@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
@@ -23,7 +24,7 @@ const GameTile = ({ game }: GameTileProps) => {
   const canAfford = pirateCoins >= game.coinCost;
   
   // Function to handle game unlocking with coins
-  const handleUnlock = (e: React.MouseEvent) => {
+  const handleUnlock = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (!canAfford) {
@@ -47,17 +48,18 @@ const GameTile = ({ game }: GameTileProps) => {
     
     setIsUnlocking(true);
     
-    // Unlock the game - fixed the truthiness check issue
-    unlockGame(game.id, game.coinCost);
+    // Unlock the game using Supabase
+    const success = await unlockGame(game.id, game.coinCost);
     
-    // Always execute the success flow since unlockGame doesn't return anything
     setTimeout(() => {
       setIsUnlocking(false);
       
-      toast({
-        title: "Game Unlocked!",
-        description: `You've successfully unlocked ${game.title}.`
-      });
+      if (success) {
+        toast({
+          title: "Game Unlocked!",
+          description: `You've successfully unlocked ${game.title}.`
+        });
+      }
     }, 1000);
   };
   
@@ -71,8 +73,9 @@ const GameTile = ({ game }: GameTileProps) => {
       return game.imgSrc;
     }
     
-    // Fall back to Picsum with the game title as seed
-    return `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
+    // Fall back to Twitch image format based on game title
+    const gameTitleForUrl = encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '%20'));
+    return `https://static-cdn.jtvnw.net/ttv-boxart/${gameTitleForUrl}-285x380.jpg`;
   };
 
   // Get the appropriate image source

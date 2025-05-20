@@ -1,8 +1,16 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { verifyCredentials, addCredential } from '@/services/credentialService';
 import { useToast } from '@/hooks/use-toast';
+import { 
+  verifyCredentials, 
+  registerUser, 
+  getUserBalance, 
+  updateUserBalance,
+  getUserTransactions,
+  getUserUnlockedGames
+} from '@/services/userService';
+import { unlockGame, checkGameUnlocked } from '@/services/gameService';
 
 interface Transaction {
   id: string;
@@ -46,90 +54,51 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(loggedIn);
       setCurrentUser(username);
       
-      // Load user's coin balance
-      const coins = localStorage.getItem('pirateCoins');
-      setPirateCoins(coins ? parseInt(coins) : 0);
-      
-      // Load user's transaction history
-      const savedTransactions = localStorage.getItem('pirateTransactions');
-      if (savedTransactions) {
+      // Load user's coin balance from Supabase
+      const loadUserData = async () => {
         try {
-          setTransactions(JSON.parse(savedTransactions));
-        } catch (e) {
-          console.error('Error parsing transactions', e);
-          setTransactions([]);
+          // Get balance
+          const balance = await getUserBalance(username);
+          setPirateCoins(balance);
+          
+          // Get transactions
+          const userTransactions = await getUserTransactions(username);
+          setTransactions(userTransactions);
+          
+          // Get unlocked games
+          const userUnlockedGames = await getUserUnlockedGames(username);
+          setUnlockedGames(userUnlockedGames);
+        } catch (error) {
+          console.error('Error loading user data:', error);
         }
-      }
+      };
       
-      // Load user's unlocked games
-      const savedUnlockedGames = localStorage.getItem('unlockedGames');
-      if (savedUnlockedGames) {
-        try {
-          setUnlockedGames(JSON.parse(savedUnlockedGames));
-        } catch (e) {
-          console.error('Error parsing unlocked games', e);
-          setUnlockedGames(['1', '2', '3', '4']); // Default to first 4 games
-        }
-      } else {
-        setUnlockedGames(['1', '2', '3', '4']); // Default to first 4 games
-      }
+      loadUserData();
     }
   }, []);
 
-  const login = (username: string, password: string) => {
-    // Check credentials against our store
-    const credential = verifyCredentials(username, password);
+  const login = async (username: string, password: string) => {
+    // Check credentials against Supabase
+    const credential = await verifyCredentials(username, password);
     
     if (credential) {
       localStorage.setItem('pirateLoggedIn', 'true');
       localStorage.setItem('pirateUsername', username);
       
-      // Initialize or load coin balance
-      const existingCoins = localStorage.getItem('pirateCoins');
-      if (!existingCoins) {
-        localStorage.setItem('pirateCoins', '50'); // Start with 50 coins for new users
-        setPirateCoins(50);
-      } else {
-        setPirateCoins(parseInt(existingCoins));
-      }
+      // Get user's balance from Supabase
+      const balance = await getUserBalance(username);
+      setPirateCoins(balance);
       
       setIsAuthenticated(true);
       setCurrentUser(username);
       
-      // Initialize or load transaction history
-      const existingTransactions = localStorage.getItem('pirateTransactions');
-      if (!existingTransactions) {
-        const initialTransaction = [{
-          id: crypto.randomUUID(),
-          timestamp: Date.now(),
-          amount: 50,
-          description: 'Welcome bonus',
-          type: 'admin' as const
-        }];
-        setTransactions(initialTransaction);
-        localStorage.setItem('pirateTransactions', JSON.stringify(initialTransaction));
-      } else {
-        try {
-          setTransactions(JSON.parse(existingTransactions));
-        } catch (e) {
-          console.error('Error parsing transactions', e);
-          setTransactions([]);
-        }
-      }
+      // Get user transactions
+      const userTransactions = await getUserTransactions(username);
+      setTransactions(userTransactions);
       
-      // Initialize or load unlocked games
-      const existingUnlockedGames = localStorage.getItem('unlockedGames');
-      if (!existingUnlockedGames) {
-        setUnlockedGames(['1', '2', '3', '4']); // First 4 games are free
-        localStorage.setItem('unlockedGames', JSON.stringify(['1', '2', '3', '4']));
-      } else {
-        try {
-          setUnlockedGames(JSON.parse(existingUnlockedGames));
-        } catch (e) {
-          console.error('Error parsing unlocked games', e);
-          setUnlockedGames(['1', '2', '3', '4']);
-        }
-      }
+      // Get unlocked games
+      const userUnlockedGames = await getUserUnlockedGames(username);
+      setUnlockedGames(userUnlockedGames);
       
       navigate('/dashboard');
     } else {
@@ -141,26 +110,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = (username: string, password: string) => {
+  const register = async (username: string, password: string) => {
     try {
-      // Check if username exists by attempting to verify credentials
-      const existingCred = verifyCredentials(username, password);
+      // Register user with Supabase - default welcome bonus is now 10 coins
+      const newUser = await registerUser(username, password);
       
-      if (existingCred) {
+      if (!newUser) {
         toast({
           variant: "destructive",
           title: "Registration Failed",
-          description: "Username already exists. Try a different username."
+          description: "Username already exists or an error occurred. Try a different username."
         });
         return;
       }
 
-      // Add new credential directly without dynamic import
-      const newUser = addCredential(username, password);
-      console.log('New user registered:', newUser);
-      
       // Auto login after registration
-      login(username, password);
+      await login(username, password);
       
       toast({
         title: "Registration Successful",
@@ -185,31 +150,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     navigate('/');
   };
 
-  const addPirateCoins = (amount: number, description: string = '') => {
-    const newTotal = Math.max(0, pirateCoins + amount);
-    setPirateCoins(newTotal);
-    localStorage.setItem('pirateCoins', newTotal.toString());
+  const addPirateCoins = async (amount: number, description: string = '') => {
+    if (!currentUser) return;
     
-    // Add transaction record with proper type assertion
     const transactionType: 'earn' | 'spend' | 'admin' = 
       amount > 0 
         ? (description.includes('admin') ? 'admin' : 'earn') 
         : 'spend';
     
-    const transaction: Transaction = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      amount: amount,
-      description: description || (amount > 0 ? 'Earned coins' : 'Spent coins'),
-      type: transactionType
-    };
+    // Update balance in Supabase
+    const success = await updateUserBalance(currentUser, amount, description, transactionType);
     
-    const updatedTransactions = [...transactions, transaction];
-    setTransactions(updatedTransactions);
-    localStorage.setItem('pirateTransactions', JSON.stringify(updatedTransactions));
+    if (success) {
+      // Update local state
+      const newTotal = Math.max(0, pirateCoins + amount);
+      setPirateCoins(newTotal);
+      
+      // Get updated transactions list
+      const updatedTransactions = await getUserTransactions(currentUser);
+      setTransactions(updatedTransactions);
+    }
   };
 
-  const unlockGame = (gameId: string, cost: number) => {
+  const handleUnlockGame = async (gameId: string, cost: number) => {
+    if (!currentUser) return false;
+    
     // Check if user has enough coins
     if (pirateCoins < cost) {
       toast({
@@ -220,19 +185,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return false;
     }
     
-    // Deduct coins
-    addPirateCoins(-cost, `Unlocked game #${gameId}`);
+    // Unlock game with Supabase
+    const success = await unlockGame(gameId, currentUser, cost);
     
-    // Add to unlocked games
-    const updatedUnlockedGames = [...unlockedGames, gameId];
-    setUnlockedGames(updatedUnlockedGames);
-    localStorage.setItem('unlockedGames', JSON.stringify(updatedUnlockedGames));
+    if (success) {
+      // Update local coin state
+      setPirateCoins(prev => Math.max(0, prev - cost));
+      
+      // Update unlocked games list
+      const updatedGames = await getUserUnlockedGames(currentUser);
+      setUnlockedGames(updatedGames);
+      
+      // Get updated transactions list
+      const updatedTransactions = await getUserTransactions(currentUser);
+      setTransactions(updatedTransactions);
+      
+      return true;
+    }
     
-    return true;
+    return false;
   };
 
   const checkIfGameUnlocked = (gameId: string) => {
-    return unlockedGames.includes(gameId) || gameId === '1' || gameId === '2' || gameId === '3' || gameId === '4';
+    return unlockedGames.includes(gameId);
   };
 
   return (
@@ -246,7 +221,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       addPirateCoins,
       transactions,
       unlockedGames,
-      unlockGame,
+      unlockGame: handleUnlockGame,
       checkIfGameUnlocked
     }}>
       {children}

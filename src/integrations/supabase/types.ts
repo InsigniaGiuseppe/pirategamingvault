@@ -9,7 +9,137 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      credentials: {
+        Row: {
+          active: boolean | null
+          auth_code: string
+          created_at: string | null
+          id: string
+          password: string
+          username: string
+        }
+        Insert: {
+          active?: boolean | null
+          auth_code: string
+          created_at?: string | null
+          id?: string
+          password: string
+          username: string
+        }
+        Update: {
+          active?: boolean | null
+          auth_code?: string
+          created_at?: string | null
+          id?: string
+          password?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      games: {
+        Row: {
+          category: string | null
+          coin_cost: number
+          created_at: string | null
+          id: string
+          img_src: string | null
+          is_pirate_pun: boolean | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          coin_cost: number
+          created_at?: string | null
+          id: string
+          img_src?: string | null
+          is_pirate_pun?: boolean | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          coin_cost?: number
+          created_at?: string | null
+          id?: string
+          img_src?: string | null
+          is_pirate_pun?: boolean | null
+          title?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          description: string | null
+          id: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      unlocked_games: {
+        Row: {
+          game_id: string
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unlocked_games_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_balance: {
+        Row: {
+          balance: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,9 +1,8 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { games } from '@/data/games';
 import GameTile from './GameTile';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Carousel,
   CarouselContent,
@@ -12,9 +11,28 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 import { useAuth } from "@/hooks/useAuth";
+import { Game } from '@/data/games';
+import { getGames } from '@/data/gamesData';
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useAuth();
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadGames = async () => {
+      try {
+        const fetchedGames = await getGames();
+        setGames(fetchedGames);
+      } catch (error) {
+        console.error('Error loading games:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadGames();
+  }, []);
   
   // Group games by category
   const actionGames = games.filter(game => game.category === 'action');
@@ -28,6 +46,14 @@ const GameGrid = () => {
   
   // Create featured games section (first 8 games)
   const featuredGames = games.slice(0, 8);
+  
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p>Loading games...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto px-4 py-8">
