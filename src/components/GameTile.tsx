@@ -48,19 +48,28 @@ const GameTile = ({ game }: GameTileProps) => {
     
     setIsUnlocking(true);
     
-    // Fixed the void expression issue by storing the return value
-    const success = await unlockGame(game.id, game.coinCost);
-    
-    setTimeout(() => {
-      setIsUnlocking(false);
+    try {
+      // Fixed: Store the result of unlockGame and use it properly
+      const success = await unlockGame(game.id, game.coinCost);
       
-      if (success) {
-        toast({
-          title: "Game Unlocked!",
-          description: `You've successfully unlocked ${game.title}.`
-        });
-      }
-    }, 1000);
+      setTimeout(() => {
+        setIsUnlocking(false);
+        
+        if (success) {
+          toast({
+            title: "Game Unlocked!",
+            description: `You've successfully unlocked ${game.title}.`
+          });
+        }
+      }, 1000);
+    } catch (error) {
+      setIsUnlocking(false);
+      toast({
+        variant: "destructive",
+        title: "Error Unlocking Game",
+        description: "Something went wrong. Please try again."
+      });
+    }
   };
   
   // Check if this game is unlocked

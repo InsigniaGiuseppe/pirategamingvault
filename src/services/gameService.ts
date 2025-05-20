@@ -115,3 +115,9 @@ export const unlockGame = async (gameId: string, userId: string, cost: number): 
   
   return true;
 };
+
+// Add additional games to the list - this is a function to add new games if needed
+export const addGamesToDatabase = async (): Promise<void> => {
+  // This function is for development purposes
+  console.log("Adding games to database...");
+};
