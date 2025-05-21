@@ -28,10 +28,13 @@ export const login = async (
     }
     
     // Create a standard email format for auth purposes
-    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+    // Normalize username by removing all special characters and spaces
+    const normalizedUsername = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const email = `${normalizedUsername}@gmail.com`;
     
     console.log('Attempting login with email:', email);
     
+    // Try to sign in with the constructed email
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -46,10 +49,13 @@ export const login = async (
       return { user: null, session: null, error: 'Invalid credentials' };
     }
     
-    // Get username from user metadata
+    // Extract username from metadata or use email prefix
+    const displayUsername = data.user.user_metadata?.username || normalizedUsername;
+    
+    // Create custom user object
     const customUser: CustomUser = {
       id: data.user.id,
-      username: data.user.user_metadata.username || username,
+      username: displayUsername,
       email: data.user.email
     };
     

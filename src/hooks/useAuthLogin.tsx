@@ -37,34 +37,63 @@ export const useAuthLogin = () => {
       
       console.log('Login successful, fetching user data');
       
-      // Get user data
-      const balance = await getUserBalance(user.id);
-      const userTransactions = await getUserTransactions(user.id);
-      const userUnlockedGames = await getUserUnlockedGames(user.id);
-      
-      console.log('User data fetched successfully:', {
-        balance,
-        transactionsCount: userTransactions.length,
-        unlockedGames: userUnlockedGames.length
-      });
-      
-      // Update state with user data
-      if (setState) {
-        setState({
-          isAuthenticated: true,
-          currentUser: user.username,
-          userId: user.id,
-          pirateCoins: balance,
-          transactions: userTransactions,
-          unlockedGames: userUnlockedGames,
-          isLoading: false,
-          session: session,
-          user: user,
-          error: null
+      try {
+        // Get user data
+        const balance = await getUserBalance(user.id);
+        const userTransactions = await getUserTransactions(user.id);
+        const userUnlockedGames = await getUserUnlockedGames(user.id);
+        
+        console.log('User data fetched successfully:', {
+          balance,
+          transactionsCount: userTransactions.length,
+          unlockedGames: userUnlockedGames.length
         });
+        
+        // Update state with user data
+        if (setState) {
+          setState({
+            isAuthenticated: true,
+            currentUser: user.username,
+            userId: user.id,
+            pirateCoins: balance,
+            transactions: userTransactions,
+            unlockedGames: userUnlockedGames,
+            isLoading: false,
+            session: session,
+            user: user,
+            error: null
+          });
+        }
+        
+        navigate('/dashboard');
+      } catch (dataError) {
+        console.error('Error fetching user data:', dataError);
+        
+        // Even if we can't get full user data, login was successful
+        // Update state with minimal information and redirect
+        if (setState) {
+          setState({
+            isAuthenticated: true,
+            currentUser: user.username,
+            userId: user.id,
+            pirateCoins: 0, // default value
+            transactions: [],
+            unlockedGames: [],
+            isLoading: false,
+            session: session,
+            user: user,
+            error: null
+          });
+        }
+        
+        toast({
+          variant: "warning",
+          title: "Login Successful",
+          description: "Signed in, but had trouble loading your data. Some features may be limited."
+        });
+        
+        navigate('/dashboard');
       }
-      
-      navigate('/dashboard');
       
     } catch (error) {
       console.error('Login error:', error);

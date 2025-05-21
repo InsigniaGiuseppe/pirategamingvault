@@ -19,9 +19,11 @@ export const registerUser = async (
     
     console.log('Starting registration for:', username);
     
+    // Normalize username by removing all special characters and spaces
+    const normalizedUsername = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
     // Create a standard email format using gmail.com that will pass Supabase validation
-    // This is just for auth purposes and won't send actual emails
-    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+    const email = `${normalizedUsername}@gmail.com`;
     
     // First check if the username already exists in profiles
     const { data: existingProfile, error: profileError } = await supabase
@@ -65,8 +67,6 @@ export const registerUser = async (
     
     console.log('User registered successfully, database trigger will handle balance initialization');
     
-    // Return the user and session
-    // Note: The balance initialization will be handled by a database trigger
     return { 
       user: data.user, 
       session: data.session, 
@@ -74,19 +74,10 @@ export const registerUser = async (
     };
   } catch (error) {
     console.error('Unexpected error during registration:', error);
-    
-    // Log the error in the console since we don't have an error_logs table
-    console.error('Registration error:', {
-      error_type: 'registration',
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      timestamp: new Date().toISOString()
-    });
-    
     return { 
       user: null, 
       session: null, 
-      error: `Unexpected error during registration: ${error instanceof Error ? error.message : String(error)}` 
+      error: error instanceof Error ? error.message : String(error) 
     };
   }
 };

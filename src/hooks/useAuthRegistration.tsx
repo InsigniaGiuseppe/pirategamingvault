@@ -46,36 +46,67 @@ export const useAuthRegistration = () => {
 
       console.log('Registration successful, proceeding to dashboard');
       
-      // Fetch user data that was created by the trigger
-      const balance = await getUserBalance(user.id);
-      const transactions = await getUserTransactions(user.id);
-      
-      // Update state with user data
-      if (setState) {
-        setState({
-          isAuthenticated: true,
-          currentUser: user.user_metadata.username || user.email?.split('@')[0] || 'User',
-          userId: user.id,
-          pirateCoins: balance, // Get balance from database
-          transactions: transactions, // Get transactions from database
-          unlockedGames: [],
-          isLoading: false,
-          session: session,
-          user: {
-            id: user.id,
-            username: user.user_metadata.username || user.email?.split('@')[0] || 'User',
-            email: user.email || ''
-          },
-          error: null
+      try {
+        // Fetch user data that was created by the trigger
+        const balance = await getUserBalance(user.id);
+        const transactions = await getUserTransactions(user.id);
+        
+        // Update state with user data
+        if (setState) {
+          setState({
+            isAuthenticated: true,
+            currentUser: user.user_metadata?.username || username,
+            userId: user.id,
+            pirateCoins: balance,
+            transactions: transactions, 
+            unlockedGames: [],
+            isLoading: false,
+            session: session,
+            user: {
+              id: user.id,
+              username: user.user_metadata?.username || username,
+              email: user.email || ''
+            },
+            error: null
+          });
+        }
+        
+        toast({
+          title: "Registration Successful",
+          description: "Welcome to Pirate Gaming!"
         });
+        
+        navigate('/dashboard');
+      } catch (dataError) {
+        console.error('Error fetching initial user data:', dataError);
+        
+        // Even if we can't get full user data, registration was successful
+        if (setState) {
+          setState({
+            isAuthenticated: true,
+            currentUser: user.user_metadata?.username || username,
+            userId: user.id,
+            pirateCoins: 10, // Default value
+            transactions: [],
+            unlockedGames: [],
+            isLoading: false,
+            session: session,
+            user: {
+              id: user.id,
+              username: user.user_metadata?.username || username,
+              email: user.email || ''
+            },
+            error: null
+          });
+        }
+        
+        toast({
+          title: "Registration Successful",
+          description: "Welcome to Pirate Gaming!"
+        });
+        
+        navigate('/dashboard');
       }
-      
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to Pirate Gaming!"
-      });
-      
-      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       toast({

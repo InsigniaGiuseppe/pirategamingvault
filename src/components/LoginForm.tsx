@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, User, Lock, Loader2 } from 'lucide-react';
+import { LogIn, User, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,74 +19,80 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
   const [registrationInProgress, setRegistrationInProgress] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
 
+  const clearErrors = () => {
+    setFormError(null);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearErrors();
+    
     if (isLoading) return;
     
+    // Basic validation
+    if (!username.trim()) {
+      setFormError('Please enter your username');
+      return;
+    }
+    
+    if (!password) {
+      setFormError('Please enter your password');
+      return;
+    }
+    
     try {
+      console.log('Initiating login process for:', username);
       if (onLogin) {
         onLogin(username, password);
       } else {
         await login(username, password);
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "An error occurred during login. Please try again."
-      });
+      console.error('Login error in component:', error);
+      setFormError('An error occurred during login. Please try again.');
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearErrors();
+    
     if (isLoading || registrationInProgress) return;
+    
+    // Input validation - clear and detailed errors
+    if (!registerUsername.trim()) {
+      setFormError('Please enter a username');
+      return;
+    }
+    
+    if (!registerPassword) {
+      setFormError('Please enter a password');
+      return;
+    }
+    
+    if (registerPassword.length < 5) {
+      setFormError('Password must be at least 5 characters long');
+      return;
+    }
+    
+    if (registerPassword !== confirmPassword) {
+      setFormError('Passwords do not match');
+      return;
+    }
     
     try {
       // Mark registration as in progress to prevent double submissions
       setRegistrationInProgress(true);
       
-      if (registerPassword !== confirmPassword) {
-        toast({
-          variant: "destructive",
-          title: "Password Mismatch",
-          description: "Passwords do not match. Please try again."
-        });
-        return;
-      }
-      
-      // Validate inputs
-      if (!registerUsername.trim()) {
-        toast({
-          variant: "destructive",
-          title: "Invalid Username",
-          description: "Please enter a valid username."
-        });
-        return;
-      }
-      
-      if (!registerPassword || registerPassword.length < 5) {
-        toast({
-          variant: "destructive",
-          title: "Password Too Short",
-          description: "Password must be at least 5 characters long."
-        });
-        return;
-      }
-      
       console.log('Initiating registration for:', registerUsername);
       await register(registerUsername, registerPassword);
     } catch (error) {
       console.error('Registration error in component:', error);
-      toast({
-        variant: "destructive",
-        title: "Registration Failed", 
-        description: "An error occurred during registration. Please try again."
-      });
+      setFormError('An error occurred during registration. Please try again.');
     } finally {
       setRegistrationInProgress(false);
     }
@@ -107,7 +113,17 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <p className="text-gray-600">Enter your credentials or create a new account</p>
       </div>
       
-      <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+      {formError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <span>{formError}</span>
+        </div>
+      )}
+      
+      <Tabs defaultValue="login" value={activeTab} onValueChange={(val) => {
+        setActiveTab(val);
+        clearErrors();
+      }}>
         <TabsList className="grid grid-cols-2 mb-6">
           <TabsTrigger value="login">Sign In</TabsTrigger>
           <TabsTrigger value="register">Register</TabsTrigger>
@@ -124,9 +140,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   type="text"
                   placeholder="Enter your username"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    clearErrors();
+                  }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  required
                   disabled={isLoading}
                 />
               </div>
@@ -144,9 +162,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    clearErrors();
+                  }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  required
                   disabled={isLoading}
                 />
               </div>
@@ -178,9 +198,11 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   type="text"
                   placeholder="Choose a username"
                   value={registerUsername}
-                  onChange={(e) => setRegisterUsername(e.target.value)}
+                  onChange={(e) => {
+                    setRegisterUsername(e.target.value);
+                    clearErrors();
+                  }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  required
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
@@ -196,13 +218,16 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   type="password"
                   placeholder="Create a password"
                   value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
+                  onChange={(e) => {
+                    setRegisterPassword(e.target.value);
+                    clearErrors();
+                  }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   minLength={5}
-                  required
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
+              <p className="text-xs text-gray-500">Password must be at least 5 characters</p>
             </div>
             
             <div className="space-y-2">
@@ -214,10 +239,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   type="password"
                   placeholder="Confirm your password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    clearErrors();
+                  }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   minLength={5}
-                  required
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
