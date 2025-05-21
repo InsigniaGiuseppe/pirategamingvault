@@ -41,30 +41,35 @@ const Index = () => {
   const progressIntervalRef = useRef<number | null>(null);
   const messageIntervalRef = useRef<number | null>(null);
   
+  // Clear any running intervals on component unmount
+  useEffect(() => {
+    return () => {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      if (messageIntervalRef.current) {
+        clearInterval(messageIntervalRef.current);
+        messageIntervalRef.current = null;
+      }
+    };
+  }, []);
+
+  // Redirect authenticated users to dashboard
   useEffect(() => {
     if (isAuthenticated && !loading) {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate, loading]);
-  
-  useEffect(() => {
-    return () => {
-      // Cleanup intervals on unmount
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      if (messageIntervalRef.current) {
-        clearInterval(messageIntervalRef.current);
-      }
-    };
-  }, []);
 
+  // Track login attempts
   useEffect(() => {
     sessionStorage.setItem('loginAttempts', loginAttempts.toString());
   }, [loginAttempts]);
   
   const handleLogin = (email: string, password: string) => {
-    if (authLoading) return; // Prevent starting animation if auth is already loading
+    // Skip if auth is already loading to prevent duplicate processes
+    if (authLoading || loading) return;
     
     setLoginEmail(email);
     setLoginPassword(password);
@@ -74,12 +79,20 @@ const Index = () => {
     setShowDialog(false);
     
     // Message rotation logic
+    if (messageIntervalRef.current) {
+      clearInterval(messageIntervalRef.current);
+    }
+    
     const messageInterval = setInterval(() => {
       setMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
     }, 400);
     messageIntervalRef.current = messageInterval as unknown as number;
     
     // Progress bar logic
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    
     const startTime = Date.now();
     const duration = 8000; // 8 seconds total
     
@@ -97,9 +110,13 @@ const Index = () => {
         
         if (newProgress >= 100) {
           clearInterval(progressInterval);
-          clearInterval(messageInterval);
+          if (messageIntervalRef.current) {
+            clearInterval(messageIntervalRef.current);
+            messageIntervalRef.current = null;
+          }
           progressIntervalRef.current = null;
-          messageIntervalRef.current = null;
+          
+          // Call the actual login function
           login(email, password);
           setLoading(false);
         }
@@ -118,6 +135,10 @@ const Index = () => {
     if (isPaused) {
       setIsPaused(false);
       setShowConfirm(false);
+      
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
       
       const startTime = Date.now();
       // Increase duration for the final 40% to make it slower, especially the last 10%
@@ -145,6 +166,8 @@ const Index = () => {
             messageIntervalRef.current = null;
           }
           progressIntervalRef.current = null;
+          
+          // Call the actual login function
           login(loginEmail, loginPassword);
           setLoading(false);
         }

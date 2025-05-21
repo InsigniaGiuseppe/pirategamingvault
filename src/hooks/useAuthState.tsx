@@ -32,7 +32,7 @@ export const initialAuthState: AuthContextState = {
   pirateCoins: 0,
   transactions: [],
   unlockedGames: [],
-  isLoading: false,
+  isLoading: true, // Start as loading to prevent flashes of unauthenticated state
   session: null,
   user: null,
   error: null
@@ -78,6 +78,7 @@ export const useLoadAuthState = () => {
     const checkAuth = async () => {
       if (!isMounted) return;
       
+      // Set to loading state initially
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       try {
@@ -100,6 +101,7 @@ export const useLoadAuthState = () => {
         const { user, session, error } = result;
         
         if (error || !user || !session) {
+          // Not an authenticated user, but loading is complete
           setState({
             ...initialAuthState,
             isLoading: false,
@@ -133,6 +135,7 @@ export const useLoadAuthState = () => {
           
           if (!isMounted) return;
           
+          // Still authenticate the user even if we can't load all their data
           setState(prev => ({ 
             ...prev, 
             isLoading: false,

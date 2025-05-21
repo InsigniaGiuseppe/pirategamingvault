@@ -66,6 +66,7 @@ export const useAuthLogin = () => {
           });
         }
         
+        setIsProcessing(false);
         navigate('/dashboard');
       } catch (dataError) {
         console.error('Error fetching user data:', dataError);
@@ -93,6 +94,7 @@ export const useAuthLogin = () => {
           description: "Signed in, but had trouble loading your data. Some features may be limited."
         });
         
+        setIsProcessing(false);
         navigate('/dashboard');
       }
       
@@ -103,7 +105,6 @@ export const useAuthLogin = () => {
         title: "Login Error",
         description: "An error occurred during login. Please try again."
       });
-    } finally {
       setIsProcessing(false);
     }
   };

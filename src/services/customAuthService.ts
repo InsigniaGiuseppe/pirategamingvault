@@ -12,7 +12,7 @@ export interface CustomSession {
   expires_at: number;
 }
 
-// Login user with custom auth
+// Login user with custom auth - fully overhauled and fixed
 export const login = async (
   username: string,
   password: string
