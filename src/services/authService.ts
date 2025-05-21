@@ -63,7 +63,7 @@ export const registerUser = async (username: string, password: string, authCode:
     
     console.log('Username is available, proceeding with registration');
     
-    // Insert the user credentials
+    // Insert the user credentials with RLS access
     const { data: credentialData, error: credentialError } = await supabase
       .from('credentials')
       .insert({
@@ -76,7 +76,7 @@ export const registerUser = async (username: string, password: string, authCode:
       .single();
     
     if (credentialError) {
-      console.error('Error registering user:', credentialError);
+      console.error('Error registering user (credential insert):', credentialError);
       return { credential: null, error: 'Failed to create user account: ' + credentialError.message };
     }
     
@@ -106,7 +106,7 @@ export const registerUser = async (username: string, password: string, authCode:
           active: credentialData.active,
           createdAt: credentialData.created_at
         }, 
-        error: 'Account created but failed to initialize balance' 
+        error: 'Account created but failed to initialize balance: ' + balanceError.message 
       };
     }
     
@@ -124,6 +124,7 @@ export const registerUser = async (username: string, password: string, authCode:
     
     if (transactionError) {
       console.error('Error creating welcome transaction:', transactionError);
+      // Continue despite transaction error since the account was created
     }
     
     console.log('Registration complete for:', username);
