@@ -1,153 +1,169 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Types for our custom auth system
 export interface CustomUser {
   id: string;
   username: string;
-  created_at: string;
+  email?: string;
 }
 
 export interface CustomSession {
-  sessionToken: string;
-  expiresAt: string;
-  userId: string;
+  access_token: string;
+  expires_at: number;
 }
 
-export interface AuthResponse {
-  user: CustomUser | null;
-  session: CustomSession | null;
-  error: string | null;
-}
-
-// Register a new user
-export const registerUser = async (username: string, password: string): Promise<AuthResponse> => {
+// Login user with custom auth
+export const login = async (
+  username: string,
+  password: string
+): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
   try {
-    console.log('Starting registration for:', username);
+    // Create a standard email format for auth purposes
+    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
     
-    const { data, error } = await supabase.functions.invoke('auth', {
-      body: { action: 'register', username, password },
-      method: 'POST',
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
     
     if (error) {
-      console.error('Error from edge function during registration:', error);
-      return { user: null, session: null, error: error.message || 'Registration failed' };
+      console.error('Login error:', error.message);
+      return { user: null, session: null, error: error.message };
     }
     
-    if (!data || !data.user || !data.session) {
-      console.error('Invalid response from edge function:', data);
-      return { user: null, session: null, error: 'Invalid response from server' };
+    if (!data.user || !data.session) {
+      return { user: null, session: null, error: 'Invalid credentials' };
     }
     
-    // Store session in localStorage
-    localStorage.setItem('pirate_session', data.session.sessionToken);
-    
-    console.log('Registration successful for:', username);
-    
-    return { 
-      user: data.user, 
-      session: data.session, 
-      error: null 
+    // Get username from user metadata
+    const customUser: CustomUser = {
+      id: data.user.id,
+      username: data.user.user_metadata.username || username,
+      email: data.user.email
     };
-  } catch (error) {
-    console.error('Unexpected error during registration:', error);
-    // @ts-ignore
-    return { user: null, session: null, error: `Unexpected error: ${error?.message || error}` };
-  }
-};
-
-// Login with username and password
-export const login = async (username: string, password: string): Promise<AuthResponse> => {
-  try {
-    console.log('Logging in with username:', username);
     
-    const { data, error } = await supabase.functions.invoke('auth', {
-      body: { action: 'login', username, password },
-      method: 'POST',
-    });
-    
-    if (error) {
-      console.error('Error from edge function during login:', error);
-      return { user: null, session: null, error: error.message || 'Login failed' };
-    }
-    
-    if (!data || !data.user || !data.session) {
-      console.error('Invalid response from edge function:', data);
-      return { user: null, session: null, error: 'Invalid response from server' };
-    }
-    
-    // Store session in localStorage
-    localStorage.setItem('pirate_session', data.session.sessionToken);
-    
-    console.log('Login successful for:', username);
-    
-    return { 
-      user: data.user, 
-      session: data.session,
-      error: null 
+    // Create simplified session object
+    const customSession: CustomSession = {
+      access_token: data.session.access_token,
+      expires_at: data.session.expires_at
     };
+    
+    return { user: customUser, session: customSession, error: null };
   } catch (error) {
     console.error('Unexpected error during login:', error);
-    // @ts-ignore
-    return { user: null, session: null, error: `Unexpected error: ${error?.message || error}` };
+    return { user: null, session: null, error: error instanceof Error ? error.message : 'An unexpected error occurred' };
   }
 };
 
-// Verify current session
-export const verifySession = async (): Promise<AuthResponse> => {
+// Register user with custom auth (re-exporting from registration service)
+export const registerUser = async (
+  username: string,
+  password: string
+): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
   try {
-    const sessionToken = localStorage.getItem('pirate_session');
+    // Implementation will use the registrationService
+    const regResult = await import('@/services/registrationService').then(module => 
+      module.registerUser(username, password)
+    );
     
-    if (!sessionToken) {
-      return { user: null, session: null, error: null };
+    if (regResult.error || !regResult.user) {
+      return { 
+        user: null,
+        session: null, 
+        error: regResult.error || 'Registration failed'
+      };
     }
     
-    const { data, error } = await supabase.functions.invoke('auth', {
-      body: { action: 'verify', sessionToken },
-      method: 'POST',
-    });
-    
-    if (error || !data || !data.valid) {
-      // Remove invalid session
-      localStorage.removeItem('pirate_session');
-      return { user: null, session: null, error: error?.message || 'Invalid session' };
-    }
-    
-    return { 
-      user: data.user, 
-      session: data.session, 
-      error: null 
+    // Create custom user and session objects
+    const customUser: CustomUser = {
+      id: regResult.user.id,
+      username: username,
+      email: regResult.user.email
     };
+    
+    // Login after registration to get session
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error || !data.session) {
+      console.error('Error getting session after registration:', error);
+      return { 
+        user: customUser, 
+        session: null, 
+        error: 'Account created but could not retrieve session'
+      };
+    }
+    
+    const customSession: CustomSession = {
+      access_token: data.session.access_token,
+      expires_at: data.session.expires_at
+    };
+    
+    return { user: customUser, session: customSession, error: null };
   } catch (error) {
-    console.error('Error verifying session:', error);
-    // @ts-ignore
-    return { user: null, session: null, error: `Session verification failed: ${error?.message || error}` };
+    console.error('Unexpected error during registration:', error);
+    return { 
+      user: null, 
+      session: null, 
+      error: error instanceof Error ? error.message : 'An unexpected error occurred during registration'
+    };
   }
 };
 
-// Logout
-export const logout = async (): Promise<{ error: string | null }> => {
+// Log out user
+export const logout = async (): Promise<{error: string | null}> => {
   try {
-    const sessionToken = localStorage.getItem('pirate_session');
-    
-    if (sessionToken) {
-      // Call logout endpoint to remove session from database
-      await supabase.functions.invoke('auth', {
-        body: { action: 'logout', sessionToken },
-        method: 'POST',
-      });
-      
-      // Remove from localStorage
-      localStorage.removeItem('pirate_session');
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error.message);
+      return { error: error.message };
     }
     
     return { error: null };
   } catch (error) {
-    console.error('Error during logout:', error);
-    // Still remove from localStorage even if the server call fails
-    localStorage.removeItem('pirate_session');
-    // @ts-ignore
-    return { error: `Logout failed: ${error?.message || error}` };
+    console.error('Unexpected error during logout:', error);
+    return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+  }
+};
+
+// Verify if user is authenticated and return current session
+export const verifySession = async (): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Session verification error:', error.message);
+      return { user: null, session: null, error: error.message };
+    }
+    
+    if (!data.session) {
+      // No active session, not an error
+      return { user: null, session: null, error: null };
+    }
+    
+    // Get user metadata to construct custom user
+    const { data: userData, error: userError } = await supabase.auth.getUser(data.session.access_token);
+    
+    if (userError || !userData.user) {
+      console.error('Error fetching user data:', userError?.message);
+      return { user: null, session: null, error: userError?.message || 'Could not fetch user data' };
+    }
+    
+    // Create custom user object from metadata
+    const customUser: CustomUser = {
+      id: userData.user.id,
+      username: userData.user.user_metadata.username || userData.user.email?.split('@')[0] || 'Unknown',
+      email: userData.user.email
+    };
+    
+    // Create simplified session object
+    const customSession: CustomSession = {
+      access_token: data.session.access_token,
+      expires_at: data.session.expires_at
+    };
+    
+    return { user: customUser, session: customSession, error: null };
+  } catch (error) {
+    console.error('Unexpected error during session verification:', error);
+    return { user: null, session: null, error: error instanceof Error ? error.message : 'An unexpected error occurred' };
   }
 };

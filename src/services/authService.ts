@@ -1,109 +1,65 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { AuthResponse, Session, User } from "@supabase/supabase-js";
+import { CustomUser, CustomSession } from "./customAuthService";
 
-// Sign in with username, converting to internal email format for Supabase Auth
-export const signInWithEmail = async (username: string, password: string): Promise<{
-  session: Session | null;
-  user: User | null;
-  error: string | null;
-}> => {
+// Get current user info from Supabase
+export const getCurrentUser = async (): Promise<CustomUser | null> => {
   try {
-    console.log('Signing in with username:', username);
+    const { data, error } = await supabase.auth.getUser();
     
-    // Try direct login first (for users who registered with email)
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: username, 
-      password
-    });
-    
-    // If direct login fails, try the username format
-    if (error) {
-      console.log('Direct login failed, trying username format login');
-      const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
-      
-      const { data: usernameData, error: usernameError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password
-      });
-      
-      if (usernameError) {
-        console.error('Error signing in with username format:', usernameError.message);
-        return { session: null, user: null, error: 'Invalid username or password' };
-      }
-      
-      if (!usernameData.session || !usernameData.user) {
-        console.log('No session or user data returned from username login');
-        return { session: null, user: null, error: 'Authentication failed' };
-      }
-      
-      console.log('Authentication successful with username format for:', username);
-      return {
-        session: usernameData.session,
-        user: usernameData.user,
-        error: null
-      };
+    if (error || !data.user) {
+      return null;
     }
     
-    if (!data.session || !data.user) {
-      console.log('No session or user data returned');
-      return { session: null, user: null, error: 'Authentication failed' };
-    }
-    
-    console.log('Authentication successful for:', username);
     return {
-      session: data.session,
-      user: data.user,
-      error: null
+      id: data.user.id,
+      username: data.user.user_metadata.username || data.user.email?.split('@')[0] || 'User',
+      email: data.user.email
     };
-    
   } catch (error) {
-    console.error('Unexpected error during authentication:', error);
-    // @ts-ignore
-    return { session: null, user: null, error: error?.message || 'An unexpected error occurred' };
+    console.error('Error getting current user:', error);
+    return null;
   }
 };
 
-// Get current session
-export const getCurrentSession = async (): Promise<{
-  session: Session | null;
-  error: string | null;
-}> => {
+// Check if session is valid
+export const isSessionValid = async (): Promise<boolean> => {
   try {
     const { data, error } = await supabase.auth.getSession();
     
-    if (error) {
-      return { session: null, error: error.message };
+    if (error || !data.session) {
+      return false;
     }
     
-    return { session: data.session, error: null };
+    return true;
   } catch (error) {
-    console.error('Error getting session:', error);
-    // @ts-ignore
-    return { session: null, error: error?.message || 'An unexpected error occurred' };
+    console.error('Error checking session validity:', error);
+    return false;
   }
 };
 
-// Sign out
-export const signOut = async (): Promise<{ error: string | null }> => {
+// Get user role
+export const getUserRole = async (userId: string): Promise<string | null> => {
   try {
-    const { error } = await supabase.auth.signOut();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle();
     
-    if (error) {
-      return { error: error.message };
+    if (error || !data) {
+      return null;
     }
     
-    return { error: null };
+    return data.role || 'user';
   } catch (error) {
-    console.error('Error signing out:', error);
-    // @ts-ignore
-    return { error: error?.message || 'An unexpected error occurred' };
+    console.error('Error getting user role:', error);
+    return null;
   }
 };
 
-// Legacy function for backward compatibility
-export const verifyCredentials = async (email: string, password: string) => {
-  console.warn('verifyCredentials is deprecated. Use signInWithEmail instead.');
-  const result = await signInWithEmail(email, password);
-  return result.user ? { username: email } : null;
+// Helper to check if user is admin
+export const isUserAdmin = async (userId: string): Promise<boolean> => {
+  const role = await getUserRole(userId);
+  return role === 'admin';
 };

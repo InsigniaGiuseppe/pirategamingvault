@@ -9,6 +9,7 @@ import './index.css';
 // Initialize error monitoring before rendering the app
 initializeErrorMonitoring();
 
+// Create root and render app with strict mode and router
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>

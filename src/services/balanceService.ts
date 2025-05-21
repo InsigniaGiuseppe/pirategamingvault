@@ -1,84 +1,79 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Transaction } from "./transactionService";
 
-// Get user's coin balance
+// Get user balance from database
 export const getUserBalance = async (userId: string): Promise<number> => {
-  const { data, error } = await supabase
-    .from('user_balance')
-    .select('balance')
-    .eq('user_id', userId)
-    .single();
-  
-  if (error || !data) {
-    console.error('Error getting user balance:', error);
+  try {
+    console.log('Getting balance for user:', userId);
+    
+    const { data, error } = await supabase
+      .from('user_balance')
+      .select('balance')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (error) {
+      console.error('Error fetching balance:', error);
+      return 0;
+    }
+    
+    return data?.balance || 0;
+  } catch (error) {
+    console.error('Unexpected error in getUserBalance:', error);
     return 0;
   }
-  
-  return data.balance;
 };
 
-// Update user's coin balance
-export const updateUserBalance = async (
-  userId: string, 
-  amount: number, 
-  description: string = '',
-  type: 'earn' | 'spend' | 'admin' = 'earn'
-): Promise<boolean> => {
-  // Get current balance
-  const { data: currentBalance, error: balanceError } = await supabase
-    .from('user_balance')
-    .select('balance')
-    .eq('user_id', userId)
-    .single();
-  
-  if (balanceError) {
-    // If no balance record exists, create one
-    if (balanceError.code === 'PGRST116') {
-      const { error: insertError } = await supabase
-        .from('user_balance')
-        .insert({
-          user_id: userId,
-          balance: Math.max(0, amount) // Ensure we don't go negative for new users
-        });
-      
-      if (insertError) {
-        console.error('Error creating user balance:', insertError);
-        return false;
-      }
-    } else {
-      console.error('Error getting user balance:', balanceError);
+// Add to user balance
+export const addToUserBalance = async (userId: string, amount: number): Promise<boolean> => {
+  try {
+    // First get current balance
+    const currentBalance = await getUserBalance(userId);
+    const newBalance = currentBalance + amount;
+    
+    const { error } = await supabase
+      .from('user_balance')
+      .update({ balance: newBalance })
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error updating balance:', error);
       return false;
     }
-  }
-  
-  const newBalance = Math.max(0, (currentBalance?.balance || 0) + amount);
-  
-  // Update the balance
-  const { error: updateError } = await supabase
-    .from('user_balance')
-    .update({ balance: newBalance })
-    .eq('user_id', userId);
-  
-  if (updateError) {
-    console.error('Error updating user balance:', updateError);
+    
+    return true;
+  } catch (error) {
+    console.error('Unexpected error in addToUserBalance:', error);
     return false;
   }
-  
-  // Add transaction record
-  const { error: transactionError } = await supabase
-    .from('transactions')
-    .insert({
-      user_id: userId,
-      amount,
-      description: description || (amount > 0 ? 'Earned coins' : 'Spent coins'),
-      type
-    });
-  
-  if (transactionError) {
-    console.error('Error creating transaction record:', transactionError);
-    // In a real app, we would handle this error more gracefully
+};
+
+// Subtract from user balance
+export const subtractFromUserBalance = async (userId: string, amount: number): Promise<boolean> => {
+  try {
+    // First get current balance
+    const currentBalance = await getUserBalance(userId);
+    
+    // Check if user has enough balance
+    if (currentBalance < amount) {
+      return false;
+    }
+    
+    const newBalance = currentBalance - amount;
+    
+    const { error } = await supabase
+      .from('user_balance')
+      .update({ balance: newBalance })
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error updating balance:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Unexpected error in subtractFromUserBalance:', error);
+    return false;
   }
-  
-  return true;
 };

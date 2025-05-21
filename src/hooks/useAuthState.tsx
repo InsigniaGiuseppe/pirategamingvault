@@ -15,7 +15,6 @@ interface AuthContextState {
   session: CustomSession | null;
   user: CustomUser | null;
   error: string | null;
-  setState?: React.Dispatch<React.SetStateAction<AuthContextState>>;
 }
 
 interface Transaction {
@@ -39,19 +38,10 @@ export const initialAuthState: AuthContextState = {
   error: null
 };
 
-export const AuthStateContext = createContext<{
-  isAuthenticated: boolean;
-  currentUser: string | null;
-  userId: string | null;
-  pirateCoins: number;
-  transactions: Transaction[];
-  unlockedGames: string[];
-  isLoading: boolean;
-  session: CustomSession | null;
-  user: CustomUser | null;
-  error: string | null;
-  setState: React.Dispatch<React.SetStateAction<AuthContextState>>;
-} | AuthContextState>(initialAuthState);
+// Create context with setState function
+export const AuthStateContext = createContext<AuthContextState & {
+  setState?: React.Dispatch<React.SetStateAction<AuthContextState>>
+}>(initialAuthState);
 
 export const useAuthState = () => {
   const context = useContext(AuthStateContext);
@@ -100,7 +90,10 @@ export const useLoadAuthState = () => {
         const result = await Promise.race([
           authPromise,
           timeoutPromise
-        ]);
+        ]).catch(err => {
+          console.error('Auth verification error:', err);
+          return {user: null, session: null, error: err.message};
+        });
         
         if (!isMounted) return;
         
@@ -166,17 +159,8 @@ export const useLoadAuthState = () => {
     
     checkAuth();
     
-    // Set up a refresh interval to periodically check session validity
-    const refreshInterval = setInterval(() => {
-      // Only refresh if the user is authenticated
-      if (state.isAuthenticated) {
-        checkAuth();
-      }
-    }, 15 * 60 * 1000); // Refresh every 15 minutes
-    
     return () => {
       isMounted = false;
-      clearInterval(refreshInterval);
     };
   }, [fetchUserData]);
   

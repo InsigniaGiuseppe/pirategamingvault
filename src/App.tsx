@@ -12,7 +12,15 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import { AuthProvider } from "./hooks/useAuth";
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
