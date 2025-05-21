@@ -23,6 +23,7 @@ interface GameTileProps {
 const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useAuth();
   const { toast } = useToast();
   
@@ -78,6 +79,11 @@ const GameTile = ({ game }: GameTileProps) => {
   // Check if this game is unlocked
   const isUnlocked = checkIfGameUnlocked(game.id);
 
+  // Function to handle image loading state
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+  };
+
   // Function to get image source with fallbacks
   const getImageSource = (game: Game) => {
     // Try the image source from the game data
@@ -125,17 +131,26 @@ const GameTile = ({ game }: GameTileProps) => {
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="relative h-full">
+                  {/* Loading state */}
+                  {isImageLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                      <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  
                   {/* Game image with conditional styling for locked games */}
                   <div className="relative">
                     <img 
                       src={imageSource} 
                       alt={game.title}
-                      className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-75' : ''} transition-all duration-200`}
+                      className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-75' : ''} transition-all duration-200 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                      onLoad={handleImageLoad}
                       onError={(e) => {
                         // Fall back to picsum if the image fails to load
                         const target = e.target as HTMLImageElement;
                         if (!target.src.includes('picsum.photos')) {
                           target.src = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
+                          setIsImageLoading(false);
                         }
                       }}
                     />

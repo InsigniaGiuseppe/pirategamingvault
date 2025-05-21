@@ -141,6 +141,7 @@ export const getGameById = async (gameId: string): Promise<Game | null> => {
     coinCost: data.coin_cost,
     category: data.category,
     created_at: data.created_at,
+    unlocked: false // Games are not unlocked by default
   };
 };
 
@@ -151,7 +152,7 @@ export const addGamesToDatabase = async (games: Omit<Game, 'unlocked' | 'created
     title: game.title,
     img_src: game.imgSrc || getTwitchImageUrl(game.title),
     is_pirate_pun: game.isPiratePun || false,
-    coin_cost: game.coinCost,
+    coin_cost: Math.max(10, game.coinCost), // Ensure minimum 10 coins
     category: game.category || 'other'
   }));
   
@@ -167,7 +168,7 @@ export const addGamesToDatabase = async (games: Omit<Game, 'unlocked' | 'created
 };
 
 // Update coin costs for all games (give them random prices between min and max)
-export const updateAllGamePrices = async (minPrice: number = 3, maxPrice: number = 20): Promise<boolean> => {
+export const updateAllGamePrices = async (minPrice: number = 10, maxPrice: number = 50): Promise<boolean> => {
   const { data: games, error: fetchError } = await supabase
     .from('games')
     .select('id');

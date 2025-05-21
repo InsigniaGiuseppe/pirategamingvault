@@ -3,8 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 // Get user's unlocked games
 export const getUserUnlockedGames = async (userId: string): Promise<string[]> => {
-  // First 4 games are always unlocked
-  const defaultUnlocked = ['1', '2', '3', '4'];
+  // No more default unlocked games - all games must be purchased
   
   const { data, error } = await supabase
     .from('unlocked_games')
@@ -13,9 +12,8 @@ export const getUserUnlockedGames = async (userId: string): Promise<string[]> =>
   
   if (error) {
     console.error('Error getting unlocked games:', error);
-    return defaultUnlocked;
+    return [];
   }
   
-  const unlockedIds = data.map(item => item.game_id);
-  return [...new Set([...defaultUnlocked, ...unlockedIds])];
+  return data.map(item => item.game_id);
 };
