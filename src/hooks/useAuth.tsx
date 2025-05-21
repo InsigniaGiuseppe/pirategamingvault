@@ -42,6 +42,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [pirateCoins, setPirateCoins] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [unlockedGames, setUnlockedGames] = useState<string[]>([]);
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -112,6 +113,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (username: string, password: string) => {
     try {
+      // Prevent duplicate registration attempts
+      if (isRegistering) return;
+      setIsRegistering(true);
+      
       // Register user with Supabase - default welcome bonus is now 10 coins
       const newUser = await registerUser(username, password);
       
@@ -121,6 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           title: "Registration Failed",
           description: "Username already exists or an error occurred. Try a different username."
         });
+        setIsRegistering(false);
         return;
       }
 
@@ -138,6 +144,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         title: "Registration Failed",
         description: "An error occurred during registration. Please try again."
       });
+    } finally {
+      setIsRegistering(false);
     }
   };
 
