@@ -58,6 +58,7 @@ export const useAuthLogin = () => {
 export const useAuthRegistration = () => {
   const { toast } = useToast();
   const { login } = useAuthLogin();
+  const navigate = useNavigate();  // Add the navigate function here
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   const register = async (username: string, password: string) => {
@@ -229,7 +230,7 @@ export const useAuthActions = () => {
   const { logout } = useAuthSession();
   const { addPirateCoins } = useCoinsManagement();
   const { unlockGame, checkIfGameUnlocked } = useGameUnlocking();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Make sure navigate is available at this level too
   
   const isProcessing = isLoginProcessing || isRegistrationProcessing;
   
