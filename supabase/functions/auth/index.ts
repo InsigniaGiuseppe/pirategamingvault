@@ -1,6 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.3.0/mod.ts'
+import { encode as encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.5'
 import { v4 as uuidv4 } from 'https://esm.sh/uuid@9.0.0'
 
@@ -14,6 +14,44 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Hash password function (using native crypto instead of bcrypt)
+async function hashPassword(password: string): Promise<string> {
+  console.log('Hashing password using native crypto');
+  // Generate a random salt
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = encodeHex(salt);
+  
+  // Encode password to bytes
+  const encoder = new TextEncoder();
+  const passwordBytes = encoder.encode(password + saltHex);
+  
+  // Hash using SHA-256
+  const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBytes);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Return salt + hash combined
+  return `${saltHex}:${hashHex}`;
+}
+
+// Verify password function
+async function verifyPassword(password: string, storedHash: string): Promise<boolean> {
+  console.log('Verifying password using native crypto');
+  const [saltHex, knownHashHex] = storedHash.split(':');
+  
+  // Encode password with known salt
+  const encoder = new TextEncoder();
+  const passwordBytes = encoder.encode(password + saltHex);
+  
+  // Hash using SHA-256
+  const hashBuffer = await crypto.subtle.digest('SHA-256', passwordBytes);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Compare hashes
+  return hashHex === knownHashHex;
+}
 
 // Generate a session that expires in 30 days
 const generateSession = async (userId: string) => {
@@ -81,10 +119,9 @@ serve(async (req) => {
       }
       
       try {
-        // Hash password - using bcrypt v0.3.0 which works in Deno
+        // Hash password using our native crypto implementation
         console.log('Hashing password');
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(password, salt);
+        const passwordHash = await hashPassword(password);
         
         // Create user
         console.log('Creating user in database');
@@ -200,7 +237,7 @@ serve(async (req) => {
       try {
         // Verify password
         console.log('Verifying password');
-        const validPassword = await bcrypt.compare(password, user.password_hash)
+        const validPassword = await verifyPassword(password, user.password_hash);
         
         if (!validPassword) {
           console.log('Invalid password for user:', username);
