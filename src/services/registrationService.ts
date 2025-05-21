@@ -65,21 +65,36 @@ export const registerUser = async (
     
     console.log('User registered successfully, initializing user balance');
     
-    // Use a transaction to ensure all operations complete successfully
-    // Note: We're using a typed approach now to fix the error
-    const { error: transactionError } = await supabase
-      .rpc('initialize_new_user', {
+    // Use direct table operations instead of RPC to avoid type issues
+    // First create user balance entry
+    const { error: balanceError } = await supabase
+      .from('user_balance')
+      .insert({
         user_id: data.user.id,
-        initial_balance: 10,
-        welcome_message: 'Welcome bonus'
+        balance: 10
+      });
+    
+    if (balanceError) {
+      console.error('Error creating user balance:', balanceError);
+      return { 
+        user: data.user, 
+        error: 'Account created but failed to initialize user balance: ' + balanceError.message 
+      };
+    }
+    
+    // Create initial welcome transaction
+    const { error: transactionError } = await supabase
+      .from('transactions')
+      .insert({
+        user_id: data.user.id,
+        amount: 10,
+        description: 'Welcome bonus',
+        type: 'admin'
       });
     
     if (transactionError) {
-      console.error('Error in user initialization transaction:', transactionError);
-      return { 
-        user: data.user, 
-        error: 'Account created but failed to initialize user data: ' + transactionError.message 
-      };
+      console.error('Error creating welcome transaction:', transactionError);
+      // Non-critical error, continue despite transaction error since the account and balance were created
     }
     
     // Add user to the credentials table for admin visibility but with masked password
@@ -103,7 +118,7 @@ export const registerUser = async (
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     
-    // Log the error for monitoring (in console only since we don't have an error_logs table)
+    // Log the error in the console since we don't have an error_logs table
     console.error('Registration error:', {
       error_type: 'registration',
       message: error instanceof Error ? error.message : String(error),
