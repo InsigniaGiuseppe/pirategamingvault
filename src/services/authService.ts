@@ -82,7 +82,7 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
     
     // Check if data is a record with a role property before accessing it
     // Using a type guard to ensure TypeScript understands what we're doing
-    const hasRole = data && typeof data === 'object' && 'role' in data;
+    const hasRole = typeof data === 'object' && data !== null && 'role' in data;
     return hasRole ? (data.role as string) || 'user' : 'user';
   } catch (error) {
     console.error('Error getting user role:', error);
