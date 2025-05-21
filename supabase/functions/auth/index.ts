@@ -1,6 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
+import * as bcrypt from 'https://deno.land/x/bcrypt@v0.3.0/mod.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.5'
 import { v4 as uuidv4 } from 'https://esm.sh/uuid@9.0.0'
 
@@ -81,9 +81,10 @@ serve(async (req) => {
       }
       
       try {
-        // Hash password
+        // Hash password - using bcrypt v0.3.0 which works in Deno
         console.log('Hashing password');
-        const passwordHash = await bcrypt.hash(password)
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(password, salt);
         
         // Create user
         console.log('Creating user in database');
