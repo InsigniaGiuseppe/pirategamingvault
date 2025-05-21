@@ -43,7 +43,7 @@ const Dashboard = () => {
             <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/3 p-4 md:p-8 animate-fade-up text-center">
               <div className="flex flex-col items-center">
                 <h1 className="text-[2.5rem] md:text-clamp-hero font-bold text-black mb-2 font-satoshi">
-                  Welcome to the PIRATE VAULT
+                  Welcome to THE COLLECTION
                 </h1>
                 <p className="text-base md:text-xl text-gray-600 mb-4">
                   Access our private collection of digital adventures

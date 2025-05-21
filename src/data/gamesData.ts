@@ -1,5 +1,5 @@
 
-import { fetchGames } from '@/services/gameService';
+import { fetchGames, updateAllGamePrices } from '@/services/gameService';
 import { games as localGames } from './games';
 
 export interface Game {
@@ -9,16 +9,16 @@ export interface Game {
   isPiratePun?: boolean;
   coinCost: number;
   category?: string;
-  unlocked?: boolean; // Added this property to match the Game interface in games.ts
+  unlocked?: boolean;
 }
 
 // Extended game list with 15+ games
 const extendedGameList: Game[] = [
-  // Free games (always unlocked)
-  { id: '1', title: 'Sea of Thieves', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/490377-285x380.jpg', coinCost: 0, category: 'action', unlocked: true },
-  { id: '2', title: 'Assassin\'s Creed IV: Black Flag', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/Assassin\'s%20Creed%20IV:%20Black%20Flag-285x380.jpg', coinCost: 0, category: 'action', unlocked: true },
-  { id: '3', title: 'The Secret of Monkey Island', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/The%20Secret%20of%20Monkey%20Island-285x380.jpg', coinCost: 0, category: 'adventure', unlocked: true },
-  { id: '4', title: 'Sid Meier\'s Pirates!', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/Sid%20Meier\'s%20Pirates!-285x380.jpg', coinCost: 0, category: 'strategy', unlocked: true },
+  // All games now require coins to unlock (removed free games concept)
+  { id: '1', title: 'Sea of Thieves', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/490377-285x380.jpg', coinCost: 10, category: 'action' },
+  { id: '2', title: 'Assassin\'s Creed IV: Black Flag', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/Assassin\'s%20Creed%20IV:%20Black%20Flag-285x380.jpg', coinCost: 8, category: 'action' },
+  { id: '3', title: 'The Secret of Monkey Island', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/The%20Secret%20of%20Monkey%20Island-285x380.jpg', coinCost: 5, category: 'adventure' },
+  { id: '4', title: 'Sid Meier\'s Pirates!', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/Sid%20Meier\'s%20Pirates!-285x380.jpg', coinCost: 7, category: 'strategy' },
   
   // Premium games (require coins to unlock)
   { id: '5', title: 'Port Royale 4', imgSrc: 'https://static-cdn.jtvnw.net/ttv-boxart/Port%20Royale%204-285x380.jpg', coinCost: 15, category: 'strategy' },
@@ -45,19 +45,14 @@ export const getGames = async (): Promise<Game[]> => {
     const supabaseGames = await fetchGames();
     
     if (supabaseGames.length > 0) {
-      return supabaseGames.map(game => ({
-        ...game,
-        unlocked: ['1', '2', '3', '4'].includes(game.id) // First four games are always unlocked
-      }));
+      return supabaseGames;
     }
     
     // Fall back to extended local games with updated coin costs
     return extendedGameList.map(game => ({
       ...game,
-      // Make sure all games except first 4 have a coin cost
-      coinCost: ['1', '2', '3', '4'].includes(game.id) ? 0 : (game.coinCost || 15),
-      // First four games are always unlocked
-      unlocked: ['1', '2', '3', '4'].includes(game.id)
+      // Make sure all games have a random coin cost
+      coinCost: game.coinCost || Math.floor(Math.random() * 17) + 3, // 3-20 coins
     }));
   } catch (error) {
     console.error('Error fetching games:', error);
@@ -65,10 +60,18 @@ export const getGames = async (): Promise<Game[]> => {
     // Fall back to extended local games with updated coin costs
     return extendedGameList.map(game => ({
       ...game,
-      // Make sure all games except first 4 have a coin cost
-      coinCost: ['1', '2', '3', '4'].includes(game.id) ? 0 : (game.coinCost || 15),
-      // First four games are always unlocked
-      unlocked: ['1', '2', '3', '4'].includes(game.id)
+      // Make sure all games have a random coin cost
+      coinCost: game.coinCost || Math.floor(Math.random() * 17) + 3, // 3-20 coins
     }));
+  }
+};
+
+// Function to randomize all game prices in the database
+export const randomizeGamePrices = async (): Promise<boolean> => {
+  try {
+    return await updateAllGamePrices(3, 20); // Set all games to have prices between 3 and 20 coins
+  } catch (error) {
+    console.error('Error randomizing game prices:', error);
+    return false;
   }
 };

@@ -32,7 +32,7 @@ export const fetchGames = async (): Promise<Game[]> => {
     coinCost: game.coin_cost,
     category: game.category,
     created_at: game.created_at,
-    unlocked: ['1', '2', '3', '4'].includes(game.id) // First four games are always unlocked
+    unlocked: false // No games are initially unlocked
   }));
 };
 
@@ -45,22 +45,7 @@ export const getTwitchImageUrl = (gameTitle: string): string => {
 
 // Check if a game is unlocked for the current user
 export const checkGameUnlocked = async (gameId: string, userId: string): Promise<boolean> => {
-  // Free games (1-4) are always unlocked
-  if (['1', '2', '3', '4'].includes(gameId)) {
-    return true;
-  }
-  
-  // Check for free games in the database (coin cost of 0)
-  const { data: gameData, error: gameError } = await supabase
-    .from('games')
-    .select('coin_cost')
-    .eq('id', gameId)
-    .single();
-  
-  if (gameData && gameData.coin_cost === 0) {
-    return true;
-  }
-  
+  // Check if the user has unlocked this game
   const { data, error } = await supabase
     .from('unlocked_games')
     .select('*')
@@ -179,4 +164,33 @@ export const addGamesToDatabase = async (games: Omit<Game, 'unlocked' | 'created
   } else {
     console.log(`Successfully added ${formattedGames.length} games to database`);
   }
+};
+
+// Update coin costs for all games (give them random prices between min and max)
+export const updateAllGamePrices = async (minPrice: number = 3, maxPrice: number = 20): Promise<boolean> => {
+  const { data: games, error: fetchError } = await supabase
+    .from('games')
+    .select('id');
+  
+  if (fetchError || !games) {
+    console.error('Error fetching games for price update:', fetchError);
+    return false;
+  }
+  
+  // For each game, update with a random price
+  for (const game of games) {
+    const randomPrice = Math.floor(Math.random() * (maxPrice - minPrice + 1)) + minPrice;
+    
+    const { error } = await supabase
+      .from('games')
+      .update({ coin_cost: randomPrice })
+      .eq('id', game.id);
+    
+    if (error) {
+      console.error(`Error updating price for game ${game.id}:`, error);
+      // Continue with other games even if one fails
+    }
+  }
+  
+  return true;
 };

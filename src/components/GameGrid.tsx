@@ -1,7 +1,7 @@
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameTile from './GameTile';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SortAsc, SortDesc } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { 
   Carousel,
@@ -13,11 +13,18 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Game } from '@/data/games';
 import { getGames } from '@/data/gamesData';
+import { Button } from "@/components/ui/button";
+import { 
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortByPrice, setSortByPrice] = useState<'asc' | 'desc' | null>(null);
   
   useEffect(() => {
     const loadGames = async () => {
@@ -26,7 +33,7 @@ const GameGrid = () => {
         // Convert the games from gamesData.ts format to games.ts format
         const formattedGames = fetchedGames.map(game => ({
           ...game,
-          unlocked: ['1', '2', '3', '4'].includes(game.id) || false
+          unlocked: false // No games are initially unlocked
         })) as Game[];
         
         setGames(formattedGames);
@@ -40,18 +47,44 @@ const GameGrid = () => {
     loadGames();
   }, []);
   
+  const handleSort = () => {
+    if (sortByPrice === null || sortByPrice === 'desc') {
+      setSortByPrice('asc');
+    } else {
+      setSortByPrice('desc');
+    }
+  };
+  
+  // Apply sorting if selected
+  const sortedGames = [...games].sort((a, b) => {
+    if (sortByPrice === 'asc') {
+      return a.coinCost - b.coinCost;
+    } else if (sortByPrice === 'desc') {
+      return b.coinCost - a.coinCost;
+    }
+    return 0;
+  });
+  
   // Group games by category
-  const actionGames = games.filter(game => game.category === 'action');
-  const adventureGames = games.filter(game => game.category === 'adventure');
-  const fpsGames = games.filter(game => game.category === 'fps');
-  const rpgGames = games.filter(game => game.category === 'rpg');
-  const strategyGames = games.filter(game => game.category === 'strategy');
-  const otherGames = games.filter(game => 
-    !['action', 'adventure', 'fps', 'rpg', 'strategy'].includes(game.category || '')
-  );
+  const allCategories = [
+    'fps', 'action', 'adventure', 'rpg', 'strategy', 
+    'puzzle', 'indie', 'classic', 'party', 'horror', 
+    'battle-royale', 'moba', 'sports', 'sandbox', 
+    'mmorpg', 'card'
+  ];
+  
+  // Create category groups
+  const categoryGroups: Record<string, Game[]> = {};
+  
+  allCategories.forEach(category => {
+    const gamesInCategory = sortedGames.filter(game => game.category === category);
+    if (gamesInCategory.length > 0) {
+      categoryGroups[category] = gamesInCategory;
+    }
+  });
   
   // Create featured games section (first 8 games)
-  const featuredGames = games.slice(0, 8);
+  const featuredGames = sortedGames.slice(0, 8);
   
   if (loading) {
     return (
@@ -61,6 +94,30 @@ const GameGrid = () => {
     );
   }
   
+  // Function to get a display name for category
+  const getCategoryDisplayName = (category: string): string => {
+    const categoryMap: Record<string, string> = {
+      'fps': 'FPS & Shooters',
+      'action': 'Action Games',
+      'adventure': 'Adventure Games',
+      'rpg': 'RPG Games',
+      'strategy': 'Strategy Games',
+      'puzzle': 'Puzzle Games',
+      'indie': 'Indie Games',
+      'classic': 'Classic Games',
+      'party': 'Party Games',
+      'horror': 'Horror Games',
+      'battle-royale': 'Battle Royale',
+      'moba': 'MOBA Games',
+      'sports': 'Sports Games',
+      'sandbox': 'Sandbox Games',
+      'mmorpg': 'MMORPGs',
+      'card': 'Card Games'
+    };
+    
+    return categoryMap[category] || `${category.charAt(0).toUpperCase()}${category.slice(1)} Games`;
+  };
+  
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Featured Collection section */}
@@ -68,8 +125,29 @@ const GameGrid = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
-            <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">Featured Collection</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">THE COLLECTION</h2>
           </div>
+          
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleSort}
+                className="flex items-center gap-2"
+              >
+                Sort by Price
+                {sortByPrice === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />}
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent className="w-auto">
+              <p className="text-sm">
+                {sortByPrice === 'asc' 
+                  ? 'Sorting from lowest to highest price' 
+                  : 'Sorting from highest to lowest price'}
+              </p>
+            </HoverCardContent>
+          </HoverCard>
         </div>
         
         {/* Featured Games - Netflix Style Carousel */}
@@ -95,17 +173,17 @@ const GameGrid = () => {
 
       {/* Game Categories - Netflix Style Layout */}
       <div className="space-y-16">
-        {fpsGames.length > 0 && (
-          <div className="space-y-6">
+        {Object.entries(categoryGroups).map(([category, gamesInCategory]) => (
+          <div key={category} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">FPS & Shooters</h3>
+              <h3 className="text-xl font-semibold">{getCategoryDisplayName(category)}</h3>
             </div>
             <Carousel className="w-full relative">
               <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
               <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
               
               <CarouselContent>
-                {fpsGames.map((game) => (
+                {gamesInCategory.map((game) => (
                   <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
                     <GameTile game={game} />
                   </CarouselItem>
@@ -119,137 +197,7 @@ const GameGrid = () => {
               </CarouselNext>
             </Carousel>
           </div>
-        )}
-
-        {actionGames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Action Games</h3>
-            </div>
-            <Carousel className="w-full relative">
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
-              
-              <CarouselContent>
-                {actionGames.map((game) => (
-                  <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
-                    <GameTile game={game} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronLeft className="h-4 w-4" />
-              </CarouselPrevious>
-              <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronRight className="h-4 w-4" />
-              </CarouselNext>
-            </Carousel>
-          </div>
-        )}
-
-        {adventureGames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Adventure Games</h3>
-            </div>
-            <Carousel className="w-full relative">
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
-              
-              <CarouselContent>
-                {adventureGames.map((game) => (
-                  <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
-                    <GameTile game={game} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronLeft className="h-4 w-4" />
-              </CarouselPrevious>
-              <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronRight className="h-4 w-4" />
-              </CarouselNext>
-            </Carousel>
-          </div>
-        )}
-
-        {rpgGames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">RPG Games</h3>
-            </div>
-            <Carousel className="w-full relative">
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
-              
-              <CarouselContent>
-                {rpgGames.map((game) => (
-                  <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
-                    <GameTile game={game} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronLeft className="h-4 w-4" />
-              </CarouselPrevious>
-              <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronRight className="h-4 w-4" />
-              </CarouselNext>
-            </Carousel>
-          </div>
-        )}
-
-        {strategyGames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Strategy Games</h3>
-            </div>
-            <Carousel className="w-full relative">
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
-              
-              <CarouselContent>
-                {strategyGames.map((game) => (
-                  <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
-                    <GameTile game={game} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronLeft className="h-4 w-4" />
-              </CarouselPrevious>
-              <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronRight className="h-4 w-4" />
-              </CarouselNext>
-            </Carousel>
-          </div>
-        )}
-
-        {otherGames.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Other Games</h3>
-            </div>
-            <Carousel className="w-full relative">
-              <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
-              <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
-              
-              <CarouselContent>
-                {otherGames.map((game) => (
-                  <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
-                    <GameTile game={game} />
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronLeft className="h-4 w-4" />
-              </CarouselPrevious>
-              <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
-                <ChevronRight className="h-4 w-4" />
-              </CarouselNext>
-            </Carousel>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );
