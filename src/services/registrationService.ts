@@ -13,8 +13,8 @@ export const registerUser = async (
       return { user: null, session: null, error: 'Username is required' };
     }
     
-    if (!password || password.length < 8) {
-      return { user: null, session: null, error: 'Password must be at least 8 characters long' };
+    if (!password || password.length < 5) {
+      return { user: null, session: null, error: 'Password must be at least 5 characters long' };
     }
     
     console.log('Starting registration for:', username);

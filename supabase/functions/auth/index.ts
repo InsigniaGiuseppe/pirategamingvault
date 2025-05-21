@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { encode as encodeHex } from "https://deno.land/std@0.177.0/encoding/hex.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.5'
@@ -176,30 +175,26 @@ serve(async (req) => {
         );
       }
       
-      if (password.length < 8) {
-        metricError = 'Password must be at least 8 characters long';
+      // Modified: Simplified password requirements for development
+      if (password.length < 5) {
+        metricError = 'Password must be at least 5 characters long';
         return new Response(
           JSON.stringify({ error: metricError }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-        metricError = 'Password must contain uppercase, lowercase letters and numbers';
-        return new Response(
-          JSON.stringify({ error: metricError }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      // Removed complex password validation to match frontend requirements
       
       // Check if username already exists
-      const { data: existingUser } = await supabase
-        .from('custom_users')
+      const { data: existingProfile } = await supabase
+        .from('profiles')
         .select('username')
         .eq('username', username)
-        .single();
+        .maybeSingle();
       
-      if (existingUser) {
+      if (existingProfile) {
+        console.log('Username already exists:', existingProfile);
         metricError = 'Username already exists';
         return new Response(
           JSON.stringify({ error: metricError }),
