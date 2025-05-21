@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, User, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { LogIn, User, Lock, Loader2, AlertCircle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
+import PasswordStrengthMeter from './PasswordStrengthMeter';
+import { checkPasswordCompromised } from '@/utils/passwordSecurity';
 
 interface LoginFormProps {
   onLogin?: (username: string, password: string) => void;
@@ -20,8 +22,33 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [activeTab, setActiveTab] = useState('login');
   const [registrationInProgress, setRegistrationInProgress] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isCheckingPassword, setIsCheckingPassword] = useState(false);
+  const [isPasswordCompromised, setIsPasswordCompromised] = useState(false);
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
+
+  // Check if password is compromised when it changes
+  useEffect(() => {
+    const checkPassword = async () => {
+      if (registerPassword.length >= 5) {
+        setIsCheckingPassword(true);
+        const compromised = await checkPasswordCompromised(registerPassword);
+        setIsPasswordCompromised(compromised);
+        setIsCheckingPassword(false);
+      } else {
+        setIsPasswordCompromised(false);
+      }
+    };
+
+    // Debounce the check to avoid too many API calls
+    const handler = setTimeout(() => {
+      if (registerPassword) {
+        checkPassword();
+      }
+    }, 800);
+
+    return () => clearTimeout(handler);
+  }, [registerPassword]);
 
   const clearErrors = () => {
     setFormError(null);
@@ -89,6 +116,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     
     if (registerPassword !== confirmPassword) {
       setFormError('Passwords do not match');
+      return;
+    }
+    
+    // Check if password is compromised
+    if (isPasswordCompromised) {
+      setFormError('This password has been found in data breaches. Please choose a different password for your security.');
       return;
     }
     
@@ -244,7 +277,21 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="registerPassword" className="text-sm font-medium text-black block">Password</label>
+              <label htmlFor="registerPassword" className="text-sm font-medium text-black flex justify-between items-center">
+                <span>Password</span>
+                {isPasswordCompromised && (
+                  <span className="text-xs text-red-500 flex items-center gap-1">
+                    <ShieldAlert size={12} />
+                    Compromised password
+                  </span>
+                )}
+                {!isPasswordCompromised && registerPassword.length >= 5 && !isCheckingPassword && (
+                  <span className="text-xs text-green-500 flex items-center gap-1">
+                    <ShieldCheck size={12} />
+                    Password not breached
+                  </span>
+                )}
+              </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Input
@@ -256,11 +303,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                     setRegisterPassword(e.target.value);
                     clearErrors();
                   }}
-                  className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
+                  className={`bg-white border-2 ${isPasswordCompromised ? 'border-red-300' : 'border-gray-300'} text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black`}
                   minLength={5}
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
+              <PasswordStrengthMeter password={registerPassword} />
               <p className="text-xs text-gray-500">Password must be at least 5 characters</p>
             </div>
             
@@ -287,7 +335,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
-              disabled={isLoading || registrationInProgress}
+              disabled={isLoading || registrationInProgress || isPasswordCompromised}
             >
               {(isLoading || registrationInProgress) ? (
                 <Loader2 size={18} className="animate-spin" />

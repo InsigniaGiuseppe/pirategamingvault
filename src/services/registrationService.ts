@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { checkPasswordCompromised } from "@/utils/passwordSecurity";
 
 // Register a new user with Supabase Auth with improved security and error handling
 export const registerUser = async (
@@ -15,6 +16,13 @@ export const registerUser = async (
     
     if (!password || password.length < 5) {
       return { user: null, session: null, error: 'Password must be at least 5 characters long' };
+    }
+    
+    // Check if password has been compromised (server-side verification)
+    const isCompromised = await checkPasswordCompromised(password);
+    if (isCompromised) {
+      console.error('Password found in data breaches');
+      return { user: null, session: null, error: 'This password has been found in data breaches. Please choose a different password for your security.' };
     }
     
     console.log('Starting registration for:', username);
