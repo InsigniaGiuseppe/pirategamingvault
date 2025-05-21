@@ -20,10 +20,13 @@ export const useAuthLogin = () => {
     try {
       setIsProcessing(true);
       
+      console.log('Login attempt initiated for:', username);
+      
       // Sign in with custom auth
       const { user, session, error } = await login(username, password);
       
       if (error || !session || !user) {
+        console.error('Login failed:', error);
         toast({
           variant: "destructive",
           title: "Login Failed",
@@ -32,10 +35,18 @@ export const useAuthLogin = () => {
         return;
       }
       
+      console.log('Login successful, fetching user data');
+      
       // Get user data
       const balance = await getUserBalance(user.id);
       const userTransactions = await getUserTransactions(user.id);
       const userUnlockedGames = await getUserUnlockedGames(user.id);
+      
+      console.log('User data fetched successfully:', {
+        balance,
+        transactionsCount: userTransactions.length,
+        unlockedGames: userUnlockedGames.length
+      });
       
       // Update state with user data
       if (setState) {
@@ -49,7 +60,7 @@ export const useAuthLogin = () => {
           isLoading: false,
           session: session,
           user: user,
-          error: null // Adding the missing error property
+          error: null
         });
       }
       

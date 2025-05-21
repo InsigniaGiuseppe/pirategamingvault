@@ -18,8 +18,19 @@ export const login = async (
   password: string
 ): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
   try {
+    // Input validation with specific error messages
+    if (!username || username.trim().length === 0) {
+      return { user: null, session: null, error: 'Username is required' };
+    }
+    
+    if (!password || password.length === 0) {
+      return { user: null, session: null, error: 'Password is required' };
+    }
+    
     // Create a standard email format for auth purposes
     const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
+    
+    console.log('Attempting login with email:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -47,6 +58,8 @@ export const login = async (
       access_token: data.session.access_token,
       expires_at: data.session.expires_at
     };
+    
+    console.log('Login successful for:', username);
     
     return { user: customUser, session: customSession, error: null };
   } catch (error) {
