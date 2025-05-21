@@ -1,6 +1,6 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts'
+import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.0/mod.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.5'
 import { v4 as uuidv4 } from 'https://esm.sh/uuid@9.0.0'
 
