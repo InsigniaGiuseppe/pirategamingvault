@@ -87,7 +87,7 @@ export const useAuthLogin = () => {
         }
         
         toast({
-          variant: "warning",
+          variant: "default",  // Changed from "warning" to "default" as "warning" is not a valid variant
           title: "Login Successful",
           description: "Signed in, but had trouble loading your data. Some features may be limited."
         });
