@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { signInWithEmail, signOut } from '@/services/authService';
-import { registerUser } from '@/services/registrationService';
+import { login, logout, registerUser } from '@/services/customAuthService';
 import { updateUserBalance, getUserTransactions, getUserUnlockedGames, getUserBalance } from '@/services/userService';
 import { unlockGame } from '@/services/gameService';
 import { AuthStateContext } from './useAuthState';
@@ -16,14 +15,14 @@ export const useAuthLogin = () => {
   
   const setState = 'setState' in context ? context.setState : undefined;
   
-  const login = async (username: string, password: string) => {
+  const handleLogin = async (username: string, password: string) => {
     if (isProcessing) return;
     
     try {
       setIsProcessing(true);
       
-      // Sign in with Supabase Auth
-      const { session, user, error } = await signInWithEmail(username, password);
+      // Sign in with custom auth
+      const { user, session, error } = await login(username, password);
       
       if (error || !session || !user) {
         toast({
@@ -34,7 +33,26 @@ export const useAuthLogin = () => {
         return;
       }
       
-      // If login successful, onAuthStateChange in useAuthState will update the state
+      // Get user data
+      const balance = await getUserBalance(user.id);
+      const userTransactions = await getUserTransactions(user.id);
+      const userUnlockedGames = await getUserUnlockedGames(user.id);
+      
+      // Update state with user data
+      if (setState) {
+        setState({
+          isAuthenticated: true,
+          currentUser: user.username,
+          userId: user.id,
+          pirateCoins: balance,
+          transactions: userTransactions,
+          unlockedGames: userUnlockedGames,
+          isLoading: false,
+          session: session,
+          user: user
+        });
+      }
+      
       navigate('/dashboard');
       
     } catch (error) {
@@ -49,7 +67,7 @@ export const useAuthLogin = () => {
     }
   };
   
-  return { login, isProcessing };
+  return { login: handleLogin, isProcessing };
 };
 
 // Create a hook for registration-related actions
@@ -57,6 +75,9 @@ export const useAuthRegistration = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const context = useContext(AuthStateContext);
+  
+  const setState = 'setState' in context ? context.setState : undefined;
   
   const register = async (username: string, password: string) => {
     if (isProcessing) return;
@@ -65,8 +86,8 @@ export const useAuthRegistration = () => {
       setIsProcessing(true);
       console.log('Attempting to register user:', username);
       
-      // Register user with Supabase Auth
-      const { user, error } = await registerUser(username, password);
+      // Register user with custom auth
+      const { user, session, error } = await registerUser(username, password);
       
       if (error) {
         console.error('Registration error from service:', error);
@@ -78,8 +99,8 @@ export const useAuthRegistration = () => {
         return;
       }
       
-      if (!user) {
-        console.error('No user returned from registerUser');
+      if (!user || !session) {
+        console.error('No user or session returned from registerUser');
         toast({
           variant: "destructive",
           title: "Registration Failed",
@@ -88,8 +109,29 @@ export const useAuthRegistration = () => {
         return;
       }
 
-      console.log('Registration successful, proceeding to login');
-      // Auto login after registration - the login will be handled by onAuthStateChange
+      console.log('Registration successful, proceeding to dashboard');
+      
+      // Update state with user data
+      if (setState) {
+        setState({
+          isAuthenticated: true,
+          currentUser: user.username,
+          userId: user.id,
+          pirateCoins: 10, // Initial balance from registration
+          transactions: [{ // Initial welcome transaction
+            id: 'welcome',
+            timestamp: Date.now(),
+            amount: 10,
+            description: 'Welcome bonus',
+            type: 'admin'
+          }],
+          unlockedGames: [],
+          isLoading: false,
+          session: session,
+          user: user
+        });
+      }
+      
       toast({
         title: "Registration Successful",
         description: "Welcome to Pirate Gaming!"
@@ -114,22 +156,36 @@ export const useAuthRegistration = () => {
 // Create a hook for session management
 export const useAuthSession = () => {
   const navigate = useNavigate();
+  const context = useContext(AuthStateContext);
   
-  const logout = async () => {
-    const { error } = await signOut();
+  const setState = 'setState' in context ? context.setState : undefined;
+  
+  const handleLogout = async () => {
+    const { error } = await logout();
     
     if (error) {
       console.error('Error signing out:', error);
     }
     
+    if (setState) {
+      setState({
+        ...context,
+        isAuthenticated: false,
+        currentUser: null,
+        userId: null,
+        session: null,
+        user: null
+      });
+    }
+    
     navigate('/');
   };
   
-  return { logout };
+  return { logout: handleLogout };
 };
 
 // Create a hook for coin management
-export const useCoinsManagement = () => {
+const useCoinsManagement = () => {
   const context = useContext(AuthStateContext);
   const { userId, pirateCoins } = context;
   
@@ -165,7 +221,7 @@ export const useCoinsManagement = () => {
 };
 
 // Create a hook for game unlocking
-export const useGameUnlocking = () => {
+const useGameUnlocking = () => {
   const { toast } = useToast();
   const context = useContext(AuthStateContext);
   const { userId, pirateCoins, unlockedGames } = context;

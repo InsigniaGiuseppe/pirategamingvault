@@ -2,7 +2,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState, useLoadAuthState, AuthStateContext, initialAuthState } from './useAuthState';
 import { useAuthActions } from './useAuthActions';
-import type { User, Session } from '@supabase/supabase-js';
+import type { CustomUser, CustomSession } from '@/services/customAuthService';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -10,7 +10,7 @@ interface AuthProviderProps {
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (email: string, password: string) => void;
+  login: (username: string, password: string) => void;
   logout: () => void;
   register: (username: string, password: string) => void;
   currentUser?: string | null;
@@ -22,8 +22,8 @@ interface AuthContextType {
   unlockGame: (gameId: string, cost: number) => Promise<boolean>;
   checkIfGameUnlocked: (gameId: string) => boolean;
   isLoading: boolean;
-  user: User | null;
-  session: Session | null;
+  user: CustomUser | null;
+  session: CustomSession | null;
 }
 
 interface Transaction {

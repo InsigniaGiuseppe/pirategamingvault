@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginFormProps {
-  onLogin?: (email: string, password: string) => void;
+  onLogin?: (username: string, password: string) => void;
 }
 
 const LoginForm = ({ onLogin }: LoginFormProps) => {
@@ -184,7 +184,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
-              <p className="text-xs text-gray-500">Can be any username you like (no email validation)</p>
+              <p className="text-xs text-gray-500">Choose any username you like</p>
             </div>
             
             <div className="space-y-2">
