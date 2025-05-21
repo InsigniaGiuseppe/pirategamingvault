@@ -2,7 +2,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { registerUser } from '@/services/customAuthService';
+import { registerUser } from '@/services/registrationService';
 import { AuthStateContext } from './useAuthState';
 
 export const useAuthRegistration = () => {
@@ -49,7 +49,7 @@ export const useAuthRegistration = () => {
       if (setState) {
         setState({
           isAuthenticated: true,
-          currentUser: user.username,
+          currentUser: user.user_metadata.username || user.email?.split('@')[0] || 'User',
           userId: user.id,
           pirateCoins: 10, // Initial balance from registration
           transactions: [{ // Initial welcome transaction
@@ -62,7 +62,11 @@ export const useAuthRegistration = () => {
           unlockedGames: [],
           isLoading: false,
           session: session,
-          user: user,
+          user: {
+            id: user.id,
+            username: user.user_metadata.username || user.email?.split('@')[0] || 'User',
+            email: user.email || ''
+          },
           error: null // Adding the missing error property
         });
       }
