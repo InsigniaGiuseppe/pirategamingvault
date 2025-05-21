@@ -48,7 +48,7 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       .select('*')
       .limit(1);
     
-    if (columnError || !columnInfo) {
+    if (columnError || !columnInfo || columnInfo.length === 0) {
       console.warn('Could not check profiles table schema:', columnError);
       return 'user'; // Default to 'user' role if we can't check
     }
@@ -69,9 +69,14 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       .eq('id', userId)
       .maybeSingle();
     
-    if (error || !data) {
+    if (error) {
       console.warn('Error getting user role:', error);
       return 'user'; // Default to 'user' role
+    }
+    
+    // If no data or role is null/undefined, return default role
+    if (!data || data.role === null || data.role === undefined) {
+      return 'user';
     }
     
     return data.role || 'user';
