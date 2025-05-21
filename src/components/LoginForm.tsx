@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, User, Lock } from 'lucide-react';
+import { LogIn, User, Lock, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,32 +18,62 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, register } = useAuth();
   const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
-    if (onLogin) {
-      onLogin(email, password);
-    } else {
-      login(email, password);
+    try {
+      setIsSubmitting(true);
+      
+      if (onLogin) {
+        onLogin(email, password);
+      } else {
+        await login(email, password);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "An error occurred during login. Please try again."
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     
-    if (registerPassword !== confirmPassword) {
+    try {
+      setIsSubmitting(true);
+      
+      if (registerPassword !== confirmPassword) {
+        toast({
+          variant: "destructive",
+          title: "Password Mismatch",
+          description: "Passwords do not match. Please try again."
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      await register(registerUsername, registerPassword);
+    } catch (error) {
+      console.error('Registration error:', error);
       toast({
         variant: "destructive",
-        title: "Password Mismatch",
-        description: "Passwords do not match. Please try again."
+        title: "Registration Failed", 
+        description: "An error occurred during registration. Please try again."
       });
-      return;
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    register(registerUsername, registerPassword);
   };
 
   return (
@@ -81,6 +111,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -100,6 +131,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -107,8 +139,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
+              disabled={isSubmitting}
             >
-              <LogIn size={18} />
+              {isSubmitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <LogIn size={18} />
+              )}
               Sign in to your vault
             </Button>
           </form>
@@ -128,6 +165,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -145,6 +183,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   minLength={6}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -162,6 +201,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   minLength={6}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -169,8 +209,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
+              disabled={isSubmitting}
             >
-              <LogIn size={18} />
+              {isSubmitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <LogIn size={18} />
+              )}
               Create Account
             </Button>
           </form>
