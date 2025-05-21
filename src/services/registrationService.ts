@@ -10,8 +10,10 @@ export const registerUser = async (
   try {
     console.log('Starting registration for:', username);
     
-    // Use username as the email for auth
-    const email = username;
+    // Format as email to work with Supabase Auth
+    // We'll use a placeholder domain if the username isn't already a valid email
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
+    const email = isValidEmail ? username : `${username}@pirate-gaming.com`;
     
     // First check if the username already exists in profiles
     const { data: existingProfile, error: profileError } = await supabase
