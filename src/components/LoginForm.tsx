@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [registerPassword, setRegisterPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
+  const [registrationInProgress, setRegistrationInProgress] = useState(false);
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -42,9 +44,12 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || registrationInProgress) return;
     
     try {
+      // Mark registration as in progress to prevent double submissions
+      setRegistrationInProgress(true);
+      
       if (registerPassword !== confirmPassword) {
         toast({
           variant: "destructive",
@@ -54,14 +59,36 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         return;
       }
       
+      // Validate inputs
+      if (!registerUsername.trim()) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Username",
+          description: "Please enter a valid username."
+        });
+        return;
+      }
+      
+      if (!registerPassword || registerPassword.length < 5) {
+        toast({
+          variant: "destructive",
+          title: "Password Too Short",
+          description: "Password must be at least 5 characters long."
+        });
+        return;
+      }
+      
+      console.log('Initiating registration for:', registerUsername);
       await register(registerUsername, registerPassword);
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('Registration error in component:', error);
       toast({
         variant: "destructive",
         title: "Registration Failed", 
         description: "An error occurred during registration. Please try again."
       });
+    } finally {
+      setRegistrationInProgress(false);
     }
   };
 
@@ -154,7 +181,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || registrationInProgress}
                 />
               </div>
             </div>
@@ -170,9 +197,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   value={registerPassword}
                   onChange={(e) => setRegisterPassword(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  minLength={6}
+                  minLength={5}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || registrationInProgress}
                 />
               </div>
             </div>
@@ -188,9 +215,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  minLength={6}
+                  minLength={5}
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || registrationInProgress}
                 />
               </div>
             </div>
@@ -198,9 +225,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
-              disabled={isLoading}
+              disabled={isLoading || registrationInProgress}
             >
-              {isLoading ? (
+              {(isLoading || registrationInProgress) ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <LogIn size={18} />

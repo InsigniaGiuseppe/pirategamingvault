@@ -75,11 +75,13 @@ export const useAuthActions = () => {
     
     try {
       setIsProcessing(true);
+      console.log('Attempting to register user:', username);
       
       // Register user with Supabase
       const { credential, error } = await registerUser(username, password);
       
       if (error) {
+        console.error('Registration error from service:', error);
         toast({
           variant: "destructive",
           title: "Registration Failed",
@@ -89,6 +91,7 @@ export const useAuthActions = () => {
       }
       
       if (!credential) {
+        console.error('No credential returned from registerUser');
         toast({
           variant: "destructive",
           title: "Registration Failed",
@@ -97,6 +100,7 @@ export const useAuthActions = () => {
         return;
       }
 
+      console.log('Registration successful, proceeding to login');
       // Auto login after registration
       await login(username, password);
       
