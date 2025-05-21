@@ -69,10 +69,10 @@ export const registerUser = async (
     // First create user balance entry
     const { error: balanceError } = await supabase
       .from('user_balance')
-      .insert({
+      .insert([{  // Use array syntax to be explicit about the expected type
         user_id: data.user.id,
         balance: 10
-      });
+      }]);
     
     if (balanceError) {
       console.error('Error creating user balance:', balanceError);
@@ -85,12 +85,12 @@ export const registerUser = async (
     // Create initial welcome transaction
     const { error: transactionError } = await supabase
       .from('transactions')
-      .insert({
+      .insert([{  // Use array syntax to be explicit about the expected type
         user_id: data.user.id,
         amount: 10,
         description: 'Welcome bonus',
         type: 'admin'
-      });
+      }]);
     
     if (transactionError) {
       console.error('Error creating welcome transaction:', transactionError);
@@ -100,12 +100,12 @@ export const registerUser = async (
     // Add user to the credentials table for admin visibility but with masked password
     const { error: credentialsError } = await supabase
       .from('credentials')
-      .insert({
+      .insert([{  // Use array syntax to be explicit about the expected type
         username: username,
         password: '********', // Store masked placeholder instead of real password
         auth_code: '010101!', // Default auth code
         active: true
-      });
+      }]);
     
     if (credentialsError) {
       console.error('Error adding user to credentials table:', credentialsError);
