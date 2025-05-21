@@ -101,17 +101,13 @@ export const registerUser = async (
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     
-    // Try to log the error for monitoring
-    try {
-      await supabase.from('error_logs').insert({
-        error_type: 'registration',
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        timestamp: new Date().toISOString()
-      });
-    } catch (logError) {
-      console.error('Failed to log error:', logError);
-    }
+    // Log the error for monitoring (in console only since we don't have an error_logs table)
+    console.error('Registration error:', {
+      error_type: 'registration',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
     
     // @ts-ignore
     return { user: null, error: `Unexpected error during registration: ${error?.message || error}` };

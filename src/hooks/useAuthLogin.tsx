@@ -48,7 +48,8 @@ export const useAuthLogin = () => {
           unlockedGames: userUnlockedGames,
           isLoading: false,
           session: session,
-          user: user
+          user: user,
+          error: null // Adding the missing error property
         });
       }
       

@@ -62,7 +62,8 @@ export const useAuthRegistration = () => {
           unlockedGames: [],
           isLoading: false,
           session: session,
-          user: user
+          user: user,
+          error: null // Adding the missing error property
         });
       }
       

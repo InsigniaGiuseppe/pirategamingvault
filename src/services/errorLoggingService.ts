@@ -19,7 +19,8 @@ interface ErrorLogEntry {
   severity: ErrorSeverity;
 }
 
-// Log errors to database for monitoring and analysis
+// Log errors to console for monitoring and analysis
+// Since we don't have an error_logs table yet, we'll just log to console
 export const logError = async (
   errorType: string,
   message: string,
@@ -38,7 +39,7 @@ export const logError = async (
       severity = ErrorSeverity.ERROR 
     } = options;
     
-    // Log to console first for local debugging
+    // Log to console for local debugging
     console.error(`[${severity.toUpperCase()}] ${errorType}: ${message}`);
     if (stack) {
       console.error(stack);
@@ -54,19 +55,10 @@ export const logError = async (
       severity
     };
     
-    // Insert error log into database
-    const { error } = await supabase
-      .from('error_logs')
-      .insert({
-        ...logEntry,
-        timestamp: new Date().toISOString()
-      });
+    // For now, we'll just log to console since we don't have an error_logs table
+    console.error("Error log entry:", logEntry, "Timestamp:", new Date().toISOString());
     
-    if (error) {
-      console.error('Failed to store error log:', error);
-      return false;
-    }
-    
+    // Return true to indicate successful logging
     return true;
   } catch (err) {
     // Fallback logging if database logging fails

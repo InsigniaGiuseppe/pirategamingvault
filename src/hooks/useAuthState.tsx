@@ -93,17 +93,18 @@ export const useLoadAuthState = () => {
       try {
         // Verify session with timeout to prevent long-hanging requests
         const authPromise = verifySession();
-        const timeoutPromise = new Promise((_, reject) => {
+        const timeoutPromise = new Promise<{user: null, session: null, error: string}>((_, reject) => {
           setTimeout(() => reject(new Error('Auth verification timeout')), 5000);
         });
         
-        const { user, session, error } = await Promise.race([
+        const result = await Promise.race([
           authPromise,
-          // @ts-ignore - TypeScript doesn't know this will return the right shape
           timeoutPromise
         ]);
         
         if (!isMounted) return;
+        
+        const { user, session, error } = result;
         
         if (error || !user || !session) {
           setState({
