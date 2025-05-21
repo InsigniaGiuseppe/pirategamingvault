@@ -17,7 +17,7 @@ interface AuthContextType {
   addPirateCoins: (amount: number, description?: string) => void;
   transactions: Transaction[];
   unlockedGames: string[];
-  unlockGame: (gameId: string, cost: number) => void;
+  unlockGame: (gameId: string, cost: number) => Promise<boolean>;
   checkIfGameUnlocked: (gameId: string) => boolean;
   isLoading: boolean;
 }
@@ -35,50 +35,43 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const { state, setState } = useLoadAuthState();
   
-  // Wrap the AuthStateContext around our useAuthActions hook
-  const WrappedAuthActions = () => {
-    const actions = useAuthActions();
-    return actions;
-  };
-  
-  const { 
-    login, 
-    register, 
-    logout, 
-    addPirateCoins, 
-    unlockGame: handleUnlockGame,
-    checkIfGameUnlocked,
-    isProcessing
-  } = WrappedAuthActions();
-
-  const contextValue: AuthContextType = {
-    isAuthenticated: state.isAuthenticated,
-    currentUser: state.currentUser,
-    pirateCoins: state.pirateCoins,
-    transactions: state.transactions,
-    unlockedGames: state.unlockedGames,
-    isLoading: state.isLoading || isProcessing,
-    login,
-    register,
-    logout,
-    addPirateCoins,
-    unlockGame: handleUnlockGame,
-    checkIfGameUnlocked
-  };
-
-  // Create a combined state that includes setState for the context provider
+  // Create a combined state context provider value that includes the setState function
   const authStateWithSetter = {
     ...state,
     setState
   };
-
-  return (
-    <AuthStateContext.Provider value={authStateWithSetter}>
+  
+  // Provide the AuthStateContext around the useAuthActions hook
+  const AuthActionsProvider = () => {
+    return (
+      <AuthStateContext.Provider value={authStateWithSetter}>
+        <AuthActionsConsumer />
+      </AuthStateContext.Provider>
+    );
+  };
+  
+  // Use a consumer component to access the context and create the actions
+  const AuthActionsConsumer = () => {
+    const actions = useAuthActions();
+    
+    const contextValue: AuthContextType = {
+      isAuthenticated: state.isAuthenticated,
+      currentUser: state.currentUser,
+      pirateCoins: state.pirateCoins,
+      transactions: state.transactions,
+      unlockedGames: state.unlockedGames,
+      isLoading: state.isLoading || actions.isProcessing,
+      ...actions
+    };
+    
+    return (
       <AuthContext.Provider value={contextValue}>
         {children}
       </AuthContext.Provider>
-    </AuthStateContext.Provider>
-  );
+    );
+  };
+  
+  return <AuthActionsProvider />;
 };
 
 export const useAuth = () => {

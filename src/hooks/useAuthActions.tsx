@@ -1,22 +1,22 @@
 
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { verifyCredentials, registerUser, updateUserBalance, getUserTransactions, getUserUnlockedGames, getUserBalance } from '@/services/userService';
+import { verifyCredentials } from '@/services/authService';
+import { registerUser } from '@/services/registrationService';
+import { updateUserBalance, getUserTransactions, getUserUnlockedGames, getUserBalance } from '@/services/userService';
 import { unlockGame } from '@/services/gameService';
 import { AuthStateContext } from './useAuthState';
 import { useContext, useState } from 'react';
 
-export const useAuthActions = () => {
+// Create a hook for authentication-related actions
+export const useAuthLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const context = useContext(AuthStateContext);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
-  // Access the properties from context
-  const { isAuthenticated, currentUser, pirateCoins, transactions, unlockedGames, isLoading } = context;
   const setState = 'setState' in context ? context.setState : undefined;
   
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-
   const login = async (username: string, password: string) => {
     if (isProcessing) return;
     
@@ -69,7 +69,16 @@ export const useAuthActions = () => {
       setIsProcessing(false);
     }
   };
+  
+  return { login, isProcessing };
+};
 
+// Create a hook for registration-related actions
+export const useAuthRegistration = () => {
+  const { toast } = useToast();
+  const { login } = useAuthLogin();
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  
   const register = async (username: string, password: string) => {
     if (isProcessing) return;
     
@@ -119,7 +128,17 @@ export const useAuthActions = () => {
       setIsProcessing(false);
     }
   };
+  
+  return { register, isProcessing };
+};
 
+// Create a hook for session management
+export const useAuthSession = () => {
+  const navigate = useNavigate();
+  const context = useContext(AuthStateContext);
+  
+  const setState = 'setState' in context ? context.setState : undefined;
+  
   const logout = () => {
     localStorage.removeItem('pirateLoggedIn');
     // We won't remove the other items so they persist between sessions
@@ -133,7 +152,17 @@ export const useAuthActions = () => {
     }
     navigate('/');
   };
+  
+  return { logout };
+};
 
+// Create a hook for coin management
+export const useCoinsManagement = () => {
+  const context = useContext(AuthStateContext);
+  const { currentUser, pirateCoins } = context;
+  
+  const setState = 'setState' in context ? context.setState : undefined;
+  
   const addPirateCoins = async (amount: number, description: string = '') => {
     if (!currentUser) return;
     
@@ -159,7 +188,18 @@ export const useAuthActions = () => {
       }));
     }
   };
+  
+  return { addPirateCoins };
+};
 
+// Create a hook for game unlocking
+export const useGameUnlocking = () => {
+  const { toast } = useToast();
+  const context = useContext(AuthStateContext);
+  const { currentUser, pirateCoins, unlockedGames } = context;
+  
+  const setState = 'setState' in context ? context.setState : undefined;
+  
   const handleUnlockGame = async (gameId: string, cost: number) => {
     if (!currentUser) return false;
     
@@ -199,17 +239,30 @@ export const useAuthActions = () => {
     
     return false;
   };
-
+  
   const checkIfGameUnlocked = (gameId: string) => {
     return unlockedGames.includes(gameId);
   };
+  
+  return { unlockGame: handleUnlockGame, checkIfGameUnlocked };
+};
 
+// Combine all hooks into a single useAuthActions hook
+export const useAuthActions = () => {
+  const { login, isProcessing: isLoginProcessing } = useAuthLogin();
+  const { register, isProcessing: isRegistrationProcessing } = useAuthRegistration();
+  const { logout } = useAuthSession();
+  const { addPirateCoins } = useCoinsManagement();
+  const { unlockGame, checkIfGameUnlocked } = useGameUnlocking();
+  
+  const isProcessing = isLoginProcessing || isRegistrationProcessing;
+  
   return {
     login,
     register,
     logout,
     addPirateCoins,
-    unlockGame: handleUnlockGame,
+    unlockGame,
     checkIfGameUnlocked,
     isProcessing
   };
