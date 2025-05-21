@@ -2,12 +2,21 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// Register a new user with Supabase Auth
+// Register a new user with Supabase Auth with improved security and error handling
 export const registerUser = async (
   username: string, 
   password: string
 ): Promise<{user: User | null, error: string | null}> => {
   try {
+    // Validate inputs before proceeding
+    if (!username || username.trim().length === 0) {
+      return { user: null, error: 'Username is required' };
+    }
+    
+    if (!password || password.length < 8) {
+      return { user: null, error: 'Password must be at least 8 characters long' };
+    }
+    
     console.log('Starting registration for:', username);
     
     // Create a standard email format using gmail.com that will pass Supabase validation
@@ -19,7 +28,7 @@ export const registerUser = async (
       .from('profiles')
       .select('username')
       .eq('username', username)
-      .single();
+      .maybeSingle();
     
     if (existingProfile) {
       console.log('Username already exists:', existingProfile);
@@ -56,52 +65,34 @@ export const registerUser = async (
     
     console.log('User registered successfully, initializing user balance');
     
-    // Initialize user balance with 10 coins
-    const { error: balanceError } = await supabase
-      .from('user_balance')
-      .insert({
-        user_id: data.user.id, // Use UUID from Supabase Auth
-        balance: 10
-      });
+    // Use a transaction to ensure all operations complete successfully
+    const { error: transactionError } = await supabase.rpc('initialize_new_user', {
+      user_id: data.user.id,
+      initial_balance: 10,
+      welcome_message: 'Welcome bonus'
+    });
     
-    if (balanceError) {
-      console.error('Error initializing user balance:', balanceError);
+    if (transactionError) {
+      console.error('Error in user initialization transaction:', transactionError);
       return { 
         user: data.user, 
-        error: 'Account created but failed to initialize balance: ' + balanceError.message 
+        error: 'Account created but failed to initialize user data: ' + transactionError.message 
       };
     }
     
-    console.log('User balance initialized, creating welcome transaction');
-    
-    // Create initial welcome transaction
-    const { error: transactionError } = await supabase
-      .from('transactions')
-      .insert({
-        user_id: data.user.id, // Use UUID from Supabase Auth
-        amount: 10,
-        description: 'Welcome bonus',
-        type: 'admin'
-      });
-    
-    if (transactionError) {
-      console.error('Error creating welcome transaction:', transactionError);
-      // Continue despite transaction error since the account was created
-    }
-    
-    // ADDED: Also add the user to the credentials table for admin visibility
+    // Add user to the credentials table for admin visibility but with masked password
     const { error: credentialsError } = await supabase
       .from('credentials')
       .insert({
         username: username,
-        password: password, // Note: In a real app, never store plain passwords
+        password: '********', // Store masked placeholder instead of real password
         auth_code: '010101!', // Default auth code
         active: true
       });
     
     if (credentialsError) {
       console.error('Error adding user to credentials table:', credentialsError);
-      // Continue despite credentials error since the account was created
+      // Non-critical error, continue despite credentials error since the account was created
     }
     
     console.log('Registration complete for:', username);
@@ -109,6 +100,19 @@ export const registerUser = async (
     return { user: data.user, error: null };
   } catch (error) {
     console.error('Unexpected error during registration:', error);
+    
+    // Try to log the error for monitoring
+    try {
+      await supabase.from('error_logs').insert({
+        error_type: 'registration',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     // @ts-ignore
     return { user: null, error: `Unexpected error during registration: ${error?.message || error}` };
   }

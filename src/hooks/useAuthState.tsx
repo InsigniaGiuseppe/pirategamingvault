@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { verifySession } from '@/services/customAuthService';
 import { getUserBalance, getUserTransactions, getUserUnlockedGames } from '@/services/userService';
 import type { CustomUser, CustomSession } from '@/services/customAuthService';
@@ -14,6 +14,7 @@ interface AuthContextState {
   isLoading: boolean;
   session: CustomSession | null;
   user: CustomUser | null;
+  error: string | null;
   setState?: React.Dispatch<React.SetStateAction<AuthContextState>>;
 }
 
@@ -34,7 +35,8 @@ export const initialAuthState: AuthContextState = {
   unlockedGames: [],
   isLoading: false,
   session: null,
-  user: null
+  user: null,
+  error: null
 };
 
 export const AuthStateContext = createContext<{
@@ -47,6 +49,7 @@ export const AuthStateContext = createContext<{
   isLoading: boolean;
   session: CustomSession | null;
   user: CustomUser | null;
+  error: string | null;
   setState: React.Dispatch<React.SetStateAction<AuthContextState>>;
 } | AuthContextState>(initialAuthState);
 
@@ -58,22 +61,55 @@ export const useAuthState = () => {
   return context;
 };
 
-// Hook for loading the initial auth state
+// Enhanced hook for loading the initial auth state with optimized data fetching
 export const useLoadAuthState = () => {
   const [state, setState] = useState<AuthContextState>(initialAuthState);
   
+  // Create memoized data fetching function to prevent unnecessary re-renders
+  const fetchUserData = useCallback(async (userId: string) => {
+    try {
+      // Use Promise.all to fetch data in parallel for better performance
+      const [balance, userTransactions, userUnlockedGames] = await Promise.all([
+        getUserBalance(userId),
+        getUserTransactions(userId),
+        getUserUnlockedGames(userId),
+      ]);
+      
+      return { balance, userTransactions, userUnlockedGames };
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      throw error;
+    }
+  }, []);
+  
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
-      setState(prev => ({ ...prev, isLoading: true }));
+      if (!isMounted) return;
+      
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       try {
-        // Verify session
-        const { user, session, error } = await verifySession();
+        // Verify session with timeout to prevent long-hanging requests
+        const authPromise = verifySession();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Auth verification timeout')), 5000);
+        });
+        
+        const { user, session, error } = await Promise.race([
+          authPromise,
+          // @ts-ignore - TypeScript doesn't know this will return the right shape
+          timeoutPromise
+        ]);
+        
+        if (!isMounted) return;
         
         if (error || !user || !session) {
           setState({
             ...initialAuthState,
             isLoading: false,
+            error: error || 'Authentication failed',
           });
           return;
         }
@@ -81,14 +117,10 @@ export const useLoadAuthState = () => {
         const userId = user.id;
         
         try {
-          // Get balance
-          const balance = await getUserBalance(userId);
+          // Fetch user data in parallel for better performance
+          const { balance, userTransactions, userUnlockedGames } = await fetchUserData(userId);
           
-          // Get transactions
-          const userTransactions = await getUserTransactions(userId);
-          
-          // Get unlocked games
-          const userUnlockedGames = await getUserUnlockedGames(userId);
+          if (!isMounted) return;
           
           setState({
             isAuthenticated: true,
@@ -99,10 +131,14 @@ export const useLoadAuthState = () => {
             unlockedGames: userUnlockedGames,
             isLoading: false,
             session: session,
-            user: user
+            user: user,
+            error: null
           });
         } catch (error) {
           console.error('Error loading user data:', error);
+          
+          if (!isMounted) return;
+          
           setState(prev => ({ 
             ...prev, 
             isLoading: false,
@@ -110,20 +146,38 @@ export const useLoadAuthState = () => {
             currentUser: user.username,
             userId: userId,
             session: session,
-            user: user
+            user: user,
+            error: 'Failed to load user data'
           }));
         }
       } catch (error) {
         console.error('Error during authentication check:', error);
+        
+        if (!isMounted) return;
+        
         setState({
           ...initialAuthState,
           isLoading: false,
+          error: error instanceof Error ? error.message : 'Authentication error',
         });
       }
     };
     
     checkAuth();
-  }, []);
+    
+    // Set up a refresh interval to periodically check session validity
+    const refreshInterval = setInterval(() => {
+      // Only refresh if the user is authenticated
+      if (state.isAuthenticated) {
+        checkAuth();
+      }
+    }, 15 * 60 * 1000); // Refresh every 15 minutes
+    
+    return () => {
+      isMounted = false;
+      clearInterval(refreshInterval);
+    };
+  }, [fetchUserData]);
   
   return { state, setState };
 };
