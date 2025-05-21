@@ -45,12 +45,12 @@ serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url)
-    const path = url.pathname.split('/').pop()
+    const body = await req.json()
+    const { action } = body
     
     // Register endpoint
-    if (path === 'register' && req.method === 'POST') {
-      const { username, password } = await req.json()
+    if (action === 'register' && req.method === 'POST') {
+      const { username, password } = body
       
       // Validate inputs
       if (!username || !password) {
@@ -150,8 +150,8 @@ serve(async (req) => {
     }
     
     // Login endpoint
-    if (path === 'login' && req.method === 'POST') {
-      const { username, password } = await req.json()
+    if (action === 'login' && req.method === 'POST') {
+      const { username, password } = body
       
       // Validate inputs
       if (!username || !password) {
@@ -203,8 +203,8 @@ serve(async (req) => {
     }
     
     // Verify session endpoint
-    if (path === 'verify' && req.method === 'POST') {
-      const { sessionToken } = await req.json()
+    if (action === 'verify' && req.method === 'POST') {
+      const { sessionToken } = body
       
       if (!sessionToken) {
         return new Response(
@@ -274,8 +274,8 @@ serve(async (req) => {
     }
     
     // Logout endpoint
-    if (path === 'logout' && req.method === 'POST') {
-      const { sessionToken } = await req.json()
+    if (action === 'logout' && req.method === 'POST') {
+      const { sessionToken } = body
       
       if (!sessionToken) {
         return new Response(

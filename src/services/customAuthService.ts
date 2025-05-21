@@ -26,9 +26,8 @@ export const registerUser = async (username: string, password: string): Promise<
     console.log('Starting registration for:', username);
     
     const { data, error } = await supabase.functions.invoke('auth', {
-      body: { username, password },
+      body: { action: 'register', username, password },
       method: 'POST',
-      path: 'register'
     });
     
     if (error) {
@@ -64,9 +63,8 @@ export const login = async (username: string, password: string): Promise<AuthRes
     console.log('Logging in with username:', username);
     
     const { data, error } = await supabase.functions.invoke('auth', {
-      body: { username, password },
+      body: { action: 'login', username, password },
       method: 'POST',
-      path: 'login'
     });
     
     if (error) {
@@ -106,9 +104,8 @@ export const verifySession = async (): Promise<AuthResponse> => {
     }
     
     const { data, error } = await supabase.functions.invoke('auth', {
-      body: { sessionToken },
+      body: { action: 'verify', sessionToken },
       method: 'POST',
-      path: 'verify'
     });
     
     if (error || !data || !data.valid) {
@@ -137,9 +134,8 @@ export const logout = async (): Promise<{ error: string | null }> => {
     if (sessionToken) {
       // Call logout endpoint to remove session from database
       await supabase.functions.invoke('auth', {
-        body: { sessionToken },
+        body: { action: 'logout', sessionToken },
         method: 'POST',
-        path: 'logout'
       });
       
       // Remove from localStorage
