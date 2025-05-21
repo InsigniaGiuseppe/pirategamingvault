@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CustomUser, CustomSession } from "./customAuthService";
 
@@ -74,15 +73,14 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       return 'user'; // Default to 'user' role
     }
     
-    // TypeScript fix: Check if data exists and if it has the role property
-    // before trying to access it
-    if (!data) {
-      return 'user';
+    // Explicitly check if data is null before proceeding
+    if (data === null) {
+      return 'user'; // Default to 'user' role if no data
     }
     
     // Check if data is a record with a role property before accessing it
     // Using a type guard to ensure TypeScript understands what we're doing
-    const hasRole = typeof data === 'object' && data !== null && 'role' in data;
+    const hasRole = typeof data === 'object' && 'role' in data;
     return hasRole ? (data.role as string) || 'user' : 'user';
   } catch (error) {
     console.error('Error getting user role:', error);
