@@ -74,12 +74,16 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       return 'user'; // Default to 'user' role
     }
     
-    // If no data or role is null/undefined, return default role
-    if (!data || data.role === null || data.role === undefined) {
+    // TypeScript fix: Check if data exists and if it has the role property
+    // before trying to access it
+    if (!data) {
       return 'user';
     }
     
-    return data.role || 'user';
+    // Check if data is a record with a role property before accessing it
+    // Using a type guard to ensure TypeScript understands what we're doing
+    const hasRole = data && typeof data === 'object' && 'role' in data;
+    return hasRole ? (data.role as string) || 'user' : 'user';
   } catch (error) {
     console.error('Error getting user role:', error);
     return 'user'; // Default to 'user' role
