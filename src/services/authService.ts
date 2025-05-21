@@ -38,9 +38,31 @@ export const isSessionValid = async (): Promise<boolean> => {
   }
 };
 
-// Get user role
+// Get user role - this checks if a 'role' column exists, 
+// and returns a default value if it doesn't
 export const getUserRole = async (userId: string): Promise<string | null> => {
   try {
+    // First check if 'role' column exists in profiles table
+    const { data: columnInfo, error: columnError } = await supabase
+      .from('profiles')
+      .select('*')
+      .limit(1);
+    
+    if (columnError || !columnInfo) {
+      console.warn('Could not check profiles table schema:', columnError);
+      return 'user'; // Default to 'user' role if we can't check
+    }
+    
+    // If the first row doesn't have a 'role' property, assume it doesn't exist
+    const firstRow = columnInfo[0];
+    const roleExists = firstRow && 'role' in firstRow;
+    
+    if (!roleExists) {
+      console.warn('Role column does not exist in profiles table');
+      return 'user'; // Default to 'user' role
+    }
+    
+    // If role column exists, proceed with original query
     const { data, error } = await supabase
       .from('profiles')
       .select('role')
@@ -48,13 +70,14 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       .maybeSingle();
     
     if (error || !data) {
-      return null;
+      console.warn('Error getting user role:', error);
+      return 'user'; // Default to 'user' role
     }
     
     return data.role || 'user';
   } catch (error) {
     console.error('Error getting user role:', error);
-    return null;
+    return 'user'; // Default to 'user' role
   }
 };
 

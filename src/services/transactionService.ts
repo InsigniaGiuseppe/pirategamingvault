@@ -26,13 +26,14 @@ export const getUserTransactions = async (userId: string): Promise<Transaction[]
       return [];
     }
     
-    // Transform database records to Transaction interface
+    // Transform database records to Transaction interface with type casting to ensure type safety
     return (data || []).map(record => ({
       id: record.id || uuid(),
       timestamp: new Date(record.created_at).getTime(),
       amount: record.amount,
-      description: record.description,
-      type: record.type
+      description: record.description || '',
+      // Cast the type to the specific union type we want
+      type: record.type as 'earn' | 'spend' | 'admin'
     }));
   } catch (error) {
     console.error('Unexpected error in getUserTransactions:', error);
