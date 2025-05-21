@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { signInWithEmail, signOut } from '@/services/authService';
@@ -7,7 +6,6 @@ import { updateUserBalance, getUserTransactions, getUserUnlockedGames, getUserBa
 import { unlockGame } from '@/services/gameService';
 import { AuthStateContext } from './useAuthState';
 import { useContext, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 // Create a hook for authentication-related actions
 export const useAuthLogin = () => {
@@ -18,14 +16,14 @@ export const useAuthLogin = () => {
   
   const setState = 'setState' in context ? context.setState : undefined;
   
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     if (isProcessing) return;
     
     try {
       setIsProcessing(true);
       
       // Sign in with Supabase Auth
-      const { session, user, error } = await signInWithEmail(email, password);
+      const { session, user, error } = await signInWithEmail(username, password);
       
       if (error || !session || !user) {
         toast({
@@ -57,8 +55,7 @@ export const useAuthLogin = () => {
 // Create a hook for registration-related actions
 export const useAuthRegistration = () => {
   const { toast } = useToast();
-  const { login } = useAuthLogin();
-  const navigate = useNavigate();  // Add the navigate function here
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   const register = async (username: string, password: string) => {
@@ -117,7 +114,6 @@ export const useAuthRegistration = () => {
 // Create a hook for session management
 export const useAuthSession = () => {
   const navigate = useNavigate();
-  const context = useContext(AuthStateContext);
   
   const logout = async () => {
     const { error } = await signOut();
@@ -135,7 +131,7 @@ export const useAuthSession = () => {
 // Create a hook for coin management
 export const useCoinsManagement = () => {
   const context = useContext(AuthStateContext);
-  const { currentUser, userId, pirateCoins } = context;
+  const { userId, pirateCoins } = context;
   
   const setState = 'setState' in context ? context.setState : undefined;
   
@@ -230,7 +226,7 @@ export const useAuthActions = () => {
   const { logout } = useAuthSession();
   const { addPirateCoins } = useCoinsManagement();
   const { unlockGame, checkIfGameUnlocked } = useGameUnlocking();
-  const navigate = useNavigate(); // Make sure navigate is available at this level too
+  const navigate = useNavigate();
   
   const isProcessing = isLoginProcessing || isRegistrationProcessing;
   

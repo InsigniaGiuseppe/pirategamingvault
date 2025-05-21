@@ -2,23 +2,47 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { AuthResponse, Session, User } from "@supabase/supabase-js";
 
-// Sign in with email and password using Supabase Auth
-export const signInWithEmail = async (email: string, password: string): Promise<{
+// Sign in with username, converting to internal email format for Supabase Auth
+export const signInWithEmail = async (username: string, password: string): Promise<{
   session: Session | null;
   user: User | null;
   error: string | null;
 }> => {
   try {
-    console.log('Signing in with email:', email);
+    console.log('Signing in with username:', username);
     
+    // Try direct login first (for users who registered with email)
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: username, 
       password
     });
     
+    // If direct login fails, try the username format
     if (error) {
-      console.error('Error signing in:', error.message);
-      return { session: null, user: null, error: error.message };
+      console.log('Direct login failed, trying username format login');
+      const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@user.pirate-gaming.com`;
+      
+      const { data: usernameData, error: usernameError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password
+      });
+      
+      if (usernameError) {
+        console.error('Error signing in with username format:', usernameError.message);
+        return { session: null, user: null, error: 'Invalid username or password' };
+      }
+      
+      if (!usernameData.session || !usernameData.user) {
+        console.log('No session or user data returned from username login');
+        return { session: null, user: null, error: 'Authentication failed' };
+      }
+      
+      console.log('Authentication successful with username format for:', username);
+      return {
+        session: usernameData.session,
+        user: usernameData.user,
+        error: null
+      };
     }
     
     if (!data.session || !data.user) {
@@ -26,12 +50,13 @@ export const signInWithEmail = async (email: string, password: string): Promise<
       return { session: null, user: null, error: 'Authentication failed' };
     }
     
-    console.log('Authentication successful for:', data.user.email);
+    console.log('Authentication successful for:', username);
     return {
       session: data.session,
       user: data.user,
       error: null
     };
+    
   } catch (error) {
     console.error('Unexpected error during authentication:', error);
     // @ts-ignore

@@ -10,10 +10,9 @@ export const registerUser = async (
   try {
     console.log('Starting registration for:', username);
     
-    // Format as email to work with Supabase Auth
-    // We'll use a placeholder domain if the username isn't already a valid email
-    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username);
-    const email = isValidEmail ? username : `${username}@pirate-gaming.com`;
+    // Create a consistent email format for Supabase Auth that doesn't need validation
+    // Use a simple format that won't trigger email validation issues
+    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@user.pirate-gaming.com`;
     
     // First check if the username already exists in profiles
     const { data: existingProfile, error: profileError } = await supabase
@@ -32,7 +31,7 @@ export const registerUser = async (
       return { user: null, error: 'Error checking if username exists' };
     }
     
-    console.log('Username is available, proceeding with registration');
+    console.log('Username is available, proceeding with registration with email:', email);
     
     // Register user with Supabase Auth
     const { data, error } = await supabase.auth.signUp({

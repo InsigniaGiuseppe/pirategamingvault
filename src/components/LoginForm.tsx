@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, User, Lock, Mail, Loader2 } from 'lucide-react';
+import { LogIn, User, Lock, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 
@@ -11,7 +12,7 @@ interface LoginFormProps {
 }
 
 const LoginForm = ({ onLogin }: LoginFormProps) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [registerUsername, setRegisterUsername] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
@@ -27,9 +28,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     
     try {
       if (onLogin) {
-        onLogin(email, password);
+        onLogin(username, password);
       } else {
-        await login(email, password);
+        await login(username, password);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -115,15 +116,15 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <TabsContent value="login">
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-black block">Email or Username</label>
+              <label htmlFor="username" className="text-sm font-medium text-black block">Username</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Input
-                  id="email"
+                  id="username"
                   type="text"
-                  placeholder="Enter your email or username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   required
                   disabled={isLoading}
@@ -183,7 +184,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   disabled={isLoading || registrationInProgress}
                 />
               </div>
-              <p className="text-xs text-gray-500">This will be used as your login credential</p>
+              <p className="text-xs text-gray-500">Can be any username you like (no email validation)</p>
             </div>
             
             <div className="space-y-2">
