@@ -20,7 +20,7 @@ export const signInWithEmail = async (username: string, password: string): Promi
     // If direct login fails, try the username format
     if (error) {
       console.log('Direct login failed, trying username format login');
-      const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@user.pirate-gaming.com`;
+      const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
       
       const { data: usernameData, error: usernameError } = await supabase.auth.signInWithPassword({
         email: email,

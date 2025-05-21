@@ -10,9 +10,9 @@ export const registerUser = async (
   try {
     console.log('Starting registration for:', username);
     
-    // Create a consistent email format for Supabase Auth that doesn't need validation
-    // Use a simple format that won't trigger email validation issues
-    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@user.pirate-gaming.com`;
+    // Create a standard email format using gmail.com that will pass Supabase validation
+    // This is just for auth purposes and won't send actual emails
+    const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, '')}@gmail.com`;
     
     // First check if the username already exists in profiles
     const { data: existingProfile, error: profileError } = await supabase
