@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Copy, Refresh } from 'lucide-react';
+import { Copy, RefreshCw } from 'lucide-react';
 import { generateSecurePassword } from '@/utils/passwordSecurity';
 
 interface PasswordSuggestionProps {
@@ -46,7 +46,7 @@ const PasswordSuggestion: React.FC<PasswordSuggestionProps> = ({
           title="Generate new password"
           className="flex-shrink-0"
         >
-          <Refresh size={16} />
+          <RefreshCw size={16} />
         </Button>
         <Button 
           type="button" 
