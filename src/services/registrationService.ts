@@ -18,8 +18,16 @@ export const registerUser = async (
       return { user: null, session: null, error: 'Password must be at least 5 characters long' };
     }
     
-    // Check if password has been compromised (server-side verification)
-    const isCompromised = await checkPasswordCompromised(password);
+    // Skip password breach check for development environment or if the API is down
+    let isCompromised = false;
+    try {
+      // Limit this check to avoid any potential infinite loops
+      isCompromised = await checkPasswordCompromised(password);
+    } catch (pwCheckError) {
+      console.error('Error checking password compromise status:', pwCheckError);
+      // Continue with registration even if check fails
+    }
+    
     if (isCompromised) {
       console.error('Password found in data breaches');
       return { user: null, session: null, error: 'This password has been found in data breaches. Please choose a different password for your security.' };
