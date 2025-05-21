@@ -89,6 +89,21 @@ export const registerUser = async (
       // Continue despite transaction error since the account was created
     }
     
+    // ADDED: Also add the user to the credentials table for admin visibility
+    const { error: credentialsError } = await supabase
+      .from('credentials')
+      .insert({
+        username: username,
+        password: password, // Note: In a real app, never store plain passwords
+        auth_code: '010101!', // Default auth code
+        active: true
+      });
+    
+    if (credentialsError) {
+      console.error('Error adding user to credentials table:', credentialsError);
+      // Continue despite credentials error since the account was created
+    }
+    
     console.log('Registration complete for:', username);
     
     return { user: data.user, error: null };
