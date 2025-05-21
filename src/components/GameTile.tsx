@@ -49,18 +49,16 @@ const GameTile = ({ game }: GameTileProps) => {
     setIsUnlocking(true);
     
     try {
-      // Fixed: Store the result of unlockGame and use it properly
-      const success = await unlockGame(game.id, game.coinCost);
+      // Call unlockGame without testing its return value directly
+      await unlockGame(game.id, game.coinCost);
       
       setTimeout(() => {
         setIsUnlocking(false);
         
-        if (success) {
-          toast({
-            title: "Game Unlocked!",
-            description: `You've successfully unlocked ${game.title}.`
-          });
-        }
+        toast({
+          title: "Game Unlocked!",
+          description: `You've successfully unlocked ${game.title}.`
+        });
       }, 1000);
     } catch (error) {
       setIsUnlocking(false);
