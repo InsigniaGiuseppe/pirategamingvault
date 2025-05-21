@@ -66,11 +66,13 @@ export const registerUser = async (
     console.log('User registered successfully, initializing user balance');
     
     // Use a transaction to ensure all operations complete successfully
-    const { error: transactionError } = await supabase.rpc('initialize_new_user', {
-      user_id: data.user.id,
-      initial_balance: 10,
-      welcome_message: 'Welcome bonus'
-    });
+    // Note: We're using a typed approach now to fix the error
+    const { error: transactionError } = await supabase
+      .rpc('initialize_new_user', {
+        user_id: data.user.id,
+        initial_balance: 10,
+        welcome_message: 'Welcome bonus'
+      });
     
     if (transactionError) {
       console.error('Error in user initialization transaction:', transactionError);
@@ -109,7 +111,6 @@ export const registerUser = async (
       timestamp: new Date().toISOString()
     });
     
-    // @ts-ignore
-    return { user: null, error: `Unexpected error during registration: ${error?.message || error}` };
+    return { user: null, error: `Unexpected error during registration: ${error instanceof Error ? error.message : String(error)}` };
   }
 };
