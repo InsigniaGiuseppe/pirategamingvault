@@ -74,15 +74,13 @@ export const getUserRole = async (userId: string): Promise<string | null> => {
       return 'user'; // Default to 'user' role
     }
     
-    // Explicitly check if data is null before proceeding
+    // Early return pattern: Handle null data explicitly
     if (data === null) {
       return 'user'; // Default to 'user' role if no data
     }
     
-    // Check if data is a record with a role property before accessing it
-    // Using a type guard to ensure TypeScript understands what we're doing
-    const hasRole = typeof data === 'object' && data !== null && 'role' in data;
-    return hasRole ? (data.role as string) || 'user' : 'user';
+    // Now that we've checked for null, we can safely access properties on data
+    return 'role' in data ? (data.role as string) || 'user' : 'user';
   } catch (error) {
     console.error('Error getting user role:', error);
     return 'user'; // Default to 'user' role
