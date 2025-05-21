@@ -45,11 +45,11 @@ const Index = () => {
   useEffect(() => {
     return () => {
       if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
+        window.clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
       }
       if (messageIntervalRef.current) {
-        clearInterval(messageIntervalRef.current);
+        window.clearInterval(messageIntervalRef.current);
         messageIntervalRef.current = null;
       }
     };
@@ -67,6 +67,17 @@ const Index = () => {
     sessionStorage.setItem('loginAttempts', loginAttempts.toString());
   }, [loginAttempts]);
   
+  const cleanupIntervals = () => {
+    if (progressIntervalRef.current) {
+      window.clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    if (messageIntervalRef.current) {
+      window.clearInterval(messageIntervalRef.current);
+      messageIntervalRef.current = null;
+    }
+  };
+  
   const handleLogin = (email: string, password: string) => {
     // Skip if auth is already loading to prevent duplicate processes
     if (authLoading || loading) return;
@@ -79,29 +90,23 @@ const Index = () => {
     setShowDialog(false);
     
     // Message rotation logic
-    if (messageIntervalRef.current) {
-      clearInterval(messageIntervalRef.current);
-    }
+    cleanupIntervals();
     
-    const messageInterval = setInterval(() => {
+    const messageInterval = window.setInterval(() => {
       setMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
     }, 400);
-    messageIntervalRef.current = messageInterval as unknown as number;
+    messageIntervalRef.current = messageInterval;
     
     // Progress bar logic
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-    }
-    
     const startTime = Date.now();
     const duration = 8000; // 8 seconds total
     
-    const progressInterval = setInterval(() => {
+    const progressInterval = window.setInterval(() => {
       const elapsed = Date.now() - startTime;
       const newProgress = Math.min(100, (elapsed / duration) * 100);
       
       if (newProgress >= 60 && !isPaused) {
-        clearInterval(progressInterval);
+        cleanupIntervals();
         setIsPaused(true);
         setProgress(60);
         setShowDialog(true);
@@ -109,12 +114,7 @@ const Index = () => {
         setProgress(newProgress);
         
         if (newProgress >= 100) {
-          clearInterval(progressInterval);
-          if (messageIntervalRef.current) {
-            clearInterval(messageIntervalRef.current);
-            messageIntervalRef.current = null;
-          }
-          progressIntervalRef.current = null;
+          cleanupIntervals();
           
           // Call the actual login function
           login(email, password);
@@ -122,7 +122,7 @@ const Index = () => {
         }
       }
     }, 50);
-    progressIntervalRef.current = progressInterval as unknown as number;
+    progressIntervalRef.current = progressInterval;
   };
   
   const resumeLoading = () => {
@@ -136,15 +136,13 @@ const Index = () => {
       setIsPaused(false);
       setShowConfirm(false);
       
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
+      cleanupIntervals();
       
       const startTime = Date.now();
       // Increase duration for the final 40% to make it slower, especially the last 10%
       const remainingDuration = 8000 * ((100 - progress) / 100); // Calculate remaining time
       
-      const progressInterval = setInterval(() => {
+      const progressInterval = window.setInterval(() => {
         const elapsed = Date.now() - startTime;
         let additionalProgress;
         
@@ -160,34 +158,21 @@ const Index = () => {
         setProgress(newProgress);
         
         if (newProgress >= 100) {
-          clearInterval(progressInterval);
-          if (messageIntervalRef.current) {
-            clearInterval(messageIntervalRef.current);
-            messageIntervalRef.current = null;
-          }
-          progressIntervalRef.current = null;
+          cleanupIntervals();
           
           // Call the actual login function
           login(loginEmail, loginPassword);
           setLoading(false);
         }
       }, 50);
-      progressIntervalRef.current = progressInterval as unknown as number;
+      progressIntervalRef.current = progressInterval;
     }
   };
 
   const cancelLogin = () => {
     setLoginAttempts(prev => prev + 1);
     
-    if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current);
-      progressIntervalRef.current = null;
-    }
-    
-    if (messageIntervalRef.current) {
-      clearInterval(messageIntervalRef.current);
-      messageIntervalRef.current = null;
-    }
+    cleanupIntervals();
     
     setLoading(false);
     setIsPaused(false);

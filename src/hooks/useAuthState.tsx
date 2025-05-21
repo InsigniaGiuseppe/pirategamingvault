@@ -74,27 +74,36 @@ export const useLoadAuthState = () => {
   
   useEffect(() => {
     let isMounted = true;
+    let authCheckTimeout: number | null = null;
     
     const checkAuth = async () => {
       if (!isMounted) return;
       
-      // Set to loading state initially
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
       try {
-        // Verify session with timeout to prevent long-hanging requests
-        const authPromise = verifySession();
+        // Set to loading state initially
+        setState(prev => ({ ...prev, isLoading: true, error: null }));
+        
+        // Create a timeout promise to prevent hanging
         const timeoutPromise = new Promise<{user: null, session: null, error: string}>((_, reject) => {
-          setTimeout(() => reject(new Error('Auth verification timeout')), 5000);
+          authCheckTimeout = window.setTimeout(() => {
+            reject(new Error('Auth verification timeout'));
+          }, 5000) as unknown as number;
         });
         
+        // Race between the actual auth check and the timeout
         const result = await Promise.race([
-          authPromise,
+          verifySession(),
           timeoutPromise
         ]).catch(err => {
           console.error('Auth verification error:', err);
           return {user: null, session: null, error: err.message};
         });
+        
+        // Clear the timeout as we got a response
+        if (authCheckTimeout) {
+          window.clearTimeout(authCheckTimeout);
+          authCheckTimeout = null;
+        }
         
         if (!isMounted) return;
         
@@ -164,6 +173,9 @@ export const useLoadAuthState = () => {
     
     return () => {
       isMounted = false;
+      if (authCheckTimeout) {
+        window.clearTimeout(authCheckTimeout);
+      }
     };
   }, [fetchUserData]);
   
