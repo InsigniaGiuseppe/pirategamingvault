@@ -1,203 +1,113 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,400&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 7%;
+    --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
-
+    --card-foreground: 224 71.4% 4.1%;
+ 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover-foreground: 224 71.4% 4.1%;
+ 
+    --primary: 220.9 39.3% 11%;
+    --primary-foreground: 210 20% 98%;
+ 
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+ 
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+ 
+    --accent: 220 14.3% 95.9%;
+    --accent-foreground: 220.9 39.3% 11%;
+ 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
 
-    --primary: 0 0% 7%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 93%;
-    --secondary-foreground: 0 0% 7%;
-
-    --muted: 0 0% 93%;
-    --muted-foreground: 0 0% 35%;
-
-    --accent: 0 0% 93%;
-    --accent-foreground: 0 0% 7%;
-
-    --destructive: 0 0% 7%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 0 0% 87%;
-    --input: 0 0% 87%;
-    --ring: 0 0% 7%;
-
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+ 
     --radius: 0.5rem;
   }
-
+ 
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+ 
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+ 
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+ 
+    --primary: 210 20% 98%;
+    --primary-foreground: 220.9 39.3% 11%;
+ 
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+ 
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+ 
+    --accent: 215 27.9% 16.9%;
+    --accent-foreground: 210 20% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+ 
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 216 12.2% 83.9%;
+  }
+}
+ 
+@layer base {
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-white text-black font-satoshi overflow-x-hidden;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    letter-spacing: -0.02em;
+    @apply bg-background text-foreground;
   }
+}
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-bold text-black;
-    letter-spacing: -0.02em;
-  }
+/* Custom animation classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-  /* Monochrome aesthetics */
-  .saas-panel {
-    @apply bg-white rounded-lg shadow-saas border border-gray-200;
-  }
-  
-  .saas-panel-dark {
-    @apply bg-white rounded-lg shadow-saas border border-gray-200;
-  }
-  
-  /* Updated button classes with monochrome styles */
-  .saas-button-primary {
-    @apply bg-white text-black font-medium rounded-md px-6 py-3 border-2 border-black
-    hover:bg-black hover:text-white transition-all duration-300;
-  }
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
 
-  .saas-button-secondary {
-    @apply bg-white text-black font-medium rounded-md px-6 py-3 border-2 border-black
-    hover:bg-black hover:text-white transition-all duration-300;
-  }
-  
-  .saas-button-tertiary {
-    @apply bg-gray-100 text-black font-medium rounded-md px-6 py-3 border-2 border-gray-300
-    hover:bg-black hover:text-white hover:border-black transition-all duration-300;
-  }
-  
-  .saas-button-outline {
-    @apply bg-white border-2 border-black text-black font-medium rounded-md px-6 py-3
-    hover:bg-black hover:text-white transition-all duration-300;
-  }
-  
-  .saas-button-disabled {
-    @apply bg-white text-gray-400 font-medium rounded-md px-6 py-3 border-2 border-gray-400 cursor-not-allowed;
-  }
+.sailing-ship {
+  position: relative;
+  animation: sail 5s infinite ease-in-out;
+}
 
-  .saas-headline-gradient {
-    @apply text-black;
+@keyframes sail {
+  0%, 100% {
+    transform: translateY(0);
   }
-  
-  .saas-card {
-    @apply bg-white rounded-lg shadow-saas p-6 border border-gray-200 hover:shadow-saas-hover transition-all duration-300;
+  50% {
+    transform: translateY(-10px);
   }
-  
-  .saas-card-dark {
-    @apply bg-white rounded-lg shadow-saas p-6 border border-gray-200 hover:shadow-saas-hover transition-all duration-300;
-  }
+}
 
-  /* Game tiles with monochrome styling */
-  .saas-game-tile {
-    @apply relative overflow-hidden rounded-lg shadow-saas transition-all duration-300
-    border border-gray-200 hover:shadow-saas-hover;
-  }
+/* Shadow styles */
+.shadow-saas {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+}
 
-  /* Legacy classes for backward compatibility during migration */
-  .glass-panel {
-    @apply saas-panel;
-  }
-  
-  .glass-button {
-    @apply saas-button-outline;
-  }
-  
-  .primary-button {
-    @apply saas-button-primary;
-  }
-
-  .secondary-button {
-    @apply saas-button-secondary;
-  }
-  
-  .glow-text {
-    @apply text-black;
-  }
-  
-  .glow-text-secondary {
-    @apply text-black;
-  }
-  
-  .game-tile {
-    @apply saas-game-tile;
-  }
-  
-  /* Old classes for backward compatibility during migration */
-  .text-stroke {
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
-  }
-
-  .parallax-cloud {
-    will-change: transform;
-  }
-  
-  .pirate-card {
-    @apply saas-panel;
-  }
-  
-  .pirate-button {
-    @apply saas-button-secondary;
-  }
-  
-  .action-button {
-    @apply saas-button-primary;
-  }
-
-  .glossy-overlay {
-    @apply absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none z-10 opacity-30;
-  }
-
-  .game-tile-frame {
-    @apply saas-game-tile;
-  }
-  
-  .parchment {
-    @apply saas-panel text-black;
-  }
-
-  /* Simple gradient background */
-  .animated-gradient {
-    background: linear-gradient(to bottom, rgba(0,0,0,0.015), rgba(0,0,0,0));
-    background-size: 200% 200%;
-    animation: gradient-shift 15s ease infinite;
-  }
-
-  /* Ship animation for loading */
-  @keyframes ship-sailing {
-    0% {
-      transform: translateX(-10%) translateY(5px) rotate(-2deg);
-    }
-    25% {
-      transform: translateX(30%) translateY(-5px) rotate(1deg);
-    }
-    50% {
-      transform: translateX(60%) translateY(0px) rotate(2deg);
-    }
-    75% {
-      transform: translateX(80%) translateY(-3px) rotate(-1deg);
-    }
-    100% {
-      transform: translateX(110%) translateY(5px) rotate(-2deg);
-    }
-  }
-  
-  .animate-ship-sailing {
-    animation: ship-sailing 3s ease-in-out infinite;
-  }
-
-  .sailing-ship {
-    animation: ship-sailing 3s ease-in-out infinite;
-  }
+/* Custom font stack for headings */
+.font-heading {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }

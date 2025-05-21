@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { checkPasswordCompromised } from '@/utils/passwordSecurity';
+import PasswordSuggestion from './PasswordSuggestion';
 
 interface LoginFormProps {
   onLogin?: (username: string, password: string) => void;
@@ -24,6 +25,8 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [formError, setFormError] = useState<string | null>(null);
   const [isCheckingPassword, setIsCheckingPassword] = useState(false);
   const [isPasswordCompromised, setIsPasswordCompromised] = useState(false);
+  const [showPasswordSuggestion, setShowPasswordSuggestion] = useState(false);
+  const [errorDismissTimer, setErrorDismissTimer] = useState<number | null>(null);
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
 
@@ -32,11 +35,23 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     const checkPassword = async () => {
       if (registerPassword.length >= 5) {
         setIsCheckingPassword(true);
-        const compromised = await checkPasswordCompromised(registerPassword);
-        setIsPasswordCompromised(compromised);
-        setIsCheckingPassword(false);
+        try {
+          const compromised = await checkPasswordCompromised(registerPassword);
+          setIsPasswordCompromised(compromised);
+          
+          if (compromised && !showPasswordSuggestion) {
+            setShowPasswordSuggestion(true);
+          } else if (!compromised && showPasswordSuggestion) {
+            setShowPasswordSuggestion(false);
+          }
+        } catch (error) {
+          console.error("Password check failed:", error);
+        } finally {
+          setIsCheckingPassword(false);
+        }
       } else {
         setIsPasswordCompromised(false);
+        setShowPasswordSuggestion(false);
       }
     };
 
@@ -50,8 +65,36 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     return () => clearTimeout(handler);
   }, [registerPassword]);
 
+  // Auto-dismiss error messages after some time
+  useEffect(() => {
+    // Clear any existing timer when form error changes
+    if (errorDismissTimer) {
+      window.clearTimeout(errorDismissTimer);
+    }
+    
+    // Only set timer if there's an error
+    if (formError) {
+      const timer = window.setTimeout(() => {
+        setFormError(null);
+      }, 8000); // Error disappears after 8 seconds
+      
+      setErrorDismissTimer(timer as unknown as number);
+    }
+    
+    // Clean up on unmount
+    return () => {
+      if (errorDismissTimer) {
+        window.clearTimeout(errorDismissTimer);
+      }
+    };
+  }, [formError]);
+
   const clearErrors = () => {
     setFormError(null);
+    if (errorDismissTimer) {
+      window.clearTimeout(errorDismissTimer);
+      setErrorDismissTimer(null);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -119,9 +162,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       return;
     }
     
-    // Check if password is compromised
-    if (isPasswordCompromised) {
-      setFormError('This password has been found in data breaches. Please choose a different password for your security.');
+    // Allow user to proceed even with a compromised password after showing suggestion
+    if (isPasswordCompromised && !showPasswordSuggestion) {
+      setFormError('This password has been found in data breaches. Please consider using a stronger password.');
+      setShowPasswordSuggestion(true);
       return;
     }
     
@@ -136,6 +180,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       setRegisterUsername('');
       setRegisterPassword('');
       setConfirmPassword('');
+      setShowPasswordSuggestion(false);
       
       toast({
         title: "Registration Successful",
@@ -146,6 +191,24 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       setFormError('An error occurred during registration. Please try again.');
     } finally {
       setRegistrationInProgress(false);
+    }
+  };
+
+  const handleUseRecommendedPassword = (password: string) => {
+    setRegisterPassword(password);
+    setConfirmPassword(password);
+    setShowPasswordSuggestion(false);
+    setIsPasswordCompromised(false); // The generated password shouldn't be compromised
+  };
+
+  const handleDismissPasswordSuggestion = () => {
+    setShowPasswordSuggestion(false);
+  };
+
+  const handlePasswordInputFocus = () => {
+    // Clear errors when the user focuses on the password field
+    if (formError && formError.includes("password")) {
+      clearErrors();
     }
   };
 
@@ -165,7 +228,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       </div>
       
       {formError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 flex items-start gap-2">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 flex items-start gap-2 animate-fade-in">
           <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <span>{formError}</span>
         </div>
@@ -174,6 +237,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       <Tabs defaultValue="login" value={activeTab} onValueChange={(val) => {
         setActiveTab(val);
         clearErrors();
+        setShowPasswordSuggestion(false);
       }}>
         <TabsList className="grid grid-cols-2 mb-6">
           <TabsTrigger value="login">Sign In</TabsTrigger>
@@ -276,6 +340,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               <p className="text-xs text-gray-500">Choose any username you like</p>
             </div>
             
+            {showPasswordSuggestion && (
+              <PasswordSuggestion 
+                onUsePassword={handleUseRecommendedPassword} 
+                onDismiss={handleDismissPasswordSuggestion}
+              />
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="registerPassword" className="text-sm font-medium text-black flex justify-between items-center">
                 <span>Password</span>
@@ -303,6 +374,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                     setRegisterPassword(e.target.value);
                     clearErrors();
                   }}
+                  onFocus={handlePasswordInputFocus}
                   className={`bg-white border-2 ${isPasswordCompromised ? 'border-red-300' : 'border-gray-300'} text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black`}
                   minLength={5}
                   disabled={isLoading || registrationInProgress}
@@ -325,6 +397,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                     setConfirmPassword(e.target.value);
                     clearErrors();
                   }}
+                  onFocus={handlePasswordInputFocus}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
                   minLength={5}
                   disabled={isLoading || registrationInProgress}
@@ -335,7 +408,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
-              disabled={isLoading || registrationInProgress || isPasswordCompromised}
+              disabled={isLoading || registrationInProgress}
             >
               {(isLoading || registrationInProgress) ? (
                 <Loader2 size={18} className="animate-spin" />

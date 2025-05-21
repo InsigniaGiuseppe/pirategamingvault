@@ -105,3 +105,38 @@ export const getPasswordFeedback = (score: number): { text: string, color: strin
     return { text: "Very strong", color: "text-emerald-600" };
   }
 };
+
+/**
+ * Generates a secure random password
+ * @param length The length of the password (default: 12)
+ * @param includeSpecial Whether to include special characters (default: true)
+ * @returns string A secure random password
+ */
+export const generateSecurePassword = (length = 12, includeSpecial = true): string => {
+  const uppercaseChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // No I to avoid confusion with 1
+  const lowercaseChars = 'abcdefghijkmnopqrstuvwxyz'; // No l to avoid confusion with 1
+  const numberChars = '23456789'; // No 0/1 to avoid confusion with O/l
+  const specialChars = '!@#$%^&*()_+[]{}|;:,.<>?';
+  
+  let charset = uppercaseChars + lowercaseChars + numberChars;
+  if (includeSpecial) charset += specialChars;
+  
+  // Ensure we have at least one of each type
+  let password = '';
+  password += uppercaseChars[Math.floor(Math.random() * uppercaseChars.length)];
+  password += lowercaseChars[Math.floor(Math.random() * lowercaseChars.length)];
+  password += numberChars[Math.floor(Math.random() * numberChars.length)];
+  if (includeSpecial) {
+    password += specialChars[Math.floor(Math.random() * specialChars.length)];
+  }
+  
+  // Fill the rest randomly
+  const remainingLength = length - password.length;
+  for (let i = 0; i < remainingLength; i++) {
+    const randomIndex = Math.floor(Math.random() * charset.length);
+    password += charset[randomIndex];
+  }
+  
+  // Shuffle the password characters
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};
