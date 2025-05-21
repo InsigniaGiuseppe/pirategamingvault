@@ -9,6 +9,7 @@ interface AuthContextState {
   transactions: Transaction[];
   unlockedGames: string[];
   isLoading: boolean;
+  setState?: React.Dispatch<React.SetStateAction<AuthContextState>>;
 }
 
 interface Transaction {
@@ -28,7 +29,15 @@ export const initialAuthState: AuthContextState = {
   isLoading: false
 };
 
-export const AuthStateContext = createContext<AuthContextState>(initialAuthState);
+export const AuthStateContext = createContext<{
+  isAuthenticated: boolean;
+  currentUser: string | null;
+  pirateCoins: number;
+  transactions: Transaction[];
+  unlockedGames: string[];
+  isLoading: boolean;
+  setState: React.Dispatch<React.SetStateAction<AuthContextState>>;
+} | AuthContextState>(initialAuthState);
 
 export const useAuthState = () => {
   const context = useContext(AuthStateContext);

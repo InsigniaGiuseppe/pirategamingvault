@@ -9,8 +9,12 @@ import { useContext, useState } from 'react';
 export const useAuthActions = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isAuthenticated, currentUser, pirateCoins, transactions, unlockedGames, isLoading } = useContext(AuthStateContext);
-  const setState = useContext(AuthStateContext)?.setState;
+  const context = useContext(AuthStateContext);
+  
+  // Access the properties from context
+  const { isAuthenticated, currentUser, pirateCoins, transactions, unlockedGames, isLoading } = context;
+  const setState = 'setState' in context ? context.setState : undefined;
+  
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const login = async (username: string, password: string) => {

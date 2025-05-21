@@ -66,8 +66,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     checkIfGameUnlocked
   };
 
+  // Create a combined state that includes setState for the context provider
+  const authStateWithSetter = {
+    ...state,
+    setState
+  };
+
   return (
-    <AuthStateContext.Provider value={{ ...state, setState }}>
+    <AuthStateContext.Provider value={authStateWithSetter}>
       <AuthContext.Provider value={contextValue}>
         {children}
       </AuthContext.Provider>
