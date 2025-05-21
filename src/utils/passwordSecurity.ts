@@ -1,6 +1,4 @@
 
-import { createHash } from 'crypto-browserify';
-
 /**
  * Checks if a password has been compromised using the HaveIBeenPwned API
  * Uses k-anonymity model for security (only sends first 5 chars of hash)
@@ -9,11 +7,14 @@ import { createHash } from 'crypto-browserify';
  */
 export const checkPasswordCompromised = async (password: string): Promise<boolean> => {
   try {
-    // Convert password to SHA-1 hash
-    const sha1Hash = createHash('sha1')
-      .update(password)
-      .digest('hex')
-      .toUpperCase();
+    // Convert password to SHA-1 hash using Web Crypto API
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    
+    // Convert hash buffer to hex string
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const sha1Hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
     
     // Split the hash into prefix and suffix for k-anonymity
     const prefix = sha1Hash.substring(0, 5);
