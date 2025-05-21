@@ -49,12 +49,11 @@ const GameTile = ({ game }: GameTileProps) => {
     setIsUnlocking(true);
     
     try {
-      // Call unlockGame without testing its return value directly
+      // Call unlockGame without checking its return value
       await unlockGame(game.id, game.coinCost);
       
       setTimeout(() => {
         setIsUnlocking(false);
-        
         toast({
           title: "Game Unlocked!",
           description: `You've successfully unlocked ${game.title}.`

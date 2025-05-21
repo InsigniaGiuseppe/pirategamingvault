@@ -2,10 +2,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
-import { Twitch, Youtube, Clock, Coins, Play, CheckCircle } from 'lucide-react';
+import { Twitch, Youtube, Clock, Coins, Play, CheckCircle, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
+import VideoPlayer from './VideoPlayer';
 
 interface VideoItem {
   id: string;
@@ -25,6 +26,7 @@ const EarnPirateCoins = () => {
   const [watchProgress, setWatchProgress] = useState<number>(0);
   const [isWatching, setIsWatching] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoItem[]>([]);
+  const [videoError, setVideoError] = useState<boolean>(false);
   const { addPirateCoins, currentUser } = useAuth();
   const { toast } = useToast();
   const progressInterval = useRef<number | null>(null);
@@ -106,6 +108,7 @@ const EarnPirateCoins = () => {
     setActiveVideo(video);
     setWatchProgress(0);
     setIsWatching(true);
+    setVideoError(false);
     
     // Start progress tracking
     if (progressInterval.current) {
@@ -131,6 +134,14 @@ const EarnPirateCoins = () => {
     }, intervalStep * 1000) as unknown as number;
   };
 
+  // Handle video loading error
+  const handleVideoError = () => {
+    setVideoError(true);
+    if (progressInterval.current) {
+      window.clearInterval(progressInterval.current);
+    }
+  };
+
   // Handle canceling video watch
   const handleCancelWatch = () => {
     if (progressInterval.current) {
@@ -139,6 +150,19 @@ const EarnPirateCoins = () => {
     setActiveVideo(null);
     setIsWatching(false);
     setWatchProgress(0);
+    setVideoError(false);
+  };
+
+  // Handle opening video in external site
+  const handleWatchExternal = () => {
+    if (!activeVideo) return;
+    
+    window.open(activeVideo.url, '_blank');
+    
+    // We'll still award coins
+    setTimeout(() => {
+      completeVideo(activeVideo);
+    }, 1500);
   };
 
   // Mark video as complete and award coins
@@ -169,6 +193,7 @@ const EarnPirateCoins = () => {
       setTimeout(() => {
         setActiveVideo(null);
         setIsWatching(false);
+        setVideoError(false);
       }, 1500);
     }
   };
@@ -184,14 +209,30 @@ const EarnPirateCoins = () => {
       
       {isWatching && activeVideo ? (
         <div className="mb-8">
-          <div className="bg-black rounded-lg overflow-hidden aspect-video mb-4">
-            <iframe 
-              src={activeVideo.embedUrl} 
-              className="w-full h-full"
-              allowFullScreen
+          {videoError ? (
+            <div className="bg-gray-900 rounded-lg overflow-hidden aspect-video mb-4 flex flex-col items-center justify-center p-8 text-center">
+              <div className="mb-4 text-white">
+                <h3 className="text-xl font-bold mb-2">Video cannot be embedded</h3>
+                <p className="text-gray-400 mb-4">
+                  Due to content provider restrictions, this video cannot be embedded in our site.
+                </p>
+                <Button 
+                  onClick={handleWatchExternal} 
+                  className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+                >
+                  <ExternalLink size={16} />
+                  Watch on {activeVideo.type === 'twitch' ? 'Twitch' : 'YouTube'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <VideoPlayer 
+              type={activeVideo.type}
+              embedUrl={activeVideo.embedUrl}
               title={activeVideo.title}
-            ></iframe>
-          </div>
+              onError={handleVideoError}
+            />
+          )}
           
           <div className="flex flex-col gap-4">
             <div>
