@@ -32,6 +32,7 @@ export const useAuthLogin = () => {
           title: "Login Failed",
           description: error || "Invalid credentials. Try again or join Discord."
         });
+        setIsProcessing(false);
         return;
       }
       
@@ -87,7 +88,7 @@ export const useAuthLogin = () => {
         }
         
         toast({
-          variant: "default",  // Changed from "warning" to "default" as "warning" is not a valid variant
+          variant: "default",  // Using "default" variant instead of "warning"
           title: "Login Successful",
           description: "Signed in, but had trouble loading your data. Some features may be limited."
         });

@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '@/components/LoginForm';
@@ -21,7 +22,7 @@ const loadingMessages = [
 ];
 
 const Index = () => {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -63,6 +64,8 @@ const Index = () => {
   }, [loginAttempts]);
   
   const handleLogin = (email: string, password: string) => {
+    if (authLoading) return; // Prevent starting animation if auth is already loading
+    
     setLoginEmail(email);
     setLoginPassword(password);
     setLoading(true);
@@ -125,7 +128,7 @@ const Index = () => {
         let additionalProgress;
         
         // Make the last 10% slower
-        if (progress + additionalProgress >= 90) {
+        if (progress + (elapsed / (remainingDuration * 1.5)) * (100 - progress) >= 90) {
           additionalProgress = Math.min(100 - progress, (elapsed / (remainingDuration * 1.5)) * (100 - progress));
         } else {
           additionalProgress = Math.min(100 - progress, (elapsed / remainingDuration) * (100 - progress));

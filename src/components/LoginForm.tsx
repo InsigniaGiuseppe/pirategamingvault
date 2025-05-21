@@ -47,8 +47,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     try {
       console.log('Initiating login process for:', username);
       if (onLogin) {
+        // Using the external login handler provided by parent
         onLogin(username, password);
       } else {
+        // Using the auth context login directly
         await login(username, password);
       }
     } catch (error) {

@@ -66,6 +66,11 @@ export const login = async (
     };
     
     console.log('Login successful for:', username);
+    console.log('User data:', customUser);
+    console.log('Session data:', { 
+      access_token: data.session.access_token.substring(0, 10) + '...', 
+      expires_at: data.session.expires_at
+    });
     
     return { user: customUser, session: customSession, error: null };
   } catch (error) {
