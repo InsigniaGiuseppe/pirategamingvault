@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { registerUser } from '@/services/registrationService';
 import { AuthStateContext } from './useAuthState';
+import { getUserBalance, getUserTransactions } from '@/services/userService';
 
 export const useAuthRegistration = () => {
   const { toast } = useToast();
@@ -45,20 +46,18 @@ export const useAuthRegistration = () => {
 
       console.log('Registration successful, proceeding to dashboard');
       
+      // Fetch user data that was created by the trigger
+      const balance = await getUserBalance(user.id);
+      const transactions = await getUserTransactions(user.id);
+      
       // Update state with user data
       if (setState) {
         setState({
           isAuthenticated: true,
           currentUser: user.user_metadata.username || user.email?.split('@')[0] || 'User',
           userId: user.id,
-          pirateCoins: 10, // Initial balance from registration
-          transactions: [{ // Initial welcome transaction
-            id: 'welcome',
-            timestamp: Date.now(),
-            amount: 10,
-            description: 'Welcome bonus',
-            type: 'admin'
-          }],
+          pirateCoins: balance, // Get balance from database
+          transactions: transactions, // Get transactions from database
           unlockedGames: [],
           isLoading: false,
           session: session,
@@ -67,7 +66,7 @@ export const useAuthRegistration = () => {
             username: user.user_metadata.username || user.email?.split('@')[0] || 'User',
             email: user.email || ''
           },
-          error: null // Adding the missing error property
+          error: null
         });
       }
       

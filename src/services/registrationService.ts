@@ -63,11 +63,10 @@ export const registerUser = async (
       return { user: null, session: null, error: 'Failed to create user account' };
     }
     
-    console.log('User registered successfully, initializing user balance');
+    console.log('User registered successfully, database trigger will handle balance initialization');
     
     // Return the user and session
     // Note: The balance initialization will be handled by a database trigger
-    // to avoid RLS policy issues during registration
     return { 
       user: data.user, 
       session: data.session, 
