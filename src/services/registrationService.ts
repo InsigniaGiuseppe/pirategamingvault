@@ -1,74 +1,72 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Credential } from "./credentialService";
+import type { User } from "@supabase/supabase-js";
 
-// Register a new user
-export const registerUser = async (username: string, password: string, authCode: string = '010101!'): Promise<{credential: Credential | null, error: string | null}> => {
+// Register a new user with Supabase Auth
+export const registerUser = async (
+  username: string, 
+  password: string
+): Promise<{user: User | null, error: string | null}> => {
   try {
     console.log('Starting registration for:', username);
     
-    // First check if the username already exists
-    const { data: existingUser, error: checkError } = await supabase
-      .from('credentials')
+    // Use username as the email for auth
+    const email = username;
+    
+    // First check if the username already exists in profiles
+    const { data: existingProfile, error: profileError } = await supabase
+      .from('profiles')
       .select('username')
       .eq('username', username)
       .single();
     
-    if (existingUser) {
-      console.log('Username already exists:', existingUser);
-      return { credential: null, error: 'Username already exists' };
+    if (existingProfile) {
+      console.log('Username already exists:', existingProfile);
+      return { user: null, error: 'Username already exists' };
     }
     
-    if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found, which is what we want
-      console.error('Error checking existing user:', checkError);
-      return { credential: null, error: 'Error checking if username exists' };
+    if (profileError && profileError.code !== 'PGRST116') {
+      console.error('Error checking existing profile:', profileError);
+      return { user: null, error: 'Error checking if username exists' };
     }
     
     console.log('Username is available, proceeding with registration');
     
-    // Insert the user credentials with RLS access
-    const { data: credentialData, error: credentialError } = await supabase
-      .from('credentials')
-      .insert({
-        username,
-        password, 
-        auth_code: authCode,
-        active: true
-      })
-      .select()
-      .single();
+    // Register user with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username: username,
+        }
+      }
+    });
     
-    if (credentialError) {
-      console.error('Error registering user (credential insert):', credentialError);
-      return { credential: null, error: 'Failed to create user account: ' + credentialError.message };
+    if (error) {
+      console.error('Error registering user:', error.message);
+      return { user: null, error: error.message };
     }
     
-    if (!credentialData) {
-      console.error('No data returned from credential insert');
-      return { credential: null, error: 'Failed to create user account: No data returned' };
+    if (!data.user) {
+      console.error('No user data returned from registration');
+      return { user: null, error: 'Failed to create user account' };
     }
     
-    console.log('Credentials created successfully, initializing user balance');
+    console.log('User registered successfully, initializing user balance');
     
     // Initialize user balance with 10 coins
     const { error: balanceError } = await supabase
       .from('user_balance')
       .insert({
-        user_id: username,
+        user_id: data.user.id, // Use UUID from Supabase Auth
         balance: 10
       });
     
     if (balanceError) {
       console.error('Error initializing user balance:', balanceError);
       return { 
-        credential: {
-          id: credentialData.id,
-          username: credentialData.username,
-          password: credentialData.password,
-          authCode: credentialData.auth_code,
-          active: credentialData.active,
-          createdAt: credentialData.created_at
-        }, 
+        user: data.user, 
         error: 'Account created but failed to initialize balance: ' + balanceError.message 
       };
     }
@@ -79,7 +77,7 @@ export const registerUser = async (username: string, password: string, authCode:
     const { error: transactionError } = await supabase
       .from('transactions')
       .insert({
-        user_id: username,
+        user_id: data.user.id, // Use UUID from Supabase Auth
         amount: 10,
         description: 'Welcome bonus',
         type: 'admin'
@@ -92,21 +90,10 @@ export const registerUser = async (username: string, password: string, authCode:
     
     console.log('Registration complete for:', username);
     
-    // Format the response to match our existing Credential interface
-    return { 
-      credential: {
-        id: credentialData.id,
-        username: credentialData.username,
-        password: credentialData.password,
-        authCode: credentialData.auth_code,
-        active: credentialData.active,
-        createdAt: credentialData.created_at
-      },
-      error: null
-    };
+    return { user: data.user, error: null };
   } catch (error) {
     console.error('Unexpected error during registration:', error);
     // @ts-ignore
-    return { credential: null, error: `Unexpected error during registration: ${error?.message || error}` };
+    return { user: null, error: `Unexpected error during registration: ${error?.message || error}` };
   }
 };

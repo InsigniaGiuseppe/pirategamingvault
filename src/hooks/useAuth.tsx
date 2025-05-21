@@ -2,6 +2,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useAuthState, useLoadAuthState, AuthStateContext, initialAuthState } from './useAuthState';
 import { useAuthActions } from './useAuthActions';
+import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ interface AuthContextType {
   logout: () => void;
   register: (username: string, password: string) => void;
   currentUser?: string | null;
+  userId?: string | null;
   pirateCoins: number;
   addPirateCoins: (amount: number, description?: string) => void;
   transactions: Transaction[];
@@ -20,6 +22,8 @@ interface AuthContextType {
   unlockGame: (gameId: string, cost: number) => Promise<boolean>;
   checkIfGameUnlocked: (gameId: string) => boolean;
   isLoading: boolean;
+  user: User | null;
+  session: Session | null;
 }
 
 interface Transaction {
@@ -57,10 +61,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const contextValue: AuthContextType = {
       isAuthenticated: state.isAuthenticated,
       currentUser: state.currentUser,
+      userId: state.userId,
       pirateCoins: state.pirateCoins,
       transactions: state.transactions,
       unlockedGames: state.unlockedGames,
       isLoading: state.isLoading || actions.isProcessing,
+      user: state.user,
+      session: state.session,
       ...actions
     };
     

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from '@/hooks/useAuth';
-import { LogIn, User, Lock, Loader2 } from 'lucide-react';
+import { LogIn, User, Lock, Mail, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 
@@ -116,13 +116,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <TabsContent value="login">
           <form onSubmit={handleLogin} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-black block">Username</label>
+              <label htmlFor="email" className="text-sm font-medium text-black block">Email or Username</label>
               <div className="relative">
-                <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Input
                   id="email"
                   type="text"
-                  placeholder="Enter your username"
+                  placeholder="Enter your email or username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
@@ -170,13 +170,13 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <TabsContent value="register">
           <form onSubmit={handleRegister} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="registerUsername" className="text-sm font-medium text-black block">Username</label>
+              <label htmlFor="registerUsername" className="text-sm font-medium text-black block">Username/Email</label>
               <div className="relative">
                 <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Input
                   id="registerUsername"
                   type="text"
-                  placeholder="Choose a username"
+                  placeholder="Enter your email address"
                   value={registerUsername}
                   onChange={(e) => setRegisterUsername(e.target.value)}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"

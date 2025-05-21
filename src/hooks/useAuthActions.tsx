@@ -1,12 +1,13 @@
 
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { verifyCredentials } from '@/services/authService';
+import { signInWithEmail, signOut } from '@/services/authService';
 import { registerUser } from '@/services/registrationService';
 import { updateUserBalance, getUserTransactions, getUserUnlockedGames, getUserBalance } from '@/services/userService';
 import { unlockGame } from '@/services/gameService';
 import { AuthStateContext } from './useAuthState';
 import { useContext, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Create a hook for authentication-related actions
 export const useAuthLogin = () => {
@@ -17,47 +18,27 @@ export const useAuthLogin = () => {
   
   const setState = 'setState' in context ? context.setState : undefined;
   
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     if (isProcessing) return;
     
     try {
       setIsProcessing(true);
       
-      // Check credentials against Supabase
-      const credential = await verifyCredentials(username, password);
+      // Sign in with Supabase Auth
+      const { session, user, error } = await signInWithEmail(email, password);
       
-      if (credential) {
-        localStorage.setItem('pirateLoggedIn', 'true');
-        localStorage.setItem('pirateUsername', username);
-        
-        // Get user's balance from Supabase
-        const balance = await getUserBalance(username);
-        
-        // Get user transactions
-        const userTransactions = await getUserTransactions(username);
-        
-        // Get unlocked games
-        const userUnlockedGames = await getUserUnlockedGames(username);
-        
-        if (setState) {
-          setState({
-            isAuthenticated: true,
-            currentUser: username,
-            pirateCoins: balance,
-            transactions: userTransactions,
-            unlockedGames: userUnlockedGames,
-            isLoading: false
-          });
-        }
-        
-        navigate('/dashboard');
-      } else {
+      if (error || !session || !user) {
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: "Invalid or disabled credentials. Try again or join Discord."
+          description: error || "Invalid credentials. Try again or join Discord."
         });
+        return;
       }
+      
+      // If login successful, onAuthStateChange in useAuthState will update the state
+      navigate('/dashboard');
+      
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -86,8 +67,8 @@ export const useAuthRegistration = () => {
       setIsProcessing(true);
       console.log('Attempting to register user:', username);
       
-      // Register user with Supabase
-      const { credential, error } = await registerUser(username, password);
+      // Register user with Supabase Auth
+      const { user, error } = await registerUser(username, password);
       
       if (error) {
         console.error('Registration error from service:', error);
@@ -99,8 +80,8 @@ export const useAuthRegistration = () => {
         return;
       }
       
-      if (!credential) {
-        console.error('No credential returned from registerUser');
+      if (!user) {
+        console.error('No user returned from registerUser');
         toast({
           variant: "destructive",
           title: "Registration Failed",
@@ -110,13 +91,13 @@ export const useAuthRegistration = () => {
       }
 
       console.log('Registration successful, proceeding to login');
-      // Auto login after registration
-      await login(username, password);
-      
+      // Auto login after registration - the login will be handled by onAuthStateChange
       toast({
         title: "Registration Successful",
         description: "Welcome to Pirate Gaming!"
       });
+      
+      navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -137,19 +118,13 @@ export const useAuthSession = () => {
   const navigate = useNavigate();
   const context = useContext(AuthStateContext);
   
-  const setState = 'setState' in context ? context.setState : undefined;
-  
-  const logout = () => {
-    localStorage.removeItem('pirateLoggedIn');
-    // We won't remove the other items so they persist between sessions
-    if (setState) {
-      setState(prev => ({
-        ...prev,
-        isAuthenticated: false,
-        currentUser: null,
-        pirateCoins: 0
-      }));
+  const logout = async () => {
+    const { error } = await signOut();
+    
+    if (error) {
+      console.error('Error signing out:', error);
     }
+    
     navigate('/');
   };
   
@@ -159,12 +134,12 @@ export const useAuthSession = () => {
 // Create a hook for coin management
 export const useCoinsManagement = () => {
   const context = useContext(AuthStateContext);
-  const { currentUser, pirateCoins } = context;
+  const { currentUser, userId, pirateCoins } = context;
   
   const setState = 'setState' in context ? context.setState : undefined;
   
   const addPirateCoins = async (amount: number, description: string = '') => {
-    if (!currentUser) return;
+    if (!userId) return;
     
     const transactionType: 'earn' | 'spend' | 'admin' = 
       amount > 0 
@@ -172,14 +147,14 @@ export const useCoinsManagement = () => {
         : 'spend';
     
     // Update balance in Supabase
-    const success = await updateUserBalance(currentUser, amount, description, transactionType);
+    const success = await updateUserBalance(userId, amount, description, transactionType);
     
     if (success && setState) {
       // Update local state
       const newTotal = Math.max(0, pirateCoins + amount);
       
       // Get updated transactions list
-      const updatedTransactions = await getUserTransactions(currentUser);
+      const updatedTransactions = await getUserTransactions(userId);
       
       setState(prev => ({
         ...prev,
@@ -196,12 +171,12 @@ export const useCoinsManagement = () => {
 export const useGameUnlocking = () => {
   const { toast } = useToast();
   const context = useContext(AuthStateContext);
-  const { currentUser, pirateCoins, unlockedGames } = context;
+  const { userId, pirateCoins, unlockedGames } = context;
   
   const setState = 'setState' in context ? context.setState : undefined;
   
   const handleUnlockGame = async (gameId: string, cost: number) => {
-    if (!currentUser) return false;
+    if (!userId) return false;
     
     // Check if user has enough coins
     if (pirateCoins < cost) {
@@ -214,18 +189,18 @@ export const useGameUnlocking = () => {
     }
     
     // Unlock game with Supabase
-    const success = await unlockGame(gameId, currentUser, cost);
+    const success = await unlockGame(gameId, userId, cost);
     
     if (success && setState) {
       // Update local coin state
       // Get updated transactions list
-      const updatedTransactions = await getUserTransactions(currentUser);
+      const updatedTransactions = await getUserTransactions(userId);
       
       // Get updated unlocked games list
-      const updatedGames = await getUserUnlockedGames(currentUser);
+      const updatedGames = await getUserUnlockedGames(userId);
       
       // Get updated balance
-      const newBalance = await getUserBalance(currentUser);
+      const newBalance = await getUserBalance(userId);
       
       setState(prev => ({
         ...prev,
@@ -254,6 +229,7 @@ export const useAuthActions = () => {
   const { logout } = useAuthSession();
   const { addPirateCoins } = useCoinsManagement();
   const { unlockGame, checkIfGameUnlocked } = useGameUnlocking();
+  const navigate = useNavigate();
   
   const isProcessing = isLoginProcessing || isRegistrationProcessing;
   
@@ -264,6 +240,7 @@ export const useAuthActions = () => {
     addPirateCoins,
     unlockGame,
     checkIfGameUnlocked,
-    isProcessing
+    isProcessing,
+    navigate
   };
 };
