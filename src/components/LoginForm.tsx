@@ -31,7 +31,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     e.preventDefault();
     clearErrors();
     
-    if (isLoading) return;
+    if (isLoading) {
+      console.log('Login already in progress, ignoring request');
+      return;
+    }
     
     // Basic validation
     if (!username.trim()) {
@@ -63,7 +66,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     e.preventDefault();
     clearErrors();
     
-    if (isLoading || registrationInProgress) return;
+    if (isLoading || registrationInProgress) {
+      console.log('Registration already in progress, ignoring request');
+      return;
+    }
     
     // Input validation - clear and detailed errors
     if (!registerUsername.trim()) {
@@ -92,6 +98,16 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       
       console.log('Initiating registration for:', registerUsername);
       await register(registerUsername, registerPassword);
+      
+      // Clear form after successful registration
+      setRegisterUsername('');
+      setRegisterPassword('');
+      setConfirmPassword('');
+      
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to Pirate Gaming!",
+      });
     } catch (error) {
       console.error('Registration error in component:', error);
       setFormError('An error occurred during registration. Please try again.');
@@ -185,6 +201,22 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                 <LogIn size={18} />
               )}
               Sign in to your vault
+            </Button>
+            
+            {/* Debug login button - use for testing only */}
+            <Button 
+              type="button" 
+              className="bg-gray-100 text-gray-700 border border-gray-300 w-full py-2 rounded-md flex gap-2 items-center justify-center text-xs hover:bg-gray-200"
+              onClick={() => {
+                if (onLogin) {
+                  onLogin('test', 'test');
+                } else {
+                  login('test', 'test');
+                }
+              }}
+              disabled={isLoading}
+            >
+              Quick Test Login (test/test)
             </Button>
           </form>
         </TabsContent>

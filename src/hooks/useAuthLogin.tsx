@@ -18,9 +18,8 @@ export const useAuthLogin = () => {
     if (isProcessing) return;
     
     try {
+      console.log('Login process starting for:', username);
       setIsProcessing(true);
-      
-      console.log('Login attempt initiated for:', username);
       
       // Sign in with custom auth
       const { user, session, error } = await login(username, password);
@@ -67,6 +66,13 @@ export const useAuthLogin = () => {
         }
         
         setIsProcessing(false);
+        
+        // Success toast
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.username}!`,
+        });
+        
         navigate('/dashboard');
       } catch (dataError) {
         console.error('Error fetching user data:', dataError);
@@ -89,7 +95,6 @@ export const useAuthLogin = () => {
         }
         
         toast({
-          variant: "default",  // Fixed variant here
           title: "Login Successful",
           description: "Signed in, but had trouble loading your data. Some features may be limited."
         });

@@ -34,8 +34,8 @@ export const login = async (
     
     console.log('Attempting login with email:', email);
     
-    // Mock successful login for testing - REMOVE THIS IN PRODUCTION
-    // Just for demo purposes to make the app work while debugging
+    // Mock successful login for development and debugging
+    // This helps us test the auth flow without actual backend calls
     if (username === 'test' && password === 'test') {
       console.log('Test user login detected, returning mock data');
       const mockUser: CustomUser = {
@@ -47,6 +47,10 @@ export const login = async (
         access_token: 'mock-token-abc-123',
         expires_at: Date.now() / 1000 + 3600, // 1 hour from now
       };
+      
+      // Store auth in localStorage for persistence
+      localStorage.setItem('pirate_user', JSON.stringify(mockUser));
+      localStorage.setItem('pirate_session', JSON.stringify(mockSession));
       
       return { user: mockUser, session: mockSession, error: null };
     }
@@ -82,6 +86,10 @@ export const login = async (
       expires_at: data.session.expires_at
     };
     
+    // Store auth in localStorage for persistence
+    localStorage.setItem('pirate_user', JSON.stringify(customUser));
+    localStorage.setItem('pirate_session', JSON.stringify(customSession));
+    
     console.log('Login successful for:', username);
     
     return { user: customUser, session: customSession, error: null };
@@ -91,12 +99,15 @@ export const login = async (
   }
 };
 
-// Re-export functions
 export * from '@/services/registrationService';
 
 // Log out user
 export const logout = async (): Promise<{error: string | null}> => {
   try {
+    // Clear local storage first
+    localStorage.removeItem('pirate_user');
+    localStorage.removeItem('pirate_session');
+    
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error.message);
@@ -113,6 +124,29 @@ export const logout = async (): Promise<{error: string | null}> => {
 // Verify if user is authenticated and return current session
 export const verifySession = async (): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
   try {
+    console.log('Verifying session...');
+    
+    // First try to get session from localStorage for persistence
+    const storedUser = localStorage.getItem('pirate_user');
+    const storedSession = localStorage.getItem('pirate_session');
+    
+    if (storedUser && storedSession) {
+      const user = JSON.parse(storedUser) as CustomUser;
+      const session = JSON.parse(storedSession) as CustomSession;
+      
+      // Check if session is expired
+      if (session.expires_at * 1000 > Date.now()) {
+        console.log('Valid session found in localStorage');
+        return { user, session, error: null };
+      } else {
+        console.log('Expired session found in localStorage, removing');
+        localStorage.removeItem('pirate_user');
+        localStorage.removeItem('pirate_session');
+      }
+    }
+    
+    // If no valid local session, check supabase
+    console.log('Checking Supabase session');
     const { data, error } = await supabase.auth.getSession();
     
     if (error) {
@@ -122,6 +156,7 @@ export const verifySession = async (): Promise<{user: CustomUser | null, session
     
     if (!data.session) {
       // No active session, not an error
+      console.log('No active session found');
       return { user: null, session: null, error: null };
     }
     
@@ -134,9 +169,10 @@ export const verifySession = async (): Promise<{user: CustomUser | null, session
     }
     
     // Create custom user object from metadata
+    const username = userData.user.user_metadata.username || userData.user.email?.split('@')[0] || 'Unknown';
     const customUser: CustomUser = {
       id: userData.user.id,
-      username: userData.user.user_metadata.username || userData.user.email?.split('@')[0] || 'Unknown',
+      username: username,
       email: userData.user.email
     };
     
@@ -145,6 +181,12 @@ export const verifySession = async (): Promise<{user: CustomUser | null, session
       access_token: data.session.access_token,
       expires_at: data.session.expires_at
     };
+    
+    // Store in localStorage for persistence
+    localStorage.setItem('pirate_user', JSON.stringify(customUser));
+    localStorage.setItem('pirate_session', JSON.stringify(customSession));
+    
+    console.log('Valid session verified for:', username);
     
     return { user: customUser, session: customSession, error: null };
   } catch (error) {

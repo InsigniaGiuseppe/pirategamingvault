@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Progress } from '@/components/ui/progress';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { AlertTriangle, Compass, Ship } from 'lucide-react';
+import { AlertTriangle, Compass } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import Footer from '@/components/Footer';
@@ -43,24 +43,16 @@ const Index = () => {
   
   // Clear any running intervals on component unmount
   useEffect(() => {
-    return () => {
-      if (progressIntervalRef.current) {
-        window.clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
-      if (messageIntervalRef.current) {
-        window.clearInterval(messageIntervalRef.current);
-        messageIntervalRef.current = null;
-      }
-    };
+    return cleanupIntervals;
   }, []);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (isAuthenticated && !loading) {
+    if (isAuthenticated && !authLoading && !loading) {
+      console.log('User authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, loading]);
+  }, [isAuthenticated, navigate, loading, authLoading]);
 
   // Track login attempts
   useEffect(() => {
@@ -80,14 +72,19 @@ const Index = () => {
   
   const handleLogin = (email: string, password: string) => {
     // Skip if auth is already loading to prevent duplicate processes
-    if (authLoading || loading) return;
+    if (authLoading || loading) {
+      console.log('Login already in progress, ignoring request');
+      return;
+    }
     
+    console.log('Starting login animation flow');
     setLoginEmail(email);
     setLoginPassword(password);
     setLoading(true);
     setProgress(0);
     setIsPaused(false);
     setShowDialog(false);
+    setShowConfirm(false);
     
     // Message rotation logic
     cleanupIntervals();
@@ -133,6 +130,7 @@ const Index = () => {
 
   const confirmResumeLoading = () => {
     if (isPaused) {
+      console.log('Resuming login animation');
       setIsPaused(false);
       setShowConfirm(false);
       
@@ -161,6 +159,7 @@ const Index = () => {
           cleanupIntervals();
           
           // Call the actual login function
+          console.log('Animation completed, calling login function');
           login(loginEmail, loginPassword);
           setLoading(false);
         }
@@ -170,6 +169,7 @@ const Index = () => {
   };
 
   const cancelLogin = () => {
+    console.log('Login cancelled by user');
     setLoginAttempts(prev => prev + 1);
     
     cleanupIntervals();
@@ -177,6 +177,7 @@ const Index = () => {
     setLoading(false);
     setIsPaused(false);
     setShowDialog(false);
+    setShowConfirm(false);
     
     toast({
       title: "Process terminated",
