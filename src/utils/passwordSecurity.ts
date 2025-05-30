@@ -7,6 +7,11 @@
  */
 export const checkPasswordCompromised = async (password: string): Promise<boolean> => {
   try {
+    // Skip check for very short passwords to avoid unnecessary API calls
+    if (password.length < 6) {
+      return false;
+    }
+    
     // Convert password to SHA-1 hash using Web Crypto API
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -22,8 +27,15 @@ export const checkPasswordCompromised = async (password: string): Promise<boolea
     
     console.log('Checking password security with HaveIBeenPwned API');
     
-    // Make request to the HaveIBeenPwned API
-    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+    // Make request to the HaveIBeenPwned API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       console.error('HaveIBeenPwned API error:', response.status);
@@ -47,7 +59,11 @@ export const checkPasswordCompromised = async (password: string): Promise<boolea
     console.log('Password not found in breaches');
     return false; // Password is not compromised
   } catch (error) {
-    console.error('Error checking password security:', error);
+    if (error.name === 'AbortError') {
+      console.error('Password check timed out');
+    } else {
+      console.error('Error checking password security:', error);
+    }
     return false; // Assume password is safe if check fails
   }
 };

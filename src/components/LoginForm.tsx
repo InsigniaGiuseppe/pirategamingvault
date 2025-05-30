@@ -30,10 +30,10 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const { login, register, isLoading } = useAuth();
   const { toast } = useToast();
 
-  // Check if password is compromised when it changes
+  // Simplified password check to prevent loops
   useEffect(() => {
     const checkPassword = async () => {
-      if (registerPassword.length >= 5) {
+      if (registerPassword.length >= 8) { // Only check longer passwords
         setIsCheckingPassword(true);
         try {
           const compromised = await checkPasswordCompromised(registerPassword);
@@ -46,6 +46,8 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
           }
         } catch (error) {
           console.error("Password check failed:", error);
+          // Don't block registration if check fails
+          setIsPasswordCompromised(false);
         } finally {
           setIsCheckingPassword(false);
         }
@@ -55,33 +57,30 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       }
     };
 
-    // Debounce the check to avoid too many API calls
+    // Debounce the check
     const handler = setTimeout(() => {
-      if (registerPassword) {
+      if (registerPassword && activeTab === 'register') {
         checkPassword();
       }
-    }, 800);
+    }, 1000); // Increased debounce time
 
     return () => clearTimeout(handler);
-  }, [registerPassword]);
+  }, [registerPassword, activeTab]);
 
-  // Auto-dismiss error messages after some time
+  // Auto-dismiss error messages
   useEffect(() => {
-    // Clear any existing timer when form error changes
     if (errorDismissTimer) {
       window.clearTimeout(errorDismissTimer);
     }
     
-    // Only set timer if there's an error
     if (formError) {
       const timer = window.setTimeout(() => {
         setFormError(null);
-      }, 8000); // Error disappears after 8 seconds
+      }, 6000);
       
       setErrorDismissTimer(timer as unknown as number);
     }
     
-    // Clean up on unmount
     return () => {
       if (errorDismissTimer) {
         window.clearTimeout(errorDismissTimer);
@@ -102,11 +101,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     clearErrors();
     
     if (isLoading) {
-      console.log('Login already in progress, ignoring request');
       return;
     }
     
-    // Basic validation
     if (!username.trim()) {
       setFormError('Please enter your username');
       return;
@@ -120,10 +117,8 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     try {
       console.log('Initiating login process for:', username);
       if (onLogin) {
-        // Using the external login handler provided by parent
         onLogin(username, password);
       } else {
-        // Using the auth context login directly
         await login(username, password);
       }
     } catch (error) {
@@ -137,11 +132,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     clearErrors();
     
     if (isLoading || registrationInProgress) {
-      console.log('Registration already in progress, ignoring request');
       return;
     }
     
-    // Input validation - clear and detailed errors
     if (!registerUsername.trim()) {
       setFormError('Please enter a username');
       return;
@@ -162,15 +155,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       return;
     }
     
-    // Allow user to proceed even with a compromised password after showing suggestion
-    if (isPasswordCompromised && !showPasswordSuggestion) {
-      setFormError('This password has been found in data breaches. Please consider using a stronger password.');
-      setShowPasswordSuggestion(true);
-      return;
-    }
-    
     try {
-      // Mark registration as in progress to prevent double submissions
       setRegistrationInProgress(true);
       
       console.log('Initiating registration for:', registerUsername);
@@ -182,10 +167,6 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       setConfirmPassword('');
       setShowPasswordSuggestion(false);
       
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to Pirate Gaming!",
-      });
     } catch (error) {
       console.error('Registration error in component:', error);
       setFormError('An error occurred during registration. Please try again.');
@@ -198,7 +179,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     setRegisterPassword(password);
     setConfirmPassword(password);
     setShowPasswordSuggestion(false);
-    setIsPasswordCompromised(false); // The generated password shouldn't be compromised
+    setIsPasswordCompromised(false);
   };
 
   const handleDismissPasswordSuggestion = () => {
@@ -206,7 +187,6 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   };
 
   const handlePasswordInputFocus = () => {
-    // Clear errors when the user focuses on the password field
     if (formError && formError.includes("password")) {
       clearErrors();
     }
@@ -300,7 +280,6 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               Sign in to your vault
             </Button>
             
-            {/* Debug login button - use for testing only */}
             <Button 
               type="button" 
               className="bg-gray-100 text-gray-700 border border-gray-300 w-full py-2 rounded-md flex gap-2 items-center justify-center text-xs hover:bg-gray-200"

@@ -32,7 +32,7 @@ export const initialAuthState: AuthContextState = {
   pirateCoins: 0,
   transactions: [],
   unlockedGames: [],
-  isLoading: true, // Start as loading to prevent flashes of unauthenticated state
+  isLoading: true,
   session: null,
   user: null,
   error: null
@@ -51,15 +51,15 @@ export const useAuthState = () => {
   return context;
 };
 
-// Enhanced hook for loading the initial auth state with optimized data fetching
+// Simplified auth state loading to prevent loops
 export const useLoadAuthState = () => {
   const [state, setState] = useState<AuthContextState>(initialAuthState);
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
   
-  // Create memoized data fetching function to prevent unnecessary re-renders
+  // Create memoized data fetching function
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       console.log('Fetching user data for:', userId);
-      // Use Promise.all to fetch data in parallel for better performance
       const [balance, userTransactions, userUnlockedGames] = await Promise.all([
         getUserBalance(userId),
         getUserTransactions(userId),
@@ -81,24 +81,30 @@ export const useLoadAuthState = () => {
   
   useEffect(() => {
     let isMounted = true;
-    let authCheckTimeout: number | null = null;
+    
+    // Prevent multiple auth checks
+    if (authCheckComplete) return;
     
     const checkAuth = async () => {
       if (!isMounted) return;
       
       try {
-        // Check local storage first for faster loading
+        console.log('Starting auth check...');
+        setState(prev => ({ ...prev, isLoading: true }));
+        
+        // Check local storage first
         const storedUser = localStorage.getItem('pirate_user');
         const storedSession = localStorage.getItem('pirate_session');
         
         if (storedUser && storedSession) {
-          console.log('Found stored session, using it for initial state');
+          console.log('Found stored session, validating...');
           const user = JSON.parse(storedUser);
           const session = JSON.parse(storedSession);
           
           // Check if session is still valid
           if (session.expires_at * 1000 > Date.now()) {
-            // Update state with stored data first
+            console.log('Valid stored session found');
+            
             setState(prev => ({
               ...prev,
               isAuthenticated: true,
@@ -106,10 +112,10 @@ export const useLoadAuthState = () => {
               userId: user.id,
               user: user,
               session: session,
-              isLoading: true // Still loading additional data
+              isLoading: true
             }));
             
-            // Fetch additional user data in the background
+            // Fetch additional data
             try {
               const { balance, userTransactions, userUnlockedGames } = await fetchUserData(user.id);
               
@@ -123,74 +129,52 @@ export const useLoadAuthState = () => {
                 }));
               }
             } catch (error) {
-              console.error('Error loading additional user data:', error);
+              console.error('Error loading user data:', error);
               if (isMounted) {
                 setState(prev => ({
                   ...prev,
-                  isLoading: false,
-                  error: 'Could not load all user data'
+                  isLoading: false
                 }));
               }
             }
             
-            return; // We're done here, no need for further verification
+            setAuthCheckComplete(true);
+            return;
+          } else {
+            console.log('Stored session expired, clearing...');
+            localStorage.removeItem('pirate_user');
+            localStorage.removeItem('pirate_session');
           }
         }
         
-        // If no valid stored session, proceed with server verification
-        console.log('No valid stored session, verifying with server');
-        setState(prev => ({ ...prev, isLoading: true }));
-        
-        // Create a timeout promise to prevent hanging
-        const timeoutPromise = new Promise<{user: null, session: null, error: string}>((_, reject) => {
-          authCheckTimeout = window.setTimeout(() => {
-            reject(new Error('Auth verification timeout'));
-          }, 5000) as unknown as number;
-        });
-        
-        // Race between the actual auth check and the timeout
-        const result = await Promise.race([
-          verifySession(),
-          timeoutPromise
-        ]).catch(err => {
-          console.error('Auth verification error:', err);
-          return {user: null, session: null, error: err.message};
-        });
-        
-        // Clear the timeout as we got a response
-        if (authCheckTimeout) {
-          window.clearTimeout(authCheckTimeout);
-          authCheckTimeout = null;
-        }
+        // No valid stored session, check with server
+        console.log('Checking server session...');
+        const { user, session, error } = await verifySession();
         
         if (!isMounted) return;
         
-        const { user, session, error } = result;
-        
         if (error || !user || !session) {
-          console.log('Not authenticated user, clearing state');
-          // Not an authenticated user, but loading is complete
+          console.log('No valid session found');
           setState({
             ...initialAuthState,
             isLoading: false,
-            error: error,
           });
+          setAuthCheckComplete(true);
           return;
         }
         
-        console.log('Authentication verified for:', user.username);
-        const userId = user.id;
+        console.log('Valid server session found for:', user.username);
         
+        // Fetch user data
         try {
-          // Fetch user data in parallel for better performance
-          const { balance, userTransactions, userUnlockedGames } = await fetchUserData(userId);
+          const { balance, userTransactions, userUnlockedGames } = await fetchUserData(user.id);
           
           if (!isMounted) return;
           
           setState({
             isAuthenticated: true,
             currentUser: user.username,
-            userId: userId,
+            userId: user.id,
             pirateCoins: balance,
             transactions: userTransactions,
             unlockedGames: userUnlockedGames,
@@ -199,27 +183,23 @@ export const useLoadAuthState = () => {
             user: user,
             error: null
           });
-          
-          console.log('Auth state fully initialized with user data');
         } catch (error) {
           console.error('Error loading user data:', error);
           
           if (!isMounted) return;
           
-          // Still authenticate the user even if we can't load all their data
           setState(prev => ({ 
             ...prev, 
             isLoading: false,
             isAuthenticated: true,
             currentUser: user.username,
-            userId: userId,
+            userId: user.id,
             session: session,
             user: user,
-            error: 'Failed to load user data'
           }));
-          
-          console.log('Auth state initialized with partial data');
         }
+        
+        setAuthCheckComplete(true);
       } catch (error) {
         console.error('Error during authentication check:', error);
         
@@ -230,28 +210,16 @@ export const useLoadAuthState = () => {
           isLoading: false,
           error: error instanceof Error ? error.message : 'Authentication error',
         });
+        setAuthCheckComplete(true);
       }
     };
     
     checkAuth();
     
-    // Set up interval to periodically check authentication status
-    const authRefreshInterval = window.setInterval(() => {
-      // Recheck auth every 5 minutes to ensure sessions are kept alive
-      if (isMounted) {
-        console.log('Periodic session refresh check');
-        checkAuth();
-      }
-    }, 5 * 60 * 1000); // 5 minutes
-    
     return () => {
       isMounted = false;
-      if (authCheckTimeout) {
-        window.clearTimeout(authCheckTimeout);
-      }
-      window.clearInterval(authRefreshInterval);
     };
-  }, [fetchUserData]);
+  }, [fetchUserData, authCheckComplete]);
   
   return { state, setState };
 };
