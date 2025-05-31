@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { Toaster } from '@/components/ui/sonner';
 import Navigation from '@/components/Navigation';
 import GameGrid from '@/components/GameGrid';

@@ -1,43 +1,24 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginForm from '@/components/LoginForm';
-import { useAuth } from '@/hooks/useAuth';
+import SimpleLoginForm from '@/components/SimpleLoginForm';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import Footer from '@/components/Footer';
 
 const Index = () => {
-  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [isProcessingLogin, setIsProcessingLogin] = useState(false);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isAuthenticated && !isLoading) {
       console.log('User authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
-  }, [isAuthenticated, navigate, authLoading]);
+  }, [isAuthenticated, navigate, isLoading]);
 
-  const handleLogin = async (username: string, password: string) => {
-    // Prevent multiple login attempts
-    if (isProcessingLogin || authLoading) {
-      console.log('Login already in progress, ignoring request');
-      return;
-    }
-    
-    try {
-      setIsProcessingLogin(true);
-      console.log('Starting login process for:', username);
-      await login(username, password);
-    } catch (error) {
-      console.error('Login error:', error);
-    } finally {
-      setIsProcessingLogin(false);
-    }
-  };
-  
   // Show loading while auth is being checked
-  if (authLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -52,7 +33,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <div className="flex-grow flex items-center justify-center px-4 py-10 w-full">
         <div className="relative z-10 flex flex-col items-center w-full max-w-md">
-          <LoginForm onLogin={handleLogin} />
+          <SimpleLoginForm />
         </div>
       </div>
       <Footer />

@@ -10,7 +10,7 @@ import Gotcha from "./pages/Gotcha";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
-import { AuthProvider } from "./hooks/useAuth";
+import { SimpleAuthProvider } from "./hooks/useSimpleAuth";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
+      <SimpleAuthProvider>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
@@ -36,7 +36,7 @@ const App = () => (
         </Routes>
         <Toaster />
         <Sonner />
-      </AuthProvider>
+      </SimpleAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
