@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useSimpleAuth";
 import { Coins } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
@@ -10,21 +10,12 @@ interface PirateCoinsDisplayProps {
 }
 
 const PirateCoinsDisplay = ({ size = "medium", showTooltip = true }: PirateCoinsDisplayProps) => {
-  const { pirateCoins, currentUser } = useAuth();
+  const { pirateCoins, user } = useAuth();
   const [displayCoins, setDisplayCoins] = useState(pirateCoins);
   
   useEffect(() => {
-    // Update the display coins whenever pirateCoins changes
     setDisplayCoins(pirateCoins);
-    
-    // Make sure we're getting the latest coins from localStorage
-    if (currentUser) {
-      const storedCoins = localStorage.getItem(`pirateCoins`);
-      if (storedCoins) {
-        setDisplayCoins(parseInt(storedCoins));
-      }
-    }
-  }, [pirateCoins, currentUser]);
+  }, [pirateCoins, user]);
   
   const containerClasses = {
     small: "flex items-center gap-1 text-sm",

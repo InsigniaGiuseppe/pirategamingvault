@@ -1,5 +1,5 @@
 
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useSimpleAuth';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, User, Settings, HelpCircle, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import PirateCoinsDisplay from '@/components/PirateCoinsDisplay';
 
 const Navigation = () => {
-  const { isAuthenticated, logout, currentUser } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!isAuthenticated) return null;
@@ -99,7 +99,7 @@ const Navigation = () => {
           {/* User info & coins */}
           <div className="mr-4 hidden md:flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{currentUser}</span>
+              <span className="text-sm font-medium">{user?.username}</span>
             </div>
             <PirateCoinsDisplay />
           </div>
@@ -130,7 +130,7 @@ const Navigation = () => {
           <div className="container mx-auto px-4 py-4 space-y-4">
             <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
               <div className="text-sm">
-                <div className="font-medium">{currentUser}</div>
+                <div className="font-medium">{user?.username}</div>
               </div>
               <PirateCoinsDisplay size="small" />
             </div>

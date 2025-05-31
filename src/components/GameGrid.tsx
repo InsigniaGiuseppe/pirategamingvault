@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameTile from './GameTile';
 import { ChevronLeft, ChevronRight, SortAsc, SortDesc } from 'lucide-react';
@@ -10,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useSimpleAuth";
 import { Game } from '@/data/games';
 import { getGames } from '@/data/gamesData';
 import { Button } from "@/components/ui/button";
@@ -30,10 +29,9 @@ const GameGrid = () => {
     const loadGames = async () => {
       try {
         const fetchedGames = await getGames();
-        // Convert the games from gamesData.ts format to games.ts format
         const formattedGames = fetchedGames.map(game => ({
           ...game,
-          unlocked: false // No games are initially unlocked
+          unlocked: false
         })) as Game[];
         
         setGames(formattedGames);
@@ -55,7 +53,6 @@ const GameGrid = () => {
     }
   };
   
-  // Apply sorting if selected
   const sortedGames = [...games].sort((a, b) => {
     if (sortByPrice === 'asc') {
       return a.coinCost - b.coinCost;
@@ -65,7 +62,6 @@ const GameGrid = () => {
     return 0;
   });
   
-  // Group games by category
   const allCategories = [
     'fps', 'action', 'adventure', 'rpg', 'strategy', 
     'puzzle', 'indie', 'classic', 'party', 'horror', 
@@ -73,7 +69,6 @@ const GameGrid = () => {
     'mmorpg', 'card'
   ];
   
-  // Create category groups
   const categoryGroups: Record<string, Game[]> = {};
   
   allCategories.forEach(category => {
@@ -83,7 +78,6 @@ const GameGrid = () => {
     }
   });
   
-  // Create featured games section (first 8 games)
   const featuredGames = sortedGames.slice(0, 8);
   
   if (loading) {
@@ -94,7 +88,6 @@ const GameGrid = () => {
     );
   }
   
-  // Function to get a display name for category
   const getCategoryDisplayName = (category: string): string => {
     const categoryMap: Record<string, string> = {
       'fps': 'FPS & Shooters',

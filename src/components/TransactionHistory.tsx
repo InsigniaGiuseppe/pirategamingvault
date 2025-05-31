@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useSimpleAuth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownRight, BadgeDollarSign } from "lucide-react";
@@ -8,15 +8,12 @@ import PirateCoinsDisplay from "@/components/PirateCoinsDisplay";
 const TransactionHistory = () => {
   const { transactions } = useAuth();
 
-  // Sort transactions by timestamp, latest first
   const sortedTransactions = [...transactions].sort((a, b) => b.timestamp - a.timestamp);
   
-  // Format amount with sign
   const formatAmount = (amount: number): string => {
     return amount > 0 ? `+${amount}` : `${amount}`;
   };
   
-  // Get appropriate icon and color based on transaction type
   const getTransactionDetails = (type: "earn" | "spend" | "admin") => {
     switch(type) {
       case "earn":
