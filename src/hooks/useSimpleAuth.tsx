@@ -55,67 +55,134 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Initialize auth state once on mount
+  // Force loading to complete after maximum timeout
+  useEffect(() => {
+    console.log('Setting up auth timeout fallback...');
+    const timeoutId = setTimeout(() => {
+      console.log('Auth timeout reached, forcing loading to complete');
+      setState(prev => {
+        if (prev.isLoading) {
+          console.log('Forcing loading state to false due to timeout');
+          return { ...prev, isLoading: false };
+        }
+        return prev;
+      });
+    }, 5000); // 5 second maximum timeout
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Initialize auth state with comprehensive error handling
   useEffect(() => {
     let isMounted = true;
+    let initializationCompleted = false;
 
     const initializeAuth = async () => {
       try {
-        console.log('Initializing auth state...');
+        console.log('Starting auth initialization...');
         
-        // Check for stored session
-        const storedUser = localStorage.getItem('pirate_user');
-        const storedSession = localStorage.getItem('pirate_session');
+        // Ensure we complete initialization within reasonable time
+        const initTimeout = setTimeout(() => {
+          if (!initializationCompleted && isMounted) {
+            console.log('Auth initialization timeout, setting default state');
+            setState(prev => ({ ...prev, isLoading: false }));
+            initializationCompleted = true;
+          }
+        }, 3000);
+
+        // Check for stored session with error handling
+        let storedUser = null;
+        let storedSession = null;
         
-        if (storedUser && storedSession) {
-          const user = JSON.parse(storedUser);
-          const session = JSON.parse(storedSession);
+        try {
+          const userStr = localStorage.getItem('pirate_user');
+          const sessionStr = localStorage.getItem('pirate_session');
           
-          // Check if session is still valid
-          if (session.expires_at * 1000 > Date.now()) {
-            console.log('Valid stored session found');
-            
-            if (isMounted) {
-              setState(prev => ({
-                ...prev,
-                isAuthenticated: true,
-                user,
-                session,
-                isLoading: false
-              }));
-            }
-            return;
-          } else {
-            console.log('Stored session expired');
+          if (userStr && sessionStr) {
+            storedUser = JSON.parse(userStr);
+            storedSession = JSON.parse(sessionStr);
+            console.log('Found stored auth data');
+          }
+        } catch (error) {
+          console.error('Error parsing stored auth data:', error);
+          // Clear corrupted data
+          try {
             localStorage.removeItem('pirate_user');
             localStorage.removeItem('pirate_session');
+          } catch (e) {
+            console.error('Error clearing localStorage:', e);
           }
         }
         
-        if (isMounted) {
-          setState(prev => ({ ...prev, isLoading: false }));
+        if (storedUser && storedSession) {
+          // Validate session expiry with error handling
+          try {
+            if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
+              console.log('Valid stored session found, user authenticated');
+              
+              if (isMounted && !initializationCompleted) {
+                setState(prev => ({
+                  ...prev,
+                  isAuthenticated: true,
+                  user: storedUser,
+                  session: storedSession,
+                  isLoading: false
+                }));
+                initializationCompleted = true;
+              }
+              clearTimeout(initTimeout);
+              return;
+            } else {
+              console.log('Stored session expired, clearing');
+              try {
+                localStorage.removeItem('pirate_user');
+                localStorage.removeItem('pirate_session');
+              } catch (e) {
+                console.error('Error clearing expired session:', e);
+              }
+            }
+          } catch (error) {
+            console.error('Error validating session:', error);
+          }
         }
+        
+        console.log('No valid stored session, user not authenticated');
+        
+        if (isMounted && !initializationCompleted) {
+          setState(prev => ({ ...prev, isLoading: false }));
+          initializationCompleted = true;
+        }
+        
+        clearTimeout(initTimeout);
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        if (isMounted) {
+        console.error('Critical error during auth initialization:', error);
+        
+        if (isMounted && !initializationCompleted) {
           setState(prev => ({ 
             ...prev, 
             isLoading: false, 
-            error: 'Failed to initialize authentication' 
+            error: 'Authentication initialization failed' 
           }));
+          initializationCompleted = true;
         }
       }
     };
 
-    initializeAuth();
+    // Small delay to prevent race conditions, then initialize
+    const startTimeout = setTimeout(initializeAuth, 100);
 
     return () => {
       isMounted = false;
+      clearTimeout(startTimeout);
+      console.log('Auth initialization cleanup completed');
     };
   }, []);
 
   const handleLogin = async (username: string, password: string) => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('Login already in progress, skipping');
+      return;
+    }
     
     try {
       setIsProcessing(true);
@@ -154,7 +221,10 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const handleRegister = async (username: string, password: string) => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('Registration already in progress, skipping');
+      return;
+    }
     
     try {
       setIsProcessing(true);
@@ -198,12 +268,19 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const handleLogout = async () => {
     try {
+      console.log('Starting logout process');
       await logout();
-      localStorage.removeItem('pirate_user');
-      localStorage.removeItem('pirate_session');
+      
+      try {
+        localStorage.removeItem('pirate_user');
+        localStorage.removeItem('pirate_session');
+      } catch (error) {
+        console.error('Error clearing localStorage during logout:', error);
+      }
       
       setState(initialState);
       navigate('/');
+      console.log('Logout completed');
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -262,6 +339,13 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     unlockGame,
     checkIfGameUnlocked
   };
+
+  console.log('Auth context state:', { 
+    isAuthenticated: state.isAuthenticated, 
+    isLoading: state.isLoading || isProcessing,
+    user: state.user?.username,
+    hasError: !!state.error
+  });
 
   return (
     <AuthContext.Provider value={contextValue}>
