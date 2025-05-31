@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { login, logout } from '@/services/customAuthService';
 import { registerUser } from '@/services/registrationService';
-import { getUserBalance, getUserTransactions, getUserUnlockedGames } from '@/services/userService';
 import type { CustomUser, CustomSession } from '@/services/customAuthService';
 
 interface AuthState {
@@ -37,8 +36,16 @@ const initialState: AuthState = {
   session: null,
   isLoading: true,
   error: null,
-  pirateCoins: 0,
-  transactions: [],
+  pirateCoins: 100, // Default mock balance
+  transactions: [
+    {
+      id: 'welcome-1',
+      timestamp: Date.now(),
+      amount: 100,
+      description: 'Welcome bonus',
+      type: 'admin'
+    }
+  ],
   unlockedGames: []
 };
 
@@ -76,9 +83,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
                 session,
                 isLoading: false
               }));
-              
-              // Load user data in background
-              loadUserData(user.id);
             }
             return;
           } else {
@@ -110,25 +114,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const loadUserData = async (userId: string) => {
-    try {
-      const [balance, transactions, unlockedGames] = await Promise.all([
-        getUserBalance(userId),
-        getUserTransactions(userId),
-        getUserUnlockedGames(userId)
-      ]);
-      
-      setState(prev => ({
-        ...prev,
-        pirateCoins: balance,
-        transactions,
-        unlockedGames
-      }));
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
-
   const handleLogin = async (username: string, password: string) => {
     if (isProcessing) return;
     
@@ -149,9 +134,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         error: null
       }));
-      
-      // Load user data
-      await loadUserData(user.id);
       
       toast({
         title: "Login Successful",
@@ -195,9 +177,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         session,
         error: null
       }));
-      
-      // Load user data
-      await loadUserData(user.id);
       
       toast({
         title: "Registration Successful",
