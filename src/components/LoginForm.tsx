@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +64,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     }, 1000); // Increased debounce time
 
     return () => clearTimeout(handler);
-  }, [registerPassword, activeTab]);
+  }, [registerPassword, activeTab, showPasswordSuggestion]);
 
   // Auto-dismiss error messages
   useEffect(() => {
@@ -86,7 +85,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         window.clearTimeout(errorDismissTimer);
       }
     };
-  }, [formError]);
+  }, [formError, errorDismissTimer]);
 
   const clearErrors = () => {
     setFormError(null);
@@ -100,7 +99,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     e.preventDefault();
     clearErrors();
     
-    if (isLoading) {
+    if (isLoading || registrationInProgress) {
       return;
     }
     
@@ -117,7 +116,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
     try {
       console.log('Initiating login process for:', username);
       if (onLogin) {
-        onLogin(username, password);
+        await onLogin(username, password);
       } else {
         await login(username, password);
       }
@@ -240,7 +239,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                     clearErrors();
                   }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  disabled={isLoading}
+                  disabled={isLoading || registrationInProgress}
                 />
               </div>
             </div>
@@ -262,7 +261,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                     clearErrors();
                   }}
                   className="bg-white border-2 border-gray-300 text-black pl-10 placeholder:text-gray-400 focus:border-black focus:ring-black"
-                  disabled={isLoading}
+                  disabled={isLoading || registrationInProgress}
                 />
               </div>
             </div>
@@ -270,9 +269,9 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
             <Button 
               type="submit" 
               className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
-              disabled={isLoading}
+              disabled={isLoading || registrationInProgress}
             >
-              {isLoading ? (
+              {(isLoading || registrationInProgress) ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <LogIn size={18} />
@@ -290,7 +289,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
                   login('test', 'test');
                 }
               }}
-              disabled={isLoading}
+              disabled={isLoading || registrationInProgress}
             >
               Quick Test Login (test/test)
             </Button>
