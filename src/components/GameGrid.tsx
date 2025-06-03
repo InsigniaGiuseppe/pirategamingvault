@@ -12,60 +12,30 @@ import {
 } from "@/components/ui/carousel";
 import { useAuth } from "@/hooks/useSimpleAuth";
 import { Game } from '@/data/games';
-import { getGames } from '@/data/gamesData';
 import { Button } from "@/components/ui/button";
 import { 
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { games as localGames } from '@/data/games';
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useAuth();
-  const [games, setGames] = useState<Game[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Emergency fix: Load games synchronously from local data
+  const [games, setGames] = useState<Game[]>(() => {
+    return localGames.map(game => ({
+      ...game,
+      coinCost: game.coinCost < 10 ? Math.floor(Math.random() * 41) + 10 : game.coinCost,
+      unlocked: false
+    }));
+  });
   const [sortByPrice, setSortByPrice] = useState<'asc' | 'desc' | null>(null);
   
+  // Remove all async loading - games are available immediately
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadGames = async () => {
-      try {
-        console.log('GameGrid: Starting to load games');
-        setLoading(true);
-        setError(null);
-        
-        const fetchedGames = await getGames();
-        
-        if (isMounted) {
-          console.log(`GameGrid: Loaded ${fetchedGames.length} games`);
-          const formattedGames = fetchedGames.map(game => ({
-            ...game,
-            unlocked: false
-          })) as Game[];
-          
-          setGames(formattedGames);
-        }
-      } catch (error) {
-        console.error('GameGrid: Error loading games:', error);
-        if (isMounted) {
-          setError('Failed to load games');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-    
-    loadGames();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    console.log(`GameGrid: ${games.length} games loaded immediately (emergency mode)`);
+  }, [games.length]);
   
   const handleSort = () => {
     if (sortByPrice === null || sortByPrice === 'desc') {
@@ -124,37 +94,6 @@ const GameGrid = () => {
     
     return categoryMap[category] || `${category.charAt(0).toUpperCase()}${category.slice(1)} Games`;
   };
-  
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <Skeleton className="h-4 w-32 mb-2" />
-              <Skeleton className="h-8 w-48" />
-            </div>
-            <Skeleton className="h-10 w-32" />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-lg" />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={() => window.location.reload()}>Retry</Button>
-      </div>
-    );
-  }
   
   return (
     <div className="container mx-auto px-4 py-8">

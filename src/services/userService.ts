@@ -1,9 +1,11 @@
-// Mock implementations to prevent blocking calls
 
-// Mock balance service
+// Emergency fix: Pure mock implementations to prevent all blocking calls
+
+// Mock balance service - always returns immediately
 export const getUserBalance = async (userId: string): Promise<number> => {
   console.log('Mock getUserBalance called for:', userId);
-  return 100; // Default mock balance
+  // Return immediately with mock data
+  return Promise.resolve(100);
 };
 
 export const updateUserBalance = async (
@@ -13,13 +15,15 @@ export const updateUserBalance = async (
   type: 'earn' | 'spend' | 'admin' = 'earn'
 ): Promise<boolean> => {
   console.log('Mock updateUserBalance called:', { userId, amount, description, type });
-  return true;
+  // Return immediately
+  return Promise.resolve(true);
 };
 
-// Mock transaction service
+// Mock transaction service - always returns immediately
 export const getUserTransactions = async (userId: string): Promise<any[]> => {
   console.log('Mock getUserTransactions called for:', userId);
-  return [
+  // Return immediately with mock data
+  return Promise.resolve([
     {
       id: 'welcome-1',
       timestamp: Date.now(),
@@ -27,7 +31,7 @@ export const getUserTransactions = async (userId: string): Promise<any[]> => {
       description: 'Welcome bonus',
       type: 'admin'
     }
-  ];
+  ]);
 };
 
 export const createTransaction = async (
@@ -37,23 +41,23 @@ export const createTransaction = async (
   type: 'earn' | 'spend' | 'admin'
 ): Promise<boolean> => {
   console.log('Mock createTransaction called:', { userId, amount, description, type });
-  return true;
+  return Promise.resolve(true);
 };
 
-// Mock game unlock service
+// Mock game unlock service - always returns immediately
 export const getUserUnlockedGames = async (userId: string): Promise<string[]> => {
   console.log('Mock getUserUnlockedGames called for:', userId);
-  return [];
+  return Promise.resolve([]);
 };
 
 export const isGameUnlocked = async (userId: string, gameId: string): Promise<boolean> => {
   console.log('Mock isGameUnlocked called:', { userId, gameId });
-  return false;
+  return Promise.resolve(false);
 };
 
 export const unlockGame = async (userId: string, gameId: string): Promise<boolean> => {
   console.log('Mock unlockGame called:', { userId, gameId });
-  return true;
+  return Promise.resolve(true);
 };
 
 // Export the profile type for use in other components
