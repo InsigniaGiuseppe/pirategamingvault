@@ -1,3 +1,4 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameTile from './GameTile';
 import { ChevronLeft, ChevronRight, SortAsc, SortDesc } from 'lucide-react';
@@ -18,31 +19,52 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sortByPrice, setSortByPrice] = useState<'asc' | 'desc' | null>(null);
   
   useEffect(() => {
+    let isMounted = true;
+    
     const loadGames = async () => {
       try {
-        const fetchedGames = await getGames();
-        const formattedGames = fetchedGames.map(game => ({
-          ...game,
-          unlocked: false
-        })) as Game[];
+        console.log('GameGrid: Starting to load games');
+        setLoading(true);
+        setError(null);
         
-        setGames(formattedGames);
+        const fetchedGames = await getGames();
+        
+        if (isMounted) {
+          console.log(`GameGrid: Loaded ${fetchedGames.length} games`);
+          const formattedGames = fetchedGames.map(game => ({
+            ...game,
+            unlocked: false
+          })) as Game[];
+          
+          setGames(formattedGames);
+        }
       } catch (error) {
-        console.error('Error loading games:', error);
+        console.error('GameGrid: Error loading games:', error);
+        if (isMounted) {
+          setError('Failed to load games');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
     loadGames();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
   
   const handleSort = () => {
@@ -80,14 +102,6 @@ const GameGrid = () => {
   
   const featuredGames = sortedGames.slice(0, 8);
   
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p>Loading games...</p>
-      </div>
-    );
-  }
-  
   const getCategoryDisplayName = (category: string): string => {
     const categoryMap: Record<string, string> = {
       'fps': 'FPS & Shooters',
@@ -110,6 +124,37 @@ const GameGrid = () => {
     
     return categoryMap[category] || `${category.charAt(0).toUpperCase()}${category.slice(1)} Games`;
   };
+  
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <Skeleton className="h-4 w-32 mb-2" />
+              <Skeleton className="h-8 w-48" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-lg" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-red-600 mb-4">{error}</p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
+  }
   
   return (
     <div className="container mx-auto px-4 py-8">
