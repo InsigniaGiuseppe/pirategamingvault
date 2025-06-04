@@ -150,7 +150,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: true,
         user: {
           id: user.id,
-          username: user.user_metadata?.username || username,
+          username: user.username || username,
           email: user.email || ''
         },
         session,
@@ -259,10 +259,10 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
+export const useSimpleAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within a SimpleAuthProvider');
+    throw new Error('useSimpleAuth must be used within a SimpleAuthProvider');
   }
   return context;
 };

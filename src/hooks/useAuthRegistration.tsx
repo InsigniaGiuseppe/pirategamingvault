@@ -55,7 +55,7 @@ export const useAuthRegistration = () => {
         if (setState) {
           setState({
             isAuthenticated: true,
-            currentUser: user.user_metadata?.username || username,
+            currentUser: user.username || username,
             userId: user.id,
             pirateCoins: balance,
             transactions: transactions, 
@@ -64,7 +64,7 @@ export const useAuthRegistration = () => {
             session: session,
             user: {
               id: user.id,
-              username: user.user_metadata?.username || username,
+              username: user.username || username,
               email: user.email || ''
             },
             error: null
@@ -84,7 +84,7 @@ export const useAuthRegistration = () => {
         if (setState) {
           setState({
             isAuthenticated: true,
-            currentUser: user.user_metadata?.username || username,
+            currentUser: user.username || username,
             userId: user.id,
             pirateCoins: 10, // Default value
             transactions: [],
@@ -93,7 +93,7 @@ export const useAuthRegistration = () => {
             session: session,
             user: {
               id: user.id,
-              username: user.user_metadata?.username || username,
+              username: user.username || username,
               email: user.email || ''
             },
             error: null
