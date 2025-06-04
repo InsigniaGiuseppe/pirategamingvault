@@ -46,7 +46,7 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
   if (youtubeId) {
     return {
       id: youtubeId,
-      type: 'youtube',
+      type: 'youtube' as const,
       thumbnail: generateYouTubeThumbnail(youtubeId),
       embedUrl: `https://www.youtube.com/embed/${youtubeId}`,
       originalUrl: url
@@ -58,7 +58,7 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
   if (twitchChannel) {
     return {
       id: twitchChannel,
-      type: 'twitch',
+      type: 'twitch' as const,
       thumbnail: generateTwitchThumbnail(twitchChannel),
       embedUrl: `https://player.twitch.tv/?channel=${twitchChannel}&parent=${window.location.hostname}`,
       originalUrl: url
@@ -77,7 +77,7 @@ export const formatDuration = (seconds: number): string => {
 export const getWorkingVideoExamples = () => [
   {
     id: '1',
-    type: 'youtube',
+    type: 'youtube' as const,
     title: 'Beautiful Nature Landscapes',
     thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg',
     duration: '212',
@@ -88,7 +88,7 @@ export const getWorkingVideoExamples = () => [
   },
   {
     id: '2',
-    type: 'youtube',
+    type: 'youtube' as const,
     title: 'Relaxing Music for Focus',
     thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/maxresdefault.jpg',
     duration: '180',
@@ -99,7 +99,7 @@ export const getWorkingVideoExamples = () => [
   },
   {
     id: '3',
-    type: 'twitch',
+    type: 'twitch' as const,
     title: 'Live Gaming Stream',
     thumbnail: 'https://static-cdn.jtvnw.net/previews-ttv/live_user_shroud-440x248.jpg',
     duration: '300',
