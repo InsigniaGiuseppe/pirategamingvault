@@ -1,9 +1,8 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Twitch, Youtube, Clock, Coins, Play, CheckCircle, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import VideoPlayer from './VideoPlayer';
@@ -27,7 +26,7 @@ const EarnPirateCoins = () => {
   const [isWatching, setIsWatching] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [videoError, setVideoError] = useState<boolean>(false);
-  const { addPirateCoins, currentUser } = useAuth();
+  const { addPirateCoins, user } = useSimpleAuth();
   const { toast } = useToast();
   const progressInterval = useRef<number | null>(null);
 
@@ -90,8 +89,8 @@ const EarnPirateCoins = () => {
     }
     
     // Load watched videos from localStorage for the current user
-    if (currentUser) {
-      const watchedVideosStr = localStorage.getItem(`${currentUser}_watchedVideos`);
+    if (user) {
+      const watchedVideosStr = localStorage.getItem(`${user.username}_watchedVideos`);
       if (watchedVideosStr) {
         try {
           const watchedIds = JSON.parse(watchedVideosStr);
@@ -101,7 +100,7 @@ const EarnPirateCoins = () => {
         }
       }
     }
-  }, [currentUser]);
+  }, [user]);
 
   // Handle starting to watch video
   const handleWatchVideo = (video: VideoItem) => {
@@ -177,9 +176,9 @@ const EarnPirateCoins = () => {
       setWatchedVideos(newWatched);
       
       // Save watched videos to localStorage
-      if (currentUser) {
+      if (user) {
         const watchedArray = Array.from(newWatched);
-        localStorage.setItem(`${currentUser}_watchedVideos`, JSON.stringify(watchedArray));
+        localStorage.setItem(`${user.username}_watchedVideos`, JSON.stringify(watchedArray));
       }
       
       // Show success message
@@ -217,7 +216,13 @@ const EarnPirateCoins = () => {
                   Due to content provider restrictions, this video cannot be embedded in our site.
                 </p>
                 <Button 
-                  onClick={handleWatchExternal} 
+                  onClick={() => {
+                    if (!activeVideo) return;
+                    window.open(activeVideo.url, '_blank');
+                    setTimeout(() => {
+                      completeVideo(activeVideo);
+                    }, 1500);
+                  }} 
                   className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                 >
                   <ExternalLink size={16} />
@@ -230,7 +235,7 @@ const EarnPirateCoins = () => {
               type={activeVideo.type}
               embedUrl={activeVideo.embedUrl}
               title={activeVideo.title}
-              onError={handleVideoError}
+              onError={() => setVideoError(true)}
             />
           )}
           
@@ -255,7 +260,15 @@ const EarnPirateCoins = () => {
             {watchProgress < 100 ? (
               <Button 
                 variant="outline" 
-                onClick={handleCancelWatch}
+                onClick={() => {
+                  if (progressInterval.current) {
+                    window.clearInterval(progressInterval.current);
+                  }
+                  setActiveVideo(null);
+                  setIsWatching(false);
+                  setWatchProgress(0);
+                  setVideoError(false);
+                }}
                 className="border-gray-300"
               >
                 Cancel Watching
@@ -304,7 +317,33 @@ const EarnPirateCoins = () => {
               </CardContent>
               <CardFooter className="p-4 pt-0">
                 <Button
-                  onClick={() => handleWatchVideo(video)}
+                  onClick={() => {
+                    setActiveVideo(video);
+                    setWatchProgress(0);
+                    setIsWatching(true);
+                    setVideoError(false);
+                    
+                    if (progressInterval.current) {
+                      window.clearInterval(progressInterval.current);
+                    }
+                    
+                    const duration = parseInt(video.duration);
+                    const intervalStep = 2;
+                    
+                    progressInterval.current = window.setInterval(() => {
+                      setWatchProgress(prev => {
+                        const newProgress = prev + (intervalStep / duration * 100);
+                        
+                        if (newProgress >= 100) {
+                          if (progressInterval.current) window.clearInterval(progressInterval.current);
+                          completeVideo(video);
+                          return 100;
+                        }
+                        
+                        return newProgress;
+                      });
+                    }, intervalStep * 1000) as unknown as number;
+                  }}
                   disabled={watchedVideos.has(video.id)}
                   className={`w-full flex items-center justify-center gap-2 ${
                     watchedVideos.has(video.id)

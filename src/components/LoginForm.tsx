@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { LogIn, User, Lock, Loader2, AlertCircle, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +27,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [isPasswordCompromised, setIsPasswordCompromised] = useState(false);
   const [showPasswordSuggestion, setShowPasswordSuggestion] = useState(false);
   const [errorDismissTimer, setErrorDismissTimer] = useState<number | null>(null);
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading } = useSimpleAuth();
   const { toast } = useToast();
 
   // Simplified password check to prevent loops
@@ -404,6 +405,14 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       </div>
     </div>
   );
+
+  function clearErrors() {
+    setFormError(null);
+    if (errorDismissTimer) {
+      window.clearTimeout(errorDismissTimer);
+      setErrorDismissTimer(null);
+    }
+  }
 };
 
 export default LoginForm;

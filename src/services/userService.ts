@@ -66,10 +66,3 @@ export interface Profile {
   username: string;
   created_at: string;
 }
-
-// Re-export from specialized service modules (keeping these for compatibility)
-export * from './authService';
-export * from './registrationService';
-export * from './balanceService';
-export * from './transactionService';
-export * from './gameUnlockService';

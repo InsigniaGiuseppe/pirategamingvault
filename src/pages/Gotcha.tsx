@@ -1,13 +1,13 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ExternalLink, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Gotcha = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSimpleAuth();
   const navigate = useNavigate();
   const [showImage, setShowImage] = useState(false);
   const [showChatBubble, setShowChatBubble] = useState(false);

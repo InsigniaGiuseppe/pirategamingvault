@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Shield, X, AlertTriangle } from 'lucide-react';
 import { verifyAuthCode } from '@/services/credentialService';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 interface SecretCodeModalProps {
   isOpen: boolean;
@@ -37,7 +36,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
   const [messageIndex, setMessageIndex] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { user } = useSimpleAuth();
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -72,7 +71,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
                 clearInterval(messageTimer);
                 setTimeout(() => {
                   // Verify auth code against the user's credentials
-                  const isValid = currentUser ? verifyAuthCode(currentUser, code) : code === '010101!';
+                  const isValid = user ? verifyAuthCode(user, code) : code === '010101!';
                   
                   if (isValid) {
                     navigate('/gotcha');
@@ -107,7 +106,7 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
       if (timer) clearInterval(timer);
       if (messageTimer) clearInterval(messageTimer);
     };
-  }, [loading, continuedLoading, code, navigate, toast, currentUser]);
+  }, [loading, continuedLoading, code, navigate, toast, user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +153,10 @@ const SecretCodeModal = ({ isOpen, onClose, gameTitle }: SecretCodeModalProps) =
             <p className="text-sm text-gray-600 mt-2">(Obtain from GIUSEPPE in the Discord Server.)</p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            setLoading(true);
+          }} className="space-y-6">
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <Input 
