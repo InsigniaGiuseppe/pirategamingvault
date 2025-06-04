@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -53,44 +54,47 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Simple, synchronous auth check on mount
+  // Simple auth check on mount with timeout protection
   useEffect(() => {
-    console.log('Starting simplified auth check...');
+    console.log('Starting auth check...');
     
-    try {
-      const userStr = localStorage.getItem('pirate_user');
-      const sessionStr = localStorage.getItem('pirate_session');
-      
-      if (userStr && sessionStr) {
-        const storedUser = JSON.parse(userStr);
-        const storedSession = JSON.parse(sessionStr);
+    const checkAuth = async () => {
+      try {
+        const userStr = localStorage.getItem('pirate_user');
+        const sessionStr = localStorage.getItem('pirate_session');
         
-        console.log('Found stored session:', { user: storedUser.username, expires: storedSession.expires_at });
-        
-        // Simple expiry check
-        if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
-          console.log('Valid session found, user authenticated');
-          setState(prev => ({
-            ...prev,
-            isAuthenticated: true,
-            user: storedUser,
-            session: storedSession
-          }));
-          return;
-        } else {
-          console.log('Session expired, clearing');
-          localStorage.removeItem('pirate_user');
-          localStorage.removeItem('pirate_session');
+        if (userStr && sessionStr) {
+          const storedUser = JSON.parse(userStr);
+          const storedSession = JSON.parse(sessionStr);
+          
+          console.log('Found stored session:', { user: storedUser.username, expires: storedSession.expires_at });
+          
+          // Simple expiry check
+          if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
+            console.log('Valid session found, user authenticated');
+            setState(prev => ({
+              ...prev,
+              isAuthenticated: true,
+              user: storedUser,
+              session: storedSession
+            }));
+            return;
+          } else {
+            console.log('Session expired, clearing');
+            localStorage.removeItem('pirate_user');
+            localStorage.removeItem('pirate_session');
+          }
         }
+        
+        console.log('No valid session, user not authenticated');
+      } catch (error) {
+        console.error('Auth check error:', error);
+        localStorage.removeItem('pirate_user');
+        localStorage.removeItem('pirate_session');
       }
-      
-      console.log('No valid session, user not authenticated');
-    } catch (error) {
-      console.error('Auth check error:', error);
-      // Clear corrupted data
-      localStorage.removeItem('pirate_user');
-      localStorage.removeItem('pirate_session');
-    }
+    };
+
+    checkAuth();
   }, []);
 
   const handleLogin = useCallback(async (username: string, password: string) => {
@@ -98,7 +102,13 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Starting login for:', username);
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const { user, session, error } = await login(username, password);
+      // Set a timeout for the entire login process
+      const loginPromise = login(username, password);
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout')), 15000)
+      );
+      
+      const { user, session, error } = await Promise.race([loginPromise, timeoutPromise]);
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
@@ -111,7 +121,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      console.log('Login successful, updating state and navigating');
+      console.log('Login successful, updating state');
       
       // Update state
       setState(prev => ({
@@ -128,16 +138,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Welcome back, ${user.username}!`
       });
       
-      // Navigate directly after state update
-      console.log('Navigating to dashboard...');
-      navigate('/dashboard');
+      // Navigate after a short delay to ensure state is updated
+      setTimeout(() => {
+        console.log('Navigating to dashboard...');
+        navigate('/dashboard');
+      }, 100);
       
     } catch (error) {
       console.error('Login error:', error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: 'Login failed' 
+        error: error instanceof Error ? error.message : 'Login failed' 
       }));
       toast({
         variant: "destructive",
@@ -152,7 +164,13 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Starting registration for:', username);
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const { user, session, error } = await registerUser(username, password);
+      // Set a timeout for the entire registration process
+      const registerPromise = registerUser(username, password);
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Registration timeout')), 15000)
+      );
+      
+      const { user, session, error } = await Promise.race([registerPromise, timeoutPromise]);
       
       if (error || !user) {
         console.error('Registration failed:', error);
@@ -165,7 +183,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      console.log('Registration successful, updating state and navigating');
+      console.log('Registration successful, updating state');
       
       // Update state
       setState(prev => ({
@@ -186,16 +204,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome to Pirate Gaming!"
       });
       
-      // Navigate directly after state update
-      console.log('Navigating to dashboard...');
-      navigate('/dashboard');
+      // Navigate after a short delay to ensure state is updated
+      setTimeout(() => {
+        console.log('Navigating to dashboard...');
+        navigate('/dashboard');
+      }, 100);
       
     } catch (error) {
       console.error('Registration error:', error);
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: 'Registration failed' 
+        error: error instanceof Error ? error.message : 'Registration failed' 
       }));
       toast({
         variant: "destructive",

@@ -12,7 +12,17 @@ export interface CustomSession {
   expires_at: number;
 }
 
-// Pure local login with database verification
+// Add timeout wrapper for database operations
+const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+    )
+  ]);
+};
+
+// Pure local login with database verification and timeout protection
 export const login = async (
   username: string,
   password: string
@@ -28,23 +38,33 @@ export const login = async (
     if (!password || password.length === 0) {
       return { user: null, session: null, error: 'Password is required' };
     }
+
+    // Clean the username to prevent issues
+    const cleanUsername = username.toLowerCase().trim();
     
-    // Check user in database
-    const { data: dbUser, error: loginError } = await supabase
+    console.log('Checking user in database with timeout protection...');
+    
+    // Check user in database with timeout protection
+    const dbQuery = supabase
       .from('custom_users')
       .select('*')
-      .eq('username', username.toLowerCase())
-      .eq('password_hash', password) // In production, compare hashed passwords
+      .eq('username', cleanUsername)
+      .eq('password_hash', password) // Simple password check for now
       .maybeSingle();
     
+    const { data: dbUser, error: loginError } = await withTimeout(dbQuery, 5000);
+    
     if (loginError) {
-      console.error('Login error:', loginError);
-      return { user: null, session: null, error: 'Login failed' };
+      console.error('Login database error:', loginError);
+      return { user: null, session: null, error: 'Login failed: Database error' };
     }
     
     if (!dbUser) {
+      console.log('No user found with provided credentials');
       return { user: null, session: null, error: 'Invalid username or password' };
     }
+    
+    console.log('User found, creating session...');
     
     const user: CustomUser = {
       id: dbUser.id,
@@ -52,8 +72,8 @@ export const login = async (
     };
     
     const session: CustomSession = {
-      access_token: `mock-token-${Date.now()}`,
-      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now in seconds
+      access_token: `token-${Date.now()}`,
+      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     };
     
     // Store auth in localStorage
@@ -65,7 +85,8 @@ export const login = async (
     
   } catch (error) {
     console.error('Login error:', error);
-    return { user: null, session: null, error: 'Login failed' };
+    const errorMessage = error instanceof Error ? error.message : 'Login failed';
+    return { user: null, session: null, error: errorMessage };
   }
 };
 
