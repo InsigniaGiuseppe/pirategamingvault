@@ -405,14 +405,6 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
       </div>
     </div>
   );
-
-  function clearErrors() {
-    setFormError(null);
-    if (errorDismissTimer) {
-      window.clearTimeout(errorDismissTimer);
-      setErrorDismissTimer(null);
-    }
-  }
 };
 
 export default LoginForm;
