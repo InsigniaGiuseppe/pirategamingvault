@@ -48,11 +48,13 @@ interface Transaction {
 
 const Admin = () => {
   const [credentials, setCredentials] = useState<Credential[]>([]);
+  const [databaseUsers, setDatabaseUsers] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSharingOpen, setIsSharingOpen] = useState(false);
   const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isCoinDialogOpen, setIsCoinDialogOpen] = useState(false);
   const [coinAmount, setCoinAmount] = useState<number>(10);
   const [coinAction, setCoinAction] = useState<'add' | 'remove'>('add');
@@ -73,8 +75,11 @@ const Admin = () => {
       return;
     }
 
-    // Load credentials
+    // Load credentials (for admin users)
     loadCredentials();
+    
+    // Load database users (for registered users)
+    loadDatabaseUsers();
     
     // Load all transactions
     loadAllTransactions();
@@ -92,6 +97,22 @@ const Admin = () => {
         variant: 'destructive',
         title: 'Failed to load credentials',
         description: 'There was a problem loading the credential store.',
+      });
+    }
+  };
+
+  const loadDatabaseUsers = async () => {
+    try {
+      const { getAllDatabaseUsers } = await import('@/services/databaseUserService');
+      const users = await getAllDatabaseUsers();
+      setDatabaseUsers(users);
+      console.log('Loaded database users:', users);
+    } catch (error) {
+      console.error('Error loading database users:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to load database users',
+        description: 'There was a problem loading users from the database.',
       });
     }
   };
@@ -213,52 +234,82 @@ const Admin = () => {
     });
   };
   
-  const handleOpenCoinDialog = (username: string, action: 'add' | 'remove') => {
+  const handleOpenCoinDialog = (username: string, action: 'add' | 'remove', userId?: string) => {
     setSelectedUser(username);
+    setSelectedUserId(userId || null);
     setCoinAction(action);
     setCoinAmount(action === 'add' ? 10 : 5);
     setCoinReason(action === 'add' ? 'Admin bonus' : 'Admin deduction');
     setIsCoinDialogOpen(true);
   };
   
-  const handleModifyCoins = () => {
+  const handleModifyCoins = async () => {
     if (!selectedUser) return;
     
-    // Get user's current coin balance from localStorage
-    const currentCoins = parseInt(localStorage.getItem(`pirateCoins`) || '0');
-    
-    // Calculate new balance
     const amount = coinAction === 'add' ? coinAmount : -coinAmount;
-    const newBalance = Math.max(0, currentCoins + amount);
     
-    // Update user's coin balance in localStorage
-    localStorage.setItem(`pirateCoins`, newBalance.toString());
+    // If it's a database user, update in database
+    if (selectedUserId) {
+      try {
+        const { updateDatabaseUserBalance } = await import('@/services/databaseUserService');
+        const success = await updateDatabaseUserBalance(
+          selectedUserId,
+          amount,
+          `${coinReason} [admin]`,
+          'admin'
+        );
+        
+        if (success) {
+          // Refresh database users
+          loadDatabaseUsers();
+          
+          toast({
+            title: 'Coins Updated',
+            description: `${coinAction === 'add' ? 'Added' : 'Removed'} ${coinAmount} coins ${coinAction === 'add' ? 'to' : 'from'} ${selectedUser}'s account.`,
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Update Failed',
+            description: 'Failed to update user balance in database.',
+          });
+        }
+      } catch (error) {
+        console.error('Error updating database user balance:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Update Failed',
+          description: 'An error occurred while updating user balance.',
+        });
+      }
+    } else {
+      // Legacy localStorage handling for old credential users
+      const currentCoins = parseInt(localStorage.getItem(`pirateCoins`) || '0');
+      const newBalance = Math.max(0, currentCoins + amount);
+      
+      localStorage.setItem(`pirateCoins`, newBalance.toString());
+      
+      const transaction = {
+        id: crypto.randomUUID(),
+        timestamp: Date.now(),
+        amount: amount,
+        description: `${coinReason} [admin]`,
+        type: 'admin' as const
+      };
+      
+      const existingTransactions = JSON.parse(localStorage.getItem(`pirateTransactions`) || '[]');
+      const updatedTransactions = [...existingTransactions, transaction];
+      localStorage.setItem(`pirateTransactions`, JSON.stringify(updatedTransactions));
+      
+      toast({
+        title: 'Coins Updated',
+        description: `${coinAction === 'add' ? 'Added' : 'Removed'} ${coinAmount} coins ${coinAction === 'add' ? 'to' : 'from'} ${selectedUser}'s account.`,
+      });
+    }
     
-    // Add transaction record
-    const transaction = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      amount: amount,
-      description: `${coinReason} [admin]`,
-      type: 'admin' as const
-    };
-    
-    // Get existing transactions
-    const existingTransactions = JSON.parse(localStorage.getItem(`pirateTransactions`) || '[]');
-    
-    // Add new transaction
-    const updatedTransactions = [...existingTransactions, transaction];
-    localStorage.setItem(`pirateTransactions`, JSON.stringify(updatedTransactions));
-    
-    // Refresh data
+    // Refresh data and close dialog
     loadAllTransactions();
-    
-    // Close dialog and notify
     setIsCoinDialogOpen(false);
-    toast({
-      title: 'Coins Updated',
-      description: `${coinAction === 'add' ? 'Added' : 'Removed'} ${coinAmount} coins ${coinAction === 'add' ? 'to' : 'from'} ${selectedUser}'s account.`,
-    });
   };
   
   const handleEditVideo = (video: any) => {
@@ -400,17 +451,91 @@ const Admin = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="credentials">
+        <Tabs defaultValue="users">
           <TabsList className="mb-6">
-            <TabsTrigger value="credentials">User Credentials</TabsTrigger>
+            <TabsTrigger value="users">Registered Users</TabsTrigger>
+            <TabsTrigger value="credentials">Admin Credentials</TabsTrigger>
             <TabsTrigger value="transactions">Transaction History</TabsTrigger>
             <TabsTrigger value="videos">Watch & Earn Videos</TabsTrigger>
           </TabsList>
           
+          <TabsContent value="users">
+            <div className="bg-white rounded-xl p-6 shadow-saas">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-black">Registered Users</h2>
+                <Button
+                  onClick={loadDatabaseUsers}
+                  variant="outline"
+                  className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-black"
+                >
+                  Refresh Users
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>User ID</TableHead>
+                      <TableHead>Coins</TableHead>
+                      <TableHead>Transactions</TableHead>
+                      <TableHead>Registered</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {databaseUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.username}</TableCell>
+                        <TableCell className="font-mono text-xs">{user.id}</TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex items-center gap-1">
+                            <Coins size={16} className="text-yellow-500" />
+                            {user.balance}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">{user.transactions.length}</TableCell>
+                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              onClick={() => handleOpenCoinDialog(user.username, 'add', user.id)}
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 px-2 border border-green-300 text-green-600 hover:bg-green-50"
+                            >
+                              Add Coins
+                            </Button>
+                            <Button 
+                              onClick={() => handleOpenCoinDialog(user.username, 'remove', user.id)}
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 px-2 border border-orange-300 text-orange-600 hover:bg-orange-50"
+                            >
+                              Remove Coins
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {databaseUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                          No registered users found. Users who register through the app will appear here.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </TabsContent>
+          
           <TabsContent value="credentials">
             <div className="bg-white rounded-xl p-6 shadow-saas">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-black">User Management</h2>
+                <h2 className="text-xl font-bold text-black">Admin Credentials</h2>
                 <Button
                   onClick={() => {
                     setEditingCredential(null);
@@ -430,93 +555,65 @@ const Admin = () => {
                       <TableHead>Username</TableHead>
                       <TableHead>Auth Code</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Coins</TableHead>
                       <TableHead>Created</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {credentials.map((cred) => {
-                      // Get user's coin balance from localStorage
-                      const userCoins = parseInt(localStorage.getItem(`${cred.username}_coins`) || '0');
-                      
-                      return (
-                        <TableRow key={cred.id}>
-                          <TableCell className="font-medium">{cred.username}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <span>{cred.authCode}</span>
-                              <button 
-                                onClick={() => copyToClipboard(cred.authCode)} 
-                                className="p-1 hover:bg-gray-100 rounded"
-                              >
-                                <Clipboard size={14} />
-                              </button>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded text-xs ${cred.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {cred.active ? 'Active' : 'Disabled'}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center gap-1">
-                              <Coins size={16} className="text-yellow-500" />
-                              {userCoins}
-                            </div>
-                          </TableCell>
-                          <TableCell>{new Date(cred.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button 
-                                onClick={() => handleOpenCoinDialog(cred.username, 'add')}
-                                variant="outline" 
-                                size="sm"
-                                className="h-8 px-2 border border-green-300 text-green-600 hover:bg-green-50"
-                              >
-                                Add Coins
-                              </Button>
-                              <Button 
-                                onClick={() => handleOpenCoinDialog(cred.username, 'remove')}
-                                variant="outline" 
-                                size="sm"
-                                className="h-8 px-2 border border-orange-300 text-orange-600 hover:bg-orange-50"
-                              >
-                                Remove Coins
-                              </Button>
-                              <Button 
-                                onClick={() => handleEdit(cred)}
-                                variant="outline" 
-                                size="sm"
-                                className="h-8 px-2 border border-gray-300"
-                              >
-                                Edit
-                              </Button>
-                              <Button 
-                                onClick={() => handleToggleStatus(cred.id)}
-                                variant="outline" 
-                                size="sm"
-                                className="h-8 px-2 border border-gray-300"
-                              >
-                                {cred.active ? 'Disable' : 'Enable'}
-                              </Button>
-                              <Button 
-                                onClick={() => handleDelete(cred.id)}
-                                variant="outline" 
-                                size="sm" 
-                                className="h-8 px-2 border border-red-300 text-red-500 hover:bg-red-50"
-                              >
-                                <Trash size={14} />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    )}
+                    {credentials.map((cred) => (
+                      <TableRow key={cred.id}>
+                        <TableCell className="font-medium">{cred.username}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span>{cred.authCode}</span>
+                            <button 
+                              onClick={() => copyToClipboard(cred.authCode)} 
+                              className="p-1 hover:bg-gray-100 rounded"
+                            >
+                              <Clipboard size={14} />
+                            </button>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded text-xs ${cred.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {cred.active ? 'Active' : 'Disabled'}
+                          </span>
+                        </TableCell>
+                        <TableCell>{new Date(cred.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button 
+                              onClick={() => handleEdit(cred)}
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 px-2 border border-gray-300"
+                            >
+                              Edit
+                            </Button>
+                            <Button 
+                              onClick={() => handleToggleStatus(cred.id)}
+                              variant="outline" 
+                              size="sm"
+                              className="h-8 px-2 border border-gray-300"
+                            >
+                              {cred.active ? 'Disable' : 'Enable'}
+                            </Button>
+                            <Button 
+                              onClick={() => handleDelete(cred.id)}
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 px-2 border border-red-300 text-red-500 hover:bg-red-50"
+                            >
+                              <Trash size={14} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                     {credentials.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No credentials found. Add a new credential to get started.
+                        <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                          No admin credentials found. Add a new credential to get started.
                         </TableCell>
                       </TableRow>
                     )}
