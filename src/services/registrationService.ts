@@ -26,17 +26,7 @@ const generateUUID = (): string => {
   });
 };
 
-// Add timeout wrapper for database operations
-const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
-    )
-  ]);
-};
-
-// Pure local registration with database integration and timeout protection
+// Pure local registration with database integration
 export const registerUser = async (
   username: string,
   password: string
@@ -60,17 +50,14 @@ export const registerUser = async (
     // Clean the username to prevent issues
     const cleanUsername = username.toLowerCase().trim();
     
-    console.log('Checking if user exists with timeout protection...');
+    console.log('Checking if user exists...');
     
-    // Check if user already exists in database with timeout - properly execute the query
-    const { data: existingUser, error: checkError } = await withTimeout(
-      supabase
-        .from('custom_users')
-        .select('username')
-        .eq('username', cleanUsername)
-        .maybeSingle(),
-      5000
-    );
+    // Check if user already exists in database
+    const { data: existingUser, error: checkError } = await supabase
+      .from('custom_users')
+      .select('username')
+      .eq('username', cleanUsername)
+      .maybeSingle();
     
     if (checkError) {
       console.error('Error checking existing user:', checkError);
@@ -87,19 +74,16 @@ export const registerUser = async (
     
     console.log('Creating user with ID:', newUserId);
     
-    // Create new user in database with timeout protection - properly execute the query
-    const { data: dbUser, error: insertError } = await withTimeout(
-      supabase
-        .from('custom_users')
-        .insert([{
-          id: newUserId,
-          username: cleanUsername,
-          password_hash: password // Store password directly for simplicity
-        }])
-        .select()
-        .single(),
-      5000
-    );
+    // Create new user in database
+    const { data: dbUser, error: insertError } = await supabase
+      .from('custom_users')
+      .insert([{
+        id: newUserId,
+        username: cleanUsername,
+        password_hash: password // Store password directly for simplicity
+      }])
+      .select()
+      .single();
     
     if (insertError) {
       console.error('Error creating user in database:', insertError);
@@ -113,37 +97,31 @@ export const registerUser = async (
     
     console.log('User created successfully:', dbUser);
     
-    // Create initial balance with timeout protection - properly execute the query
+    // Create initial balance
     console.log('Creating initial balance...');
     try {
-      await withTimeout(
-        supabase
-          .from('user_balance')
-          .insert({
-            user_id: dbUser.id,
-            balance: 10
-          }),
-        3000
-      );
+      await supabase
+        .from('user_balance')
+        .insert({
+          user_id: dbUser.id,
+          balance: 10
+        });
       console.log('Initial balance created successfully');
     } catch (balanceError) {
       console.warn('Balance creation failed but continuing with registration:', balanceError);
     }
     
-    // Create welcome transaction with timeout protection - properly execute the query
+    // Create welcome transaction
     console.log('Creating welcome transaction...');
     try {
-      await withTimeout(
-        supabase
-          .from('transactions')
-          .insert({
-            user_id: dbUser.id,
-            amount: 10,
-            description: 'Welcome bonus',
-            type: 'admin'
-          }),
-        3000
-      );
+      await supabase
+        .from('transactions')
+        .insert({
+          user_id: dbUser.id,
+          amount: 10,
+          description: 'Welcome bonus',
+          type: 'admin'
+        });
       console.log('Welcome transaction created successfully');
     } catch (transactionError) {
       console.warn('Transaction creation failed but continuing with registration:', transactionError);

@@ -12,17 +12,7 @@ export interface CustomSession {
   expires_at: number;
 }
 
-// Add timeout wrapper for database operations
-const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 10000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => 
-      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
-    )
-  ]);
-};
-
-// Pure local login with database verification and timeout protection
+// Pure local login with database verification
 export const login = async (
   username: string,
   password: string
@@ -42,18 +32,15 @@ export const login = async (
     // Clean the username to prevent issues
     const cleanUsername = username.toLowerCase().trim();
     
-    console.log('Checking user in database with timeout protection...');
+    console.log('Checking user in database...');
     
-    // Check user in database with timeout protection - properly execute the query
-    const { data: dbUser, error: loginError } = await withTimeout(
-      supabase
-        .from('custom_users')
-        .select('*')
-        .eq('username', cleanUsername)
-        .eq('password_hash', password) // Simple password check for now
-        .maybeSingle(),
-      5000
-    );
+    // Check user in database with direct query
+    const { data: dbUser, error: loginError } = await supabase
+      .from('custom_users')
+      .select('*')
+      .eq('username', cleanUsername)
+      .eq('password_hash', password) // Simple password check for now
+      .maybeSingle();
     
     if (loginError) {
       console.error('Login database error:', loginError);
