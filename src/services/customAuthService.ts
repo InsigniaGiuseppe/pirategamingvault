@@ -53,7 +53,7 @@ export const login = async (
     
     const session: CustomSession = {
       access_token: `mock-token-${Date.now()}`,
-      expires_at: Date.now() / 1000 + 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now in seconds
     };
     
     // Store auth in localStorage

@@ -67,6 +67,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         const storedUser = JSON.parse(userStr);
         const storedSession = JSON.parse(sessionStr);
         
+        console.log('Found stored session:', { user: storedUser.username, expires: storedSession.expires_at });
+        
         // Simple expiry check
         if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
           console.log('Valid session found, user authenticated');
@@ -94,16 +96,28 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleLogin = useCallback(async (username: string, password: string) => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('Login already in progress, skipping');
+      return;
+    }
     
     try {
       setIsProcessing(true);
       console.log('Starting login for:', username);
       
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
       const { user, session, error } = await login(username, password);
       
       if (error || !user || !session) {
-        throw new Error(error || 'Login failed');
+        console.error('Login failed:', error);
+        setState(prev => ({ ...prev, isLoading: false, error: error || 'Login failed' }));
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: error || 'Login failed'
+        });
+        return;
       }
       
       setState(prev => ({
@@ -111,7 +125,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: true,
         user,
         session,
-        error: null
+        error: null,
+        isLoading: false
       }));
       
       toast({
@@ -119,9 +134,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Welcome back, ${user.username}!`
       });
       
+      console.log('Login successful, navigating to dashboard');
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
+      setState(prev => ({ ...prev, isLoading: false, error: 'Login failed' }));
       toast({
         variant: "destructive",
         title: "Login Failed",
@@ -133,18 +150,31 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isProcessing, navigate, toast]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
-    if (isProcessing) return;
+    if (isProcessing) {
+      console.log('Registration already in progress, skipping');
+      return;
+    }
     
     try {
       setIsProcessing(true);
       console.log('Starting registration for:', username);
       
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
       const { user, session, error } = await registerUser(username, password);
       
       if (error || !user) {
-        throw new Error(error || 'Registration failed');
+        console.error('Registration failed:', error);
+        setState(prev => ({ ...prev, isLoading: false, error: error || 'Registration failed' }));
+        toast({
+          variant: "destructive",
+          title: "Registration Failed",
+          description: error || 'Registration failed'
+        });
+        return;
       }
       
+      console.log('Registration successful, setting auth state');
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
@@ -154,7 +184,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           email: user.email || ''
         },
         session,
-        error: null
+        error: null,
+        isLoading: false
       }));
       
       toast({
@@ -162,9 +193,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome to Pirate Gaming!"
       });
       
+      console.log('Registration complete, navigating to dashboard');
       navigate('/dashboard');
     } catch (error) {
       console.error('Registration error:', error);
+      setState(prev => ({ ...prev, isLoading: false, error: 'Registration failed' }));
       toast({
         variant: "destructive",
         title: "Registration Failed",
