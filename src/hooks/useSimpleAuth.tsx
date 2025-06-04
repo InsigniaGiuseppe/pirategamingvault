@@ -36,12 +36,12 @@ const initialState: AuthState = {
   session: null,
   isLoading: false, // Start with false to prevent blocking
   error: null,
-  pirateCoins: 100,
+  pirateCoins: 10,
   transactions: [
     {
       id: 'welcome-1',
       timestamp: Date.now(),
-      amount: 100,
+      amount: 10,
       description: 'Welcome bonus',
       type: 'admin'
     }
