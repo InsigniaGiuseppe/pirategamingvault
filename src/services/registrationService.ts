@@ -62,14 +62,15 @@ export const registerUser = async (
     
     console.log('Checking if user exists with timeout protection...');
     
-    // Check if user already exists in database with timeout - properly await the query
-    const existingUserQuery = supabase
-      .from('custom_users')
-      .select('username')
-      .eq('username', cleanUsername)
-      .maybeSingle();
-    
-    const { data: existingUser, error: checkError } = await withTimeout(existingUserQuery, 5000);
+    // Check if user already exists in database with timeout - execute the query and wrap the promise
+    const { data: existingUser, error: checkError } = await withTimeout(
+      supabase
+        .from('custom_users')
+        .select('username')
+        .eq('username', cleanUsername)
+        .maybeSingle(),
+      5000
+    );
     
     if (checkError) {
       console.error('Error checking existing user:', checkError);
@@ -86,18 +87,19 @@ export const registerUser = async (
     
     console.log('Creating user with ID:', newUserId);
     
-    // Create new user in database with timeout protection - properly await the query
-    const insertUserQuery = supabase
-      .from('custom_users')
-      .insert([{
-        id: newUserId,
-        username: cleanUsername,
-        password_hash: password // Store password directly for simplicity
-      }])
-      .select()
-      .single();
-    
-    const { data: dbUser, error: insertError } = await withTimeout(insertUserQuery, 5000);
+    // Create new user in database with timeout protection - execute the query and wrap the promise
+    const { data: dbUser, error: insertError } = await withTimeout(
+      supabase
+        .from('custom_users')
+        .insert([{
+          id: newUserId,
+          username: cleanUsername,
+          password_hash: password // Store password directly for simplicity
+        }])
+        .select()
+        .single(),
+      5000
+    );
     
     if (insertError) {
       console.error('Error creating user in database:', insertError);
@@ -111,35 +113,37 @@ export const registerUser = async (
     
     console.log('User created successfully:', dbUser);
     
-    // Create initial balance with timeout protection - properly await the query
+    // Create initial balance with timeout protection - execute the query and wrap the promise
     console.log('Creating initial balance...');
     try {
-      const balanceQuery = supabase
-        .from('user_balance')
-        .insert({
-          user_id: dbUser.id,
-          balance: 10
-        });
-      
-      await withTimeout(balanceQuery, 3000);
+      await withTimeout(
+        supabase
+          .from('user_balance')
+          .insert({
+            user_id: dbUser.id,
+            balance: 10
+          }),
+        3000
+      );
       console.log('Initial balance created successfully');
     } catch (balanceError) {
       console.warn('Balance creation failed but continuing with registration:', balanceError);
     }
     
-    // Create welcome transaction with timeout protection - properly await the query
+    // Create welcome transaction with timeout protection - execute the query and wrap the promise
     console.log('Creating welcome transaction...');
     try {
-      const transactionQuery = supabase
-        .from('transactions')
-        .insert({
-          user_id: dbUser.id,
-          amount: 10,
-          description: 'Welcome bonus',
-          type: 'admin'
-        });
-      
-      await withTimeout(transactionQuery, 3000);
+      await withTimeout(
+        supabase
+          .from('transactions')
+          .insert({
+            user_id: dbUser.id,
+            amount: 10,
+            description: 'Welcome bonus',
+            type: 'admin'
+          }),
+        3000
+      );
       console.log('Welcome transaction created successfully');
     } catch (transactionError) {
       console.warn('Transaction creation failed but continuing with registration:', transactionError);
