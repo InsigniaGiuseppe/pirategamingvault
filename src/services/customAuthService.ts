@@ -44,15 +44,15 @@ export const login = async (
     
     console.log('Checking user in database with timeout protection...');
     
-    // Check user in database with timeout protection
-    const dbQuery = supabase
+    // Check user in database with timeout protection - execute the query properly
+    const dbQueryPromise = supabase
       .from('custom_users')
       .select('*')
       .eq('username', cleanUsername)
       .eq('password_hash', password) // Simple password check for now
       .maybeSingle();
     
-    const { data: dbUser, error: loginError } = await withTimeout(dbQuery, 5000);
+    const { data: dbUser, error: loginError } = await withTimeout(dbQueryPromise, 5000);
     
     if (loginError) {
       console.error('Login database error:', loginError);
