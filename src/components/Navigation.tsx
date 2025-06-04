@@ -1,5 +1,4 @@
-
-import { useAuth } from '@/hooks/useSimpleAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, User, Settings, HelpCircle, ChevronDown, Shield } from 'lucide-react';
 import { useState } from 'react';
@@ -7,7 +6,7 @@ import { Link } from 'react-router-dom';
 import PirateCoinsDisplay from '@/components/PirateCoinsDisplay';
 
 const Navigation = () => {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user } = useSimpleAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!isAuthenticated) return null;

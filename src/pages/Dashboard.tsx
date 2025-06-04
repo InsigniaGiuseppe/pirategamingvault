@@ -1,7 +1,6 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useSimpleAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Toaster } from '@/components/ui/sonner';
 import Navigation from '@/components/Navigation';
 import GameGrid from '@/components/GameGrid';
@@ -13,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Gamepad2, Coins, Heart, History } from 'lucide-react';
 
 const Dashboard = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useSimpleAuth();
   const navigate = useNavigate();
   
   useEffect(() => {

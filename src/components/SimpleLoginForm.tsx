@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from '@/hooks/useSimpleAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { LogIn, User, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -19,7 +18,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   const [activeTab, setActiveTab] = useState('login');
   const [formError, setFormError] = useState<string | null>(null);
   
-  const { login, register, isLoading } = useAuth();
+  const { login, register, isLoading } = useSimpleAuth();
 
   const clearErrors = () => setFormError(null);
 

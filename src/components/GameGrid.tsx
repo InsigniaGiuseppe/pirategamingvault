@@ -1,4 +1,3 @@
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameTile from './GameTile';
 import { ChevronLeft, ChevronRight, SortAsc, SortDesc } from 'lucide-react';
@@ -10,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
-import { useAuth } from "@/hooks/useSimpleAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { Game } from '@/data/games';
 import { Button } from "@/components/ui/button";
 import { 
@@ -21,7 +20,7 @@ import {
 import { games as localGames } from '@/data/games';
 
 const GameGrid = () => {
-  const { checkIfGameUnlocked } = useAuth();
+  const { checkIfGameUnlocked } = useSimpleAuth();
   // Emergency fix: Load games synchronously from local data
   const [games, setGames] = useState<Game[]>(() => {
     return localGames.map(game => ({

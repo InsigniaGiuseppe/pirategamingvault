@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
 import { Tag, Info, Lock, Coins, ExternalLink } from 'lucide-react';
-import { useAuth } from '@/hooks/useSimpleAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from './ui/button';
 import { 
@@ -23,7 +22,7 @@ const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
-  const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useAuth();
+  const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useSimpleAuth();
   const { toast } = useToast();
   
   const canAfford = pirateCoins >= game.coinCost;

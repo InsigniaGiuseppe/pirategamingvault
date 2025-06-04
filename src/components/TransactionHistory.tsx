@@ -1,12 +1,11 @@
-
-import { useAuth } from "@/hooks/useSimpleAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownRight, BadgeDollarSign } from "lucide-react";
 import PirateCoinsDisplay from "@/components/PirateCoinsDisplay";
 
 const TransactionHistory = () => {
-  const { transactions } = useAuth();
+  const { transactions } = useSimpleAuth();
 
   const sortedTransactions = [...transactions].sort((a, b) => b.timestamp - a.timestamp);
   

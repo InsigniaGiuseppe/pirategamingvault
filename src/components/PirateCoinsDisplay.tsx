@@ -1,5 +1,4 @@
-
-import { useAuth } from "@/hooks/useSimpleAuth";
+import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { Coins } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
@@ -10,7 +9,7 @@ interface PirateCoinsDisplayProps {
 }
 
 const PirateCoinsDisplay = ({ size = "medium", showTooltip = true }: PirateCoinsDisplayProps) => {
-  const { pirateCoins, user } = useAuth();
+  const { pirateCoins, user } = useSimpleAuth();
   const [displayCoins, setDisplayCoins] = useState(pirateCoins);
   
   useEffect(() => {
