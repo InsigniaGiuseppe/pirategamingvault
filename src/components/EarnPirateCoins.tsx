@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
@@ -6,14 +7,15 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import VideoPlayer from './VideoPlayer';
+import { getWorkingVideoExamples } from '@/utils/videoProcessor';
 
 interface VideoItem {
   id: string;
   type: 'twitch' | 'youtube';
   title: string;
   thumbnail: string;
-  duration: string; // in seconds for actual implementation
-  durationDisplay: string; // for display
+  duration: string;
+  durationDisplay: string;
   reward: number;
   url: string;
   embedUrl: string;
@@ -31,64 +33,18 @@ const EarnPirateCoins = () => {
   const progressInterval = useRef<number | null>(null);
 
   useEffect(() => {
-    // Load videos from localStorage
     const savedVideos = localStorage.getItem('watchEarnVideos');
     if (savedVideos) {
       try {
         setVideos(JSON.parse(savedVideos));
       } catch (e) {
         console.error('Error parsing videos', e);
-        // Use default videos if there's an error
-        setVideos([
-          {
-            id: '1',
-            type: 'twitch',
-            title: 'Epic Boss Battle in Elden Ring',
-            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-            duration: '225', // 3min 45sec
-            durationDisplay: '3:45',
-            reward: 15,
-            url: 'https://twitch.tv/dannehsbum',
-            embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-          },
-          {
-            id: '2',
-            type: 'youtube',
-            title: 'Ultimate Guide to Palworld',
-            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-            duration: '320', // 5min 20sec
-            durationDisplay: '5:20',
-            reward: 25,
-            url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-            embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-          },
-          {
-            id: '3',
-            type: 'twitch',
-            title: 'First Look at New DLC',
-            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-            duration: '150', // 2min 30sec
-            durationDisplay: '2:30',
-            reward: 10,
-            url: 'https://twitch.tv/dannehsbum',
-            embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-          },
-          {
-            id: '4',
-            type: 'youtube',
-            title: 'Secret Easter Eggs in Starfield',
-            thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-            duration: '255', // 4min 15sec
-            durationDisplay: '4:15',
-            reward: 20,
-            url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-            embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-          }
-        ]);
+        initializeDefaultVideos();
       }
+    } else {
+      initializeDefaultVideos();
     }
     
-    // Load watched videos from localStorage for the current user
     if (user) {
       const watchedVideosStr = localStorage.getItem(`${user.username}_watchedVideos`);
       if (watchedVideosStr) {
@@ -102,26 +58,29 @@ const EarnPirateCoins = () => {
     }
   }, [user]);
 
-  // Handle starting to watch video
+  const initializeDefaultVideos = () => {
+    const defaultVideos = getWorkingVideoExamples();
+    setVideos(defaultVideos);
+    localStorage.setItem('watchEarnVideos', JSON.stringify(defaultVideos));
+  };
+
   const handleWatchVideo = (video: VideoItem) => {
     setActiveVideo(video);
     setWatchProgress(0);
     setIsWatching(true);
     setVideoError(false);
     
-    // Start progress tracking
     if (progressInterval.current) {
       window.clearInterval(progressInterval.current);
     }
     
     const duration = parseInt(video.duration);
-    const intervalStep = 2; // Update every 2 seconds
+    const intervalStep = 2;
     
     progressInterval.current = window.setInterval(() => {
       setWatchProgress(prev => {
         const newProgress = prev + (intervalStep / duration * 100);
         
-        // If video is complete
         if (newProgress >= 100) {
           if (progressInterval.current) window.clearInterval(progressInterval.current);
           completeVideo(video);
@@ -133,7 +92,6 @@ const EarnPirateCoins = () => {
     }, intervalStep * 1000) as unknown as number;
   };
 
-  // Handle video loading error
   const handleVideoError = () => {
     setVideoError(true);
     if (progressInterval.current) {
@@ -141,54 +99,35 @@ const EarnPirateCoins = () => {
     }
   };
 
-  // Handle canceling video watch
-  const handleCancelWatch = () => {
-    if (progressInterval.current) {
-      window.clearInterval(progressInterval.current);
-    }
-    setActiveVideo(null);
-    setIsWatching(false);
-    setWatchProgress(0);
-    setVideoError(false);
-  };
-
-  // Handle opening video in external site
   const handleWatchExternal = () => {
     if (!activeVideo) return;
     
     window.open(activeVideo.url, '_blank');
     
-    // We'll still award coins
     setTimeout(() => {
       completeVideo(activeVideo);
     }, 1500);
   };
 
-  // Mark video as complete and award coins
   const completeVideo = (video: VideoItem) => {
     if (!watchedVideos.has(video.id)) {
-      // Add pirate coins
       addPirateCoins(video.reward, `Watched ${video.title}`);
       
-      // Update watched videos list in local state
       const newWatched = new Set(watchedVideos);
       newWatched.add(video.id);
       setWatchedVideos(newWatched);
       
-      // Save watched videos to localStorage
       if (user) {
         const watchedArray = Array.from(newWatched);
         localStorage.setItem(`${user.username}_watchedVideos`, JSON.stringify(watchedArray));
       }
       
-      // Show success message
       toast({
         title: "Coins Earned!",
         description: `You earned ${video.reward} Pirate Coins!`,
         duration: 3000,
       });
       
-      // Reset state
       setTimeout(() => {
         setActiveVideo(null);
         setIsWatching(false);
@@ -216,13 +155,7 @@ const EarnPirateCoins = () => {
                   Due to content provider restrictions, this video cannot be embedded in our site.
                 </p>
                 <Button 
-                  onClick={() => {
-                    if (!activeVideo) return;
-                    window.open(activeVideo.url, '_blank');
-                    setTimeout(() => {
-                      completeVideo(activeVideo);
-                    }, 1500);
-                  }} 
+                  onClick={handleWatchExternal}
                   className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
                 >
                   <ExternalLink size={16} />
@@ -234,8 +167,9 @@ const EarnPirateCoins = () => {
             <VideoPlayer 
               type={activeVideo.type}
               embedUrl={activeVideo.embedUrl}
+              originalUrl={activeVideo.url}
               title={activeVideo.title}
-              onError={() => setVideoError(true)}
+              onError={handleVideoError}
             />
           )}
           
@@ -293,6 +227,10 @@ const EarnPirateCoins = () => {
                   src={video.thumbnail} 
                   alt={video.title}
                   className="w-full h-[160px] object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png';
+                  }}
                 />
                 <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
                   <Clock size={12} />
@@ -317,33 +255,7 @@ const EarnPirateCoins = () => {
               </CardContent>
               <CardFooter className="p-4 pt-0">
                 <Button
-                  onClick={() => {
-                    setActiveVideo(video);
-                    setWatchProgress(0);
-                    setIsWatching(true);
-                    setVideoError(false);
-                    
-                    if (progressInterval.current) {
-                      window.clearInterval(progressInterval.current);
-                    }
-                    
-                    const duration = parseInt(video.duration);
-                    const intervalStep = 2;
-                    
-                    progressInterval.current = window.setInterval(() => {
-                      setWatchProgress(prev => {
-                        const newProgress = prev + (intervalStep / duration * 100);
-                        
-                        if (newProgress >= 100) {
-                          if (progressInterval.current) window.clearInterval(progressInterval.current);
-                          completeVideo(video);
-                          return 100;
-                        }
-                        
-                        return newProgress;
-                      });
-                    }, intervalStep * 1000) as unknown as number;
-                  }}
+                  onClick={() => handleWatchVideo(video)}
                   disabled={watchedVideos.has(video.id)}
                   className={`w-full flex items-center justify-center gap-2 ${
                     watchedVideos.has(video.id)

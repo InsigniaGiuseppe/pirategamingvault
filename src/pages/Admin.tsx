@@ -35,6 +35,7 @@ import AdminSettings from '@/components/AdminSettings';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { processVideoUrl, getWorkingVideoExamples, formatDuration } from '@/utils/videoProcessor';
 
 interface Transaction {
   id: string;
@@ -135,53 +136,7 @@ const Admin = () => {
   };
   
   const initializeDefaultVideos = () => {
-    const defaultVideos = [
-      {
-        id: '1',
-        type: 'twitch',
-        title: 'Epic Boss Battle in Elden Ring',
-        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-        duration: '225', // 3min 45sec
-        durationDisplay: '3:45',
-        reward: 15,
-        url: 'https://twitch.tv/dannehsbum',
-        embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-      },
-      {
-        id: '2',
-        type: 'youtube',
-        title: 'Ultimate Guide to Palworld',
-        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-        duration: '320', // 5min 20sec
-        durationDisplay: '5:20',
-        reward: 25,
-        url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-      },
-      {
-        id: '3',
-        type: 'twitch',
-        title: 'First Look at New DLC',
-        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-        duration: '150', // 2min 30sec
-        durationDisplay: '2:30',
-        reward: 10,
-        url: 'https://twitch.tv/dannehsbum',
-        embedUrl: 'https://player.twitch.tv/?channel=dannehsbum&parent=' + window.location.hostname
-      },
-      {
-        id: '4',
-        type: 'youtube',
-        title: 'Secret Easter Eggs in Starfield',
-        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
-        duration: '255', // 4min 15sec
-        durationDisplay: '4:15',
-        reward: 20,
-        url: 'https://youtube.com/watch?v=dQw4w9WgXcQ',
-        embedUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-      }
-    ];
-    
+    const defaultVideos = getWorkingVideoExamples();
     setVideoList(defaultVideos);
     localStorage.setItem('watchEarnVideos', JSON.stringify(defaultVideos));
   };
@@ -308,6 +263,32 @@ const Admin = () => {
   const handleEditVideo = (video: any) => {
     setEditingVideo({...video});
     setIsVideoManagerOpen(true);
+  };
+  
+  const handleProcessVideoUrl = (url: string) => {
+    if (!editingVideo) return;
+
+    const processedVideo = processVideoUrl(url);
+    if (processedVideo) {
+      setEditingVideo({
+        ...editingVideo,
+        type: processedVideo.type,
+        url: url,
+        embedUrl: processedVideo.embedUrl,
+        thumbnail: processedVideo.thumbnail
+      });
+      
+      toast({
+        title: 'URL Processed',
+        description: `Automatically detected ${processedVideo.type} video and generated thumbnail.`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid URL',
+        description: 'Could not process this URL. Please enter a valid YouTube or Twitch URL.',
+      });
+    }
   };
   
   const handleSaveVideo = () => {
@@ -576,7 +557,7 @@ const Admin = () => {
                       setEditingVideo({
                         type: 'youtube',
                         title: '',
-                        thumbnail: '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png',
+                        thumbnail: '',
                         duration: '180',
                         durationDisplay: '3:00',
                         reward: 15,
@@ -600,6 +581,10 @@ const Admin = () => {
                           src={video.thumbnail} 
                           alt={video.title} 
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png';
+                          }}
                         />
                         <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
                           {video.durationDisplay}
@@ -705,18 +690,37 @@ const Admin = () => {
         </DialogContent>
       </Dialog>
       
-      {/* New Dialog for Video Management */}
       <Dialog open={isVideoManagerOpen} onOpenChange={setIsVideoManagerOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{editingVideo && editingVideo.id ? 'Edit Video' : 'Add New Video'}</DialogTitle>
             <DialogDescription>
-              Update the details for this Watch & Earn video.
+              Enter a YouTube or Twitch URL to automatically fetch video details.
             </DialogDescription>
           </DialogHeader>
           
           {editingVideo && (
             <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="video-url">Video URL</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="video-url"
+                    value={editingVideo.url}
+                    onChange={(e) => setEditingVideo({...editingVideo, url: e.target.value})}
+                    placeholder="https://youtube.com/watch?v=... or https://twitch.tv/username"
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={() => handleProcessVideoUrl(editingVideo.url)}
+                    variant="outline"
+                    disabled={!editingVideo.url}
+                  >
+                    Process
+                  </Button>
+                </div>
+              </div>
+              
               <div className="grid gap-2">
                 <Label htmlFor="video-title">Title</Label>
                 <Input
@@ -740,44 +744,12 @@ const Admin = () => {
               </div>
               
               <div className="grid gap-2">
-                <Label htmlFor="video-url">Video URL</Label>
-                <Input
-                  id="video-url"
-                  value={editingVideo.url}
-                  onChange={(e) => {
-                    const url = e.target.value;
-                    let embedUrl = '';
-                    
-                    // Auto-generate embed URL based on video type and URL
-                    if (editingVideo.type === 'youtube') {
-                      const videoId = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|$)/)?.[1];
-                      if (videoId) {
-                        embedUrl = `https://www.youtube.com/embed/${videoId}`;
-                      }
-                    } else if (editingVideo.type === 'twitch') {
-                      const channelName = url.split('/').pop();
-                      if (channelName) {
-                        embedUrl = `https://player.twitch.tv/?channel=${channelName}&parent=${window.location.hostname}`;
-                      }
-                    }
-                    
-                    setEditingVideo({
-                      ...editingVideo, 
-                      url,
-                      embedUrl: embedUrl || editingVideo.embedUrl
-                    });
-                  }}
-                  placeholder={editingVideo.type === 'youtube' ? 'https://youtube.com/watch?v=VIDEO_ID' : 'https://twitch.tv/username'}
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="video-embed">Embed URL (auto-generated)</Label>
+                <Label htmlFor="video-embed">Embed URL</Label>
                 <Input
                   id="video-embed"
                   value={editingVideo.embedUrl}
                   onChange={(e) => setEditingVideo({...editingVideo, embedUrl: e.target.value})}
-                  placeholder={editingVideo.type === 'youtube' ? 'https://www.youtube.com/embed/VIDEO_ID' : 'https://player.twitch.tv/?channel=username&parent=yourdomain.com'}
+                  placeholder="Auto-generated when processing URL"
                 />
               </div>
               
@@ -790,9 +762,7 @@ const Admin = () => {
                     value={editingVideo.duration}
                     onChange={(e) => {
                       const duration = parseInt(e.target.value) || 0;
-                      const minutes = Math.floor(duration / 60);
-                      const seconds = duration % 60;
-                      const durationDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                      const durationDisplay = formatDuration(duration);
                       
                       setEditingVideo({
                         ...editingVideo, 
@@ -820,8 +790,24 @@ const Admin = () => {
                   id="video-thumbnail"
                   value={editingVideo.thumbnail}
                   onChange={(e) => setEditingVideo({...editingVideo, thumbnail: e.target.value})}
+                  placeholder="Auto-generated when processing URL"
                 />
               </div>
+              
+              {editingVideo.thumbnail && (
+                <div className="grid gap-2">
+                  <Label>Thumbnail Preview</Label>
+                  <img 
+                    src={editingVideo.thumbnail} 
+                    alt="Thumbnail preview" 
+                    className="w-full h-32 object-cover rounded border"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png';
+                    }}
+                  />
+                </div>
+              )}
             </div>
           )}
           
