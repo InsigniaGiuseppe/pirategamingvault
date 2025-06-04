@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { login, logout } from '@/services/customAuthService';
 import { registerUser } from '@/services/registrationService';
+import { getUserBalance, getUserTransactions, getUserUnlockedGames, updateUserBalance } from '@/services/userService';
 import type { CustomUser, CustomSession } from '@/services/customAuthService';
 
 interface AuthState {
@@ -21,9 +22,10 @@ interface AuthActions {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  addPirateCoins: (amount: number, description?: string) => void;
+  addPirateCoins: (amount: number, description?: string) => Promise<void>;
   unlockGame: (gameId: string, cost: number) => Promise<boolean>;
   checkIfGameUnlocked: (gameId: string) => boolean;
+  refreshUserData: () => Promise<void>;
 }
 
 type AuthContextType = AuthState & AuthActions;
@@ -36,16 +38,8 @@ const initialState: AuthState = {
   session: null,
   isLoading: false,
   error: null,
-  pirateCoins: 10,
-  transactions: [
-    {
-      id: 'welcome-1',
-      timestamp: Date.now(),
-      amount: 10,
-      description: 'Welcome bonus',
-      type: 'admin'
-    }
-  ],
+  pirateCoins: 0,
+  transactions: [],
   unlockedGames: []
 };
 
@@ -54,7 +48,31 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Simple auth check on mount with timeout protection
+  // Load user data from database
+  const loadUserData = useCallback(async (userId: string) => {
+    try {
+      console.log('Loading user data from database for:', userId);
+      
+      const [balance, transactions, unlockedGames] = await Promise.all([
+        getUserBalance(userId),
+        getUserTransactions(userId),
+        getUserUnlockedGames(userId)
+      ]);
+      
+      console.log('User data loaded:', { balance, transactions: transactions.length, unlockedGames: unlockedGames.length });
+      
+      setState(prev => ({
+        ...prev,
+        pirateCoins: balance,
+        transactions,
+        unlockedGames
+      }));
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  }, []);
+
+  // Simple auth check on mount
   useEffect(() => {
     console.log('Starting auth check...');
     
@@ -78,6 +96,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
               user: storedUser,
               session: storedSession
             }));
+            
+            // Load user data from database
+            await loadUserData(storedUser.id);
             return;
           } else {
             console.log('Session expired, clearing');
@@ -95,20 +116,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkAuth();
-  }, []);
+  }, [loadUserData]);
 
   const handleLogin = useCallback(async (username: string, password: string) => {
     try {
       console.log('Starting login for:', username);
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Set a timeout for the entire login process
-      const loginPromise = login(username, password);
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Login timeout')), 15000)
-      );
-      
-      const { user, session, error } = await Promise.race([loginPromise, timeoutPromise]);
+      const { user, session, error } = await login(username, password);
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
@@ -133,12 +148,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading: false
       }));
       
+      // Load user data from database
+      await loadUserData(user.id);
+      
       toast({
         title: "Login Successful",
         description: `Welcome back, ${user.username}!`
       });
       
-      // Navigate after a short delay to ensure state is updated
+      // Navigate after a short delay
       setTimeout(() => {
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
@@ -157,20 +175,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : 'Login failed'
       });
     }
-  }, [toast, navigate]);
+  }, [toast, navigate, loadUserData]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
     try {
       console.log('Starting registration for:', username);
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Set a timeout for the entire registration process
-      const registerPromise = registerUser(username, password);
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Registration timeout')), 15000)
-      );
-      
-      const { user, session, error } = await Promise.race([registerPromise, timeoutPromise]);
+      const { user, session, error } = await registerUser(username, password);
       
       if (error || !user) {
         console.error('Registration failed:', error);
@@ -199,12 +211,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading: false
       }));
       
+      // Load user data from database (should include welcome bonus)
+      await loadUserData(user.id);
+      
       toast({
         title: "Registration Successful",
         description: "Welcome to Pirate Gaming!"
       });
       
-      // Navigate after a short delay to ensure state is updated
+      // Navigate after a short delay
       setTimeout(() => {
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
@@ -223,7 +238,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : 'Registration failed'
       });
     }
-  }, [toast, navigate]);
+  }, [toast, navigate, loadUserData]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -241,48 +256,61 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [navigate]);
 
-  const addPirateCoins = useCallback((amount: number, description?: string) => {
-    setState(prev => ({
-      ...prev,
-      pirateCoins: prev.pirateCoins + amount,
-      transactions: [
-        {
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-          amount,
-          description: description || 'Coins added',
-          type: 'earn'
-        },
-        ...prev.transactions
-      ]
-    }));
-  }, []);
+  const addPirateCoins = useCallback(async (amount: number, description?: string) => {
+    if (!state.user?.id) return;
+    
+    try {
+      const success = await updateUserBalance(
+        state.user.id, 
+        amount, 
+        description || 'Coins added', 
+        'earn'
+      );
+      
+      if (success) {
+        // Refresh user data to get updated balance and transactions
+        await loadUserData(state.user.id);
+      }
+    } catch (error) {
+      console.error('Error adding pirate coins:', error);
+    }
+  }, [state.user?.id, loadUserData]);
 
   const unlockGame = useCallback(async (gameId: string, cost: number): Promise<boolean> => {
-    if (state.pirateCoins < cost) return false;
+    if (!state.user?.id || state.pirateCoins < cost) return false;
     
-    setState(prev => ({
-      ...prev,
-      pirateCoins: prev.pirateCoins - cost,
-      unlockedGames: [...prev.unlockedGames, gameId],
-      transactions: [
-        {
-          id: Date.now().toString(),
-          timestamp: Date.now(),
-          amount: -cost,
-          description: `Unlocked game: ${gameId}`,
-          type: 'spend'
-        },
-        ...prev.transactions
-      ]
-    }));
-    
-    return true;
-  }, [state.pirateCoins]);
+    try {
+      // Deduct coins
+      const success = await updateUserBalance(
+        state.user.id, 
+        -cost, 
+        `Unlocked game: ${gameId}`, 
+        'spend'
+      );
+      
+      if (success) {
+        // Add to unlocked games (you might want to create a service for this)
+        // For now, just refresh user data
+        await loadUserData(state.user.id);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error unlocking game:', error);
+      return false;
+    }
+  }, [state.user?.id, state.pirateCoins, loadUserData]);
 
   const checkIfGameUnlocked = useCallback((gameId: string): boolean => {
     return state.unlockedGames.includes(gameId);
   }, [state.unlockedGames]);
+
+  const refreshUserData = useCallback(async () => {
+    if (state.user?.id) {
+      await loadUserData(state.user.id);
+    }
+  }, [state.user?.id, loadUserData]);
 
   const contextValue: AuthContextType = {
     ...state,
@@ -291,14 +319,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     logout: handleLogout,
     addPirateCoins,
     unlockGame,
-    checkIfGameUnlocked
+    checkIfGameUnlocked,
+    refreshUserData
   };
 
   console.log('Auth context state:', { 
     isAuthenticated: state.isAuthenticated, 
     isLoading: state.isLoading,
     user: state.user?.username,
-    hasError: !!state.error
+    hasError: !!state.error,
+    pirateCoins: state.pirateCoins
   });
 
   return (

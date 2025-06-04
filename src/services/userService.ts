@@ -22,13 +22,13 @@ export const getUserBalance = async (userId: string): Promise<number> => {
     
     if (error) {
       console.error('Error getting user balance:', error);
-      return 100; // Default fallback balance
+      return 10; // Default fallback balance
     }
     
-    return data?.balance || 100;
+    return data?.balance || 10;
   } catch (error) {
     console.error('Unexpected error in getUserBalance:', error);
-    return 100; // Default fallback balance
+    return 10; // Default fallback balance
   }
 };
 
@@ -49,7 +49,7 @@ export const getUserTransactions = async (userId: string): Promise<Transaction[]
         {
           id: 'welcome-1',
           timestamp: Date.now(),
-          amount: 100,
+          amount: 10,
           description: 'Welcome bonus',
           type: 'admin'
         }
@@ -70,7 +70,7 @@ export const getUserTransactions = async (userId: string): Promise<Transaction[]
       {
         id: 'welcome-1',
         timestamp: Date.now(),
-        amount: 100,
+        amount: 10,
         description: 'Welcome bonus',
         type: 'admin'
       }
