@@ -18,6 +18,7 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
   const [showFallback, setShowFallback] = useState(false);
 
   useEffect(() => {
+    console.log('VideoPlayer rendering with:', { type, embedUrl, originalUrl });
     setLoaded(false);
     setError(false);
     setShowFallback(false);
@@ -26,6 +27,7 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
     if (type === 'twitch' || type === 'twitch-clip') {
       const timer = setTimeout(() => {
         if (!loaded) {
+          console.log('Twitch content failed to load, showing fallback');
           setShowFallback(true);
         }
       }, 2000); // Reduced timeout for faster fallback
@@ -35,6 +37,7 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
   }, [embedUrl, type, loaded]);
 
   const handleLoad = () => {
+    console.log('Video content loaded successfully');
     setLoaded(true);
     setShowFallback(false);
   };
@@ -68,6 +71,7 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
   };
 
   const handleWatchExternal = () => {
+    console.log('Opening external video:', getExternalUrl());
     window.open(getExternalUrl(), '_blank');
     if (onExternalWatch) {
       onExternalWatch();
@@ -100,22 +104,42 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
     }
   };
 
+  const getErrorTitle = () => {
+    switch (type) {
+      case 'twitch-clip':
+        return 'Clip Unavailable for Embedding';
+      case 'twitch':
+        return 'Stream Unavailable for Embedding';
+      case 'youtube':
+        return 'Video Unavailable';
+      default:
+        return 'Content Unavailable';
+    }
+  };
+
+  const getErrorMessage = () => {
+    switch (type) {
+      case 'twitch-clip':
+        return "This Twitch clip cannot be embedded due to platform restrictions. Watch it directly on Twitch to earn your coins!";
+      case 'twitch':
+        return "This Twitch stream may be offline, private, or doesn't allow embedding due to platform restrictions.";
+      case 'youtube':
+        return "This YouTube video may be private, restricted, or doesn't allow embedding.";
+      default:
+        return "This content cannot be embedded. Please watch it on the original platform.";
+    }
+  };
+
   // Show fallback for errors or Twitch timeout
   if (error || ((type === 'twitch' || type === 'twitch-clip') && showFallback && !loaded)) {
     return (
       <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center">
         <div className="text-center p-6">
           <h3 className="text-white font-medium mb-2">
-            {type === 'twitch-clip' ? 'Clip Unavailable for Embedding' : 
-             type === 'twitch' ? 'Stream Unavailable for Embedding' : 
-             'Video Unavailable'}
+            {getErrorTitle()}
           </h3>
           <p className="text-gray-400 text-sm mb-4">
-            {type === 'twitch-clip' 
-              ? "This Twitch clip cannot be embedded due to platform restrictions. Watch it directly on Twitch to earn your coins!" 
-              : type === 'twitch'
-              ? "This Twitch stream may be offline, private, or doesn't allow embedding due to platform restrictions." 
-              : "This YouTube video may be private, restricted, or doesn't allow embedding."}
+            {getErrorMessage()}
           </p>
           <Button 
             onClick={handleWatchExternal}

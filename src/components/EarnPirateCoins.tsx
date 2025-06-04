@@ -66,6 +66,9 @@ const EarnPirateCoins = () => {
   };
 
   const handleWatchVideo = (video: VideoItem) => {
+    console.log('Starting to watch video:', video);
+    console.log('Video type detected as:', video.type);
+    
     setActiveVideo(video);
     setWatchProgress(0);
     setIsWatching(true);
@@ -81,9 +84,13 @@ const EarnPirateCoins = () => {
     
     // For Twitch content, show helpful message
     if (video.type === 'twitch' || video.type === 'twitch-clip') {
+      const message = video.type === 'twitch-clip' 
+        ? "If the clip doesn't embed, you can watch it directly on Twitch to earn coins!"
+        : "If the stream doesn't embed, you can watch it directly on Twitch to earn coins!";
+        
       toast({
         title: video.type === 'twitch-clip' ? "Twitch Clip Detected" : "Twitch Stream Detected",
-        description: "If the content doesn't embed, you can watch it directly on Twitch to earn coins!",
+        description: message,
         duration: 4000,
       });
     }
@@ -104,6 +111,7 @@ const EarnPirateCoins = () => {
   };
 
   const handleVideoError = () => {
+    console.log('Video error occurred for:', activeVideo);
     setVideoError(true);
     if (progressInterval.current) {
       window.clearInterval(progressInterval.current);
@@ -113,6 +121,7 @@ const EarnPirateCoins = () => {
   const handleExternalWatch = () => {
     if (!activeVideo) return;
     
+    console.log('External watch started for:', activeVideo.type, activeVideo.id);
     setExternalWatchStarted(true);
     
     if (activeVideo.type === 'twitch-clip') {

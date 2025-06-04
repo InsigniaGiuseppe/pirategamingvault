@@ -29,16 +29,33 @@ export const extractTwitchChannel = (url: string): string | null => {
 };
 
 export const extractTwitchClipId = (url: string): string | null => {
-  // Handle both clips.twitch.tv and twitch.tv/*/clip/ formats
+  console.log('Attempting to extract Twitch clip ID from URL:', url);
+  
+  // Enhanced patterns to catch more Twitch clip URL formats
   const patterns = [
+    // clips.twitch.tv/ClipSlug
     /clips\.twitch\.tv\/([a-zA-Z0-9_-]+)/,
-    /twitch\.tv\/[^\/]+\/clip\/([a-zA-Z0-9_-]+)/
+    // twitch.tv/channel/clip/ClipSlug
+    /twitch\.tv\/[^\/]+\/clip\/([a-zA-Z0-9_-]+)/,
+    // www.twitch.tv/channel/clip/ClipSlug
+    /www\.twitch\.tv\/[^\/]+\/clip\/([a-zA-Z0-9_-]+)/,
+    // clips.twitch.tv/embed?clip=ClipSlug
+    /clips\.twitch\.tv\/embed\?clip=([a-zA-Z0-9_-]+)/,
+    // twitch.tv/videos/123456789?t=30s (VOD clips)
+    /twitch\.tv\/videos\/(\d+)/,
+    // New format: twitch.tv/clip/ClipSlug
+    /twitch\.tv\/clip\/([a-zA-Z0-9_-]+)/
   ];
   
   for (const pattern of patterns) {
     const match = url.match(pattern);
-    if (match) return match[1];
+    if (match) {
+      console.log('Twitch clip ID found:', match[1]);
+      return match[1];
+    }
   }
+  
+  console.log('No Twitch clip ID found in URL');
   return null;
 };
 
@@ -58,9 +75,12 @@ export const generateTwitchClipThumbnail = (clipId: string): string => {
 export const processVideoUrl = (url: string): VideoInfo | null => {
   if (!url) return null;
 
-  // Check if it's a Twitch clip first (more specific)
+  console.log('Processing video URL:', url);
+
+  // Check if it's a Twitch clip first (more specific patterns)
   const clipId = extractTwitchClipId(url);
   if (clipId) {
+    console.log('Detected as Twitch clip with ID:', clipId);
     const hostname = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
     return {
       id: clipId,
@@ -74,6 +94,7 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
   // Check if it's a YouTube URL
   const youtubeId = extractYouTubeVideoId(url);
   if (youtubeId) {
+    console.log('Detected as YouTube video with ID:', youtubeId);
     return {
       id: youtubeId,
       type: 'youtube' as const,
@@ -83,19 +104,23 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
     };
   }
 
-  // Check if it's a Twitch channel
-  const twitchChannel = extractTwitchChannel(url);
-  if (twitchChannel) {
-    const hostname = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
-    return {
-      id: twitchChannel,
-      type: 'twitch' as const,
-      thumbnail: generateTwitchThumbnail(twitchChannel),
-      embedUrl: `https://player.twitch.tv/?channel=${twitchChannel}&parent=${hostname}&autoplay=false`,
-      originalUrl: url
-    };
+  // Check if it's a Twitch channel (only if it's not a clip)
+  if (!url.includes('/clip/') && !url.includes('clips.twitch.tv')) {
+    const twitchChannel = extractTwitchChannel(url);
+    if (twitchChannel) {
+      console.log('Detected as Twitch channel:', twitchChannel);
+      const hostname = window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname;
+      return {
+        id: twitchChannel,
+        type: 'twitch' as const,
+        thumbnail: generateTwitchThumbnail(twitchChannel),
+        embedUrl: `https://player.twitch.tv/?channel=${twitchChannel}&parent=${hostname}&autoplay=false`,
+        originalUrl: url
+      };
+    }
   }
 
+  console.log('URL not recognized as any supported video format');
   return null;
 };
 
@@ -103,6 +128,12 @@ export const formatDuration = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+// Test function to validate Twitch clip URLs
+export const testTwitchClipUrl = (url: string): boolean => {
+  const clipId = extractTwitchClipId(url);
+  return clipId !== null;
 };
 
 export const getWorkingVideoExamples = () => [
