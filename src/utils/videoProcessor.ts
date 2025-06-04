@@ -60,7 +60,7 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
       id: twitchChannel,
       type: 'twitch' as const,
       thumbnail: generateTwitchThumbnail(twitchChannel),
-      embedUrl: `https://player.twitch.tv/?channel=${twitchChannel}&parent=${window.location.hostname}`,
+      embedUrl: `https://player.twitch.tv/?channel=${twitchChannel}&parent=${window.location.hostname}&autoplay=false`,
       originalUrl: url
     };
   }
@@ -99,13 +99,24 @@ export const getWorkingVideoExamples = () => [
   },
   {
     id: '3',
-    type: 'twitch' as const,
-    title: 'Live Gaming Stream',
-    thumbnail: 'https://static-cdn.jtvnw.net/previews-ttv/live_user_shroud-440x248.jpg',
+    type: 'youtube' as const,
+    title: 'Coding Tutorial - JavaScript Basics',
+    thumbnail: 'https://img.youtube.com/vi/W6NZfCO5SIk/maxresdefault.jpg',
     duration: '300',
     durationDisplay: '5:00',
     reward: 20,
+    url: 'https://youtube.com/watch?v=W6NZfCO5SIk',
+    embedUrl: 'https://www.youtube.com/embed/W6NZfCO5SIk'
+  },
+  {
+    id: '4',
+    type: 'twitch' as const,
+    title: 'Live Gaming Stream (External Only)',
+    thumbnail: 'https://static-cdn.jtvnw.net/previews-ttv/live_user_shroud-440x248.jpg',
+    duration: '300',
+    durationDisplay: '5:00',
+    reward: 25,
     url: 'https://twitch.tv/shroud',
-    embedUrl: `https://player.twitch.tv/?channel=shroud&parent=${window.location.hostname}`
+    embedUrl: `https://player.twitch.tv/?channel=shroud&parent=${window.location.hostname}&autoplay=false`
   }
 ];

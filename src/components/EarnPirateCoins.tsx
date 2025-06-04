@@ -77,6 +77,15 @@ const EarnPirateCoins = () => {
     const duration = parseInt(video.duration);
     const intervalStep = 2;
     
+    // For Twitch videos, start progress immediately since they often can't embed
+    if (video.type === 'twitch') {
+      toast({
+        title: "Twitch Stream Detected",
+        description: "Twitch streams may not embed properly. If needed, you'll be redirected to watch on Twitch directly.",
+        duration: 4000,
+      });
+    }
+    
     progressInterval.current = window.setInterval(() => {
       setWatchProgress(prev => {
         const newProgress = prev + (intervalStep / duration * 100);
@@ -104,6 +113,7 @@ const EarnPirateCoins = () => {
     
     window.open(activeVideo.url, '_blank');
     
+    // For external watching, complete the video after a short delay
     setTimeout(() => {
       completeVideo(activeVideo);
     }, 1500);
@@ -152,7 +162,9 @@ const EarnPirateCoins = () => {
               <div className="mb-4 text-white">
                 <h3 className="text-xl font-bold mb-2">Video cannot be embedded</h3>
                 <p className="text-gray-400 mb-4">
-                  Due to content provider restrictions, this video cannot be embedded in our site.
+                  {activeVideo.type === 'twitch' 
+                    ? "This Twitch stream cannot be embedded due to platform restrictions. You can watch it directly on Twitch." 
+                    : "This YouTube video may be private, restricted, or doesn't allow embedding."}
                 </p>
                 <Button 
                   onClick={handleWatchExternal}
@@ -192,21 +204,32 @@ const EarnPirateCoins = () => {
             </div>
             
             {watchProgress < 100 ? (
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  if (progressInterval.current) {
-                    window.clearInterval(progressInterval.current);
-                  }
-                  setActiveVideo(null);
-                  setIsWatching(false);
-                  setWatchProgress(0);
-                  setVideoError(false);
-                }}
-                className="border-gray-300"
-              >
-                Cancel Watching
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    if (progressInterval.current) {
+                      window.clearInterval(progressInterval.current);
+                    }
+                    setActiveVideo(null);
+                    setIsWatching(false);
+                    setWatchProgress(0);
+                    setVideoError(false);
+                  }}
+                  className="border-gray-300 flex-1"
+                >
+                  Cancel Watching
+                </Button>
+                {activeVideo.type === 'twitch' && (
+                  <Button 
+                    onClick={handleWatchExternal}
+                    className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                  >
+                    <ExternalLink size={16} />
+                    Watch on Twitch
+                  </Button>
+                )}
+              </div>
             ) : (
               <Button 
                 onClick={() => setActiveVideo(null)}
@@ -243,6 +266,11 @@ const EarnPirateCoins = () => {
                     <><Youtube size={12} className="text-red-500" /> YouTube</>
                   )}
                 </div>
+                {video.type === 'twitch' && (
+                  <div className="absolute bottom-2 left-2 bg-purple-600/90 text-white px-2 py-1 text-xs rounded-md">
+                    External Link
+                  </div>
+                )}
               </div>
               <CardContent className="p-4">
                 <h3 className="font-medium text-lg mb-2 line-clamp-2">{video.title}</h3>
