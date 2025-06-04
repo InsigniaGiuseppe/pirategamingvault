@@ -11,24 +11,24 @@ export const useAuthSession = () => {
   const setState = 'setState' in context ? context.setState : undefined;
   
   const handleLogout = async () => {
-    const { error } = await logout();
-    
-    if (error) {
+    try {
+      await logout(); // logout() returns void, so no destructuring needed
+      
+      if (setState) {
+        setState({
+          ...context,
+          isAuthenticated: false,
+          currentUser: null,
+          userId: null,
+          session: null,
+          user: null
+        });
+      }
+      
+      navigate('/');
+    } catch (error) {
       console.error('Error signing out:', error);
     }
-    
-    if (setState) {
-      setState({
-        ...context,
-        isAuthenticated: false,
-        currentUser: null,
-        userId: null,
-        session: null,
-        user: null
-      });
-    }
-    
-    navigate('/');
   };
   
   return { logout: handleLogout };
