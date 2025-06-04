@@ -11,7 +11,7 @@ import { getWorkingVideoExamples } from '@/utils/videoProcessor';
 
 interface VideoItem {
   id: string;
-  type: 'twitch' | 'youtube';
+  type: 'twitch' | 'youtube' | 'twitch-clip';
   title: string;
   thumbnail: string;
   duration: string;
@@ -28,6 +28,7 @@ const EarnPirateCoins = () => {
   const [isWatching, setIsWatching] = useState<boolean>(false);
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [videoError, setVideoError] = useState<boolean>(false);
+  const [externalWatchStarted, setExternalWatchStarted] = useState<boolean>(false);
   const { addPirateCoins, user } = useSimpleAuth();
   const { toast } = useToast();
   const progressInterval = useRef<number | null>(null);
@@ -69,6 +70,7 @@ const EarnPirateCoins = () => {
     setWatchProgress(0);
     setIsWatching(true);
     setVideoError(false);
+    setExternalWatchStarted(false);
     
     if (progressInterval.current) {
       window.clearInterval(progressInterval.current);
@@ -77,11 +79,11 @@ const EarnPirateCoins = () => {
     const duration = parseInt(video.duration);
     const intervalStep = 2;
     
-    // For Twitch videos, start progress immediately since they often can't embed
-    if (video.type === 'twitch') {
+    // For Twitch content, show helpful message
+    if (video.type === 'twitch' || video.type === 'twitch-clip') {
       toast({
-        title: "Twitch Stream Detected",
-        description: "Twitch streams may not embed properly. If needed, you'll be redirected to watch on Twitch directly.",
+        title: video.type === 'twitch-clip' ? "Twitch Clip Detected" : "Twitch Stream Detected",
+        description: "If the content doesn't embed, you can watch it directly on Twitch to earn coins!",
         duration: 4000,
       });
     }
@@ -108,15 +110,34 @@ const EarnPirateCoins = () => {
     }
   };
 
-  const handleWatchExternal = () => {
+  const handleExternalWatch = () => {
     if (!activeVideo) return;
     
-    window.open(activeVideo.url, '_blank');
+    setExternalWatchStarted(true);
     
-    // For external watching, complete the video after a short delay
-    setTimeout(() => {
-      completeVideo(activeVideo);
-    }, 1500);
+    if (activeVideo.type === 'twitch-clip') {
+      // For clips, complete immediately since they're short
+      setTimeout(() => {
+        completeVideo(activeVideo);
+      }, 2000);
+      
+      toast({
+        title: "Watching Clip Externally",
+        description: "Coins will be awarded in a few seconds!",
+        duration: 3000,
+      });
+    } else {
+      // For other Twitch content, use a reasonable delay
+      setTimeout(() => {
+        completeVideo(activeVideo);
+      }, 10000);
+      
+      toast({
+        title: "Watching Externally",
+        description: "Coins will be awarded shortly. Thank you for watching!",
+        duration: 5000,
+      });
+    }
   };
 
   const completeVideo = (video: VideoItem) => {
@@ -142,7 +163,34 @@ const EarnPirateCoins = () => {
         setActiveVideo(null);
         setIsWatching(false);
         setVideoError(false);
+        setExternalWatchStarted(false);
       }, 1500);
+    }
+  };
+
+  const getVideoIcon = (type: string) => {
+    switch (type) {
+      case 'twitch-clip':
+        return <Twitch size={12} className="text-purple-400" />;
+      case 'twitch':
+        return <Twitch size={12} className="text-purple-400" />;
+      case 'youtube':
+        return <Youtube size={12} className="text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getVideoTypeLabel = (type: string) => {
+    switch (type) {
+      case 'twitch-clip':
+        return 'Clip';
+      case 'twitch':
+        return 'Stream';
+      case 'youtube':
+        return 'YouTube';
+      default:
+        return 'Video';
     }
   };
 
@@ -157,53 +205,45 @@ const EarnPirateCoins = () => {
       
       {isWatching && activeVideo ? (
         <div className="mb-8">
-          {videoError ? (
-            <div className="bg-gray-900 rounded-lg overflow-hidden aspect-video mb-4 flex flex-col items-center justify-center p-8 text-center">
-              <div className="mb-4 text-white">
-                <h3 className="text-xl font-bold mb-2">Video cannot be embedded</h3>
-                <p className="text-gray-400 mb-4">
-                  {activeVideo.type === 'twitch' 
-                    ? "This Twitch stream cannot be embedded due to platform restrictions. You can watch it directly on Twitch." 
-                    : "This YouTube video may be private, restricted, or doesn't allow embedding."}
-                </p>
-                <Button 
-                  onClick={handleWatchExternal}
-                  className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                >
-                  <ExternalLink size={16} />
-                  Watch on {activeVideo.type === 'twitch' ? 'Twitch' : 'YouTube'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <VideoPlayer 
-              type={activeVideo.type}
-              embedUrl={activeVideo.embedUrl}
-              originalUrl={activeVideo.url}
-              title={activeVideo.title}
-              onError={handleVideoError}
-            />
-          )}
+          <VideoPlayer 
+            type={activeVideo.type}
+            embedUrl={activeVideo.embedUrl}
+            originalUrl={activeVideo.url}
+            title={activeVideo.title}
+            onError={handleVideoError}
+            onExternalWatch={handleExternalWatch}
+          />
           
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 mt-4">
             <div>
               <h3 className="text-lg font-medium mb-1">{activeVideo.title}</h3>
               <p className="text-sm text-gray-500">
-                {activeVideo.type === 'twitch' ? 'Twitch Stream' : 'YouTube Video'} • 
+                {getVideoTypeLabel(activeVideo.type)} • 
                 {activeVideo.durationDisplay} • 
                 {activeVideo.reward} coins reward
               </p>
             </div>
             
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-sm">
-                <span>Watch progress</span>
-                <span>{Math.floor(watchProgress)}%</span>
+            {!externalWatchStarted && (
+              <div className="flex flex-col gap-2">
+                <div className="flex justify-between text-sm">
+                  <span>Watch progress</span>
+                  <span>{Math.floor(watchProgress)}%</span>
+                </div>
+                <Progress value={watchProgress} className="h-2" />
               </div>
-              <Progress value={watchProgress} className="h-2" />
-            </div>
+            )}
             
-            {watchProgress < 100 ? (
+            {externalWatchStarted ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                <p className="text-green-800 font-medium">
+                  External viewing in progress...
+                </p>
+                <p className="text-green-600 text-sm mt-1">
+                  Your coins will be awarded automatically!
+                </p>
+              </div>
+            ) : watchProgress < 100 ? (
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
@@ -220,9 +260,9 @@ const EarnPirateCoins = () => {
                 >
                   Cancel Watching
                 </Button>
-                {activeVideo.type === 'twitch' && (
+                {(activeVideo.type === 'twitch' || activeVideo.type === 'twitch-clip') && (
                   <Button 
-                    onClick={handleWatchExternal}
+                    onClick={handleExternalWatch}
                     className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
                   >
                     <ExternalLink size={16} />
@@ -260,15 +300,12 @@ const EarnPirateCoins = () => {
                   {video.durationDisplay}
                 </div>
                 <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
-                  {video.type === 'twitch' ? (
-                    <><Twitch size={12} className="text-purple-400" /> Twitch</>
-                  ) : (
-                    <><Youtube size={12} className="text-red-500" /> YouTube</>
-                  )}
+                  {getVideoIcon(video.type)}
+                  {getVideoTypeLabel(video.type)}
                 </div>
-                {video.type === 'twitch' && (
+                {(video.type === 'twitch' || video.type === 'twitch-clip') && (
                   <div className="absolute bottom-2 left-2 bg-purple-600/90 text-white px-2 py-1 text-xs rounded-md">
-                    External Link
+                    May Open Externally
                   </div>
                 )}
               </div>
