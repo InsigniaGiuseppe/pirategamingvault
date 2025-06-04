@@ -2,14 +2,14 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SimpleLoginForm from '@/components/SimpleLoginForm';
-import { useAuth } from '@/hooks/useSimpleAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import Footer from '@/components/Footer';
 
 const Index = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useSimpleAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard immediately
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       console.log('User authenticated, redirecting to dashboard');
@@ -17,7 +17,7 @@ const Index = () => {
     }
   }, [isAuthenticated, navigate, isLoading]);
 
-  // Show loading while auth is being checked
+  // Show minimal loading while auth is being checked (should be instant now)
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">

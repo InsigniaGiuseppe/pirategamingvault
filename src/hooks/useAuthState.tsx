@@ -51,61 +51,65 @@ export const useAuthState = () => {
   return context;
 };
 
-// Simplified auth state loading to prevent loops
+// Emergency fix: Completely local auth state loading with cache-busting
 export const useLoadAuthState = () => {
   const [state, setState] = useState<AuthContextState>(initialAuthState);
   
-  // Create memoized data fetching function
+  // Create memoized data fetching function for mock data
   const fetchUserData = useCallback(async (userId: string) => {
     try {
-      console.log('Fetching user data for:', userId);
-      const [balance, userTransactions, userUnlockedGames] = await Promise.all([
-        getUserBalance(userId),
-        getUserTransactions(userId),
-        getUserUnlockedGames(userId),
-      ]);
+      console.log('Fetching mock user data for:', userId);
       
-      console.log('User data fetched successfully:', { 
-        balance, 
-        transactions: userTransactions.length,
-        games: userUnlockedGames.length 
-      });
+      // All data is now mock and returns immediately
+      const balance = 100; // Mock balance
+      const userTransactions = [
+        {
+          id: 'welcome-1',
+          timestamp: Date.now(),
+          amount: 100,
+          description: 'Welcome bonus',
+          type: 'admin' as const
+        }
+      ];
+      const userUnlockedGames: string[] = [];
       
+      console.log('Mock user data loaded instantly');
       return { balance, userTransactions, userUnlockedGames };
     } catch (error) {
-      console.error('Error fetching user data:', error);
+      console.error('Error with mock data:', error);
       throw error;
     }
   }, []);
   
   useEffect(() => {
     let isMounted = true;
-    let hasRunCheck = false;
     
     const checkAuth = async () => {
-      // Prevent multiple simultaneous auth checks
-      if (hasRunCheck || !isMounted) return;
-      hasRunCheck = true;
+      if (!isMounted) return;
       
       try {
-        console.log('Starting auth check...');
+        console.log('Emergency auth check - completely local only...');
         setState(prev => ({ ...prev, isLoading: true }));
         
-        // Check local storage first for quick authentication
+        // Clear any potential Supabase cache
+        sessionStorage.clear();
+        
+        // Check local storage only - no external calls
         const storedUser = localStorage.getItem('pirate_user');
         const storedSession = localStorage.getItem('pirate_session');
         
         if (storedUser && storedSession) {
-          console.log('Found stored session, validating...');
+          console.log('Found local session, validating...');
           const user = JSON.parse(storedUser);
           const session = JSON.parse(storedSession);
           
-          // Check if session is still valid (with some buffer time)
-          if (session.expires_at * 1000 > Date.now() + 60000) { // 1 minute buffer
-            console.log('Valid stored session found');
+          // Check if session is still valid
+          if (session.expires_at * 1000 > Date.now() + 60000) {
+            console.log('Valid local session confirmed');
             
             if (!isMounted) return;
             
+            // Set authenticated state immediately
             setState(prev => ({
               ...prev,
               isAuthenticated: true,
@@ -113,32 +117,30 @@ export const useLoadAuthState = () => {
               userId: user.id,
               user: user,
               session: session,
-              isLoading: false
+              isLoading: false,
+              pirateCoins: 100, // Default mock value
+              transactions: [
+                {
+                  id: 'welcome-1',
+                  timestamp: Date.now(),
+                  amount: 100,
+                  description: 'Welcome bonus',
+                  type: 'admin'
+                }
+              ],
+              unlockedGames: []
             }));
             
-            // Fetch additional data in background
-            fetchUserData(user.id).then((data) => {
-              if (isMounted) {
-                setState(prev => ({
-                  ...prev,
-                  pirateCoins: data.balance,
-                  transactions: data.userTransactions,
-                  unlockedGames: data.userUnlockedGames,
-                }));
-              }
-            }).catch(error => {
-              console.error('Error loading user data:', error);
-            });
-            
+            console.log('Auth state set - user is authenticated');
             return;
           } else {
-            console.log('Stored session expired, clearing...');
+            console.log('Local session expired, clearing...');
             localStorage.removeItem('pirate_user');
             localStorage.removeItem('pirate_session');
           }
         }
         
-        console.log('No valid stored session, setting unauthenticated state');
+        console.log('No valid local session, setting unauthenticated');
         
         if (!isMounted) return;
         
@@ -148,26 +150,25 @@ export const useLoadAuthState = () => {
         });
         
       } catch (error) {
-        console.error('Error during authentication check:', error);
+        console.error('Error during local auth check:', error);
         
         if (!isMounted) return;
         
         setState({
           ...initialAuthState,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Authentication error',
+          error: 'Auth check failed',
         });
       }
     };
     
-    // Small delay to prevent race conditions
-    const timeoutId = setTimeout(checkAuth, 100);
+    // Run immediately - no delays
+    checkAuth();
     
     return () => {
       isMounted = false;
-      clearTimeout(timeoutId);
     };
-  }, [fetchUserData]);
+  }, []);
   
   return { state, setState };
 };
