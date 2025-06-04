@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,21 +169,6 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
                 <LogIn size={18} />
               )}
               Sign in to your vault
-            </Button>
-            
-            <Button 
-              type="button" 
-              className="bg-gray-100 text-gray-700 border border-gray-300 w-full py-2 rounded-md flex gap-2 items-center justify-center text-xs hover:bg-gray-200"
-              onClick={() => {
-                if (onLogin) {
-                  onLogin('test', 'test');
-                } else {
-                  login('test', 'test');
-                }
-              }}
-              disabled={isLoading}
-            >
-              Quick Test Login (test/test)
             </Button>
           </form>
         </TabsContent>
