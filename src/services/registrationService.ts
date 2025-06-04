@@ -44,6 +44,7 @@ export const registerUser = async (
     }
     
     // Check if user already exists in database
+    console.log('Checking if user exists...');
     const { data: existingUser, error: checkError } = await supabase
       .from('custom_users')
       .select('username')
@@ -52,10 +53,11 @@ export const registerUser = async (
     
     if (checkError) {
       console.error('Error checking existing user:', checkError);
-      return { user: null, session: null, error: 'Registration failed: Database error' };
+      return { user: null, session: null, error: 'Registration failed: Database error while checking username' };
     }
     
     if (existingUser) {
+      console.log('Username already exists');
       return { user: null, session: null, error: 'Username already exists' };
     }
     
@@ -75,14 +77,20 @@ export const registerUser = async (
       .select()
       .single();
     
-    if (insertError || !dbUser) {
+    if (insertError) {
       console.error('Error creating user in database:', insertError);
-      return { user: null, session: null, error: 'Registration failed: Could not create user' };
+      return { user: null, session: null, error: `Registration failed: ${insertError.message || 'Could not create user'}` };
+    }
+    
+    if (!dbUser) {
+      console.error('No user data returned after insert');
+      return { user: null, session: null, error: 'Registration failed: User creation returned no data' };
     }
     
     console.log('User created successfully:', dbUser);
     
     // Create initial balance for the user
+    console.log('Creating initial balance...');
     const { error: balanceError } = await supabase
       .from('user_balance')
       .insert({
@@ -92,10 +100,14 @@ export const registerUser = async (
     
     if (balanceError) {
       console.error('Error creating user balance:', balanceError);
-      // Don't fail registration for this, but log it
+      // Continue with registration even if balance creation fails
+      console.warn('Balance creation failed but continuing with registration');
+    } else {
+      console.log('Initial balance created successfully');
     }
     
     // Create welcome transaction
+    console.log('Creating welcome transaction...');
     const { error: transactionError } = await supabase
       .from('transactions')
       .insert({
@@ -107,7 +119,10 @@ export const registerUser = async (
     
     if (transactionError) {
       console.error('Error creating welcome transaction:', transactionError);
-      // Don't fail registration for this, but log it
+      // Continue with registration even if transaction creation fails
+      console.warn('Transaction creation failed but continuing with registration');
+    } else {
+      console.log('Welcome transaction created successfully');
     }
     
     const newUser: CustomUser = {
@@ -121,6 +136,7 @@ export const registerUser = async (
     };
     
     // Store auth in localStorage
+    console.log('Storing authentication data...');
     localStorage.setItem('pirate_user', JSON.stringify(newUser));
     localStorage.setItem('pirate_session', JSON.stringify(newSession));
     
@@ -128,10 +144,13 @@ export const registerUser = async (
     return { user: newUser, session: newSession, error: null };
     
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Unexpected registration error:', error);
     // Clear any partial localStorage data
     localStorage.removeItem('pirate_user');
     localStorage.removeItem('pirate_session');
-    return { user: null, session: null, error: 'Registration failed: Unexpected error' };
+    
+    // Provide more specific error message
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return { user: null, session: null, error: `Registration failed: ${errorMessage}` };
   }
 };
