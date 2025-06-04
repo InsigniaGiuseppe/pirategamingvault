@@ -28,14 +28,14 @@ import {
   exportCredentialsAsCSV
 } from '@/services/credentialService';
 import { useToast } from '@/hooks/use-toast';
-import { Clipboard, Download, LogOut, Plus, Settings, Trash, Share2, Coins } from 'lucide-react';
+import { Clipboard, Download, LogOut, Plus, Settings, Trash, Share2, Coins, TestTube } from 'lucide-react';
 import CredentialFormModal from '@/components/CredentialFormModal';
 import CredentialSharingModal from '@/components/CredentialSharingModal';
 import AdminSettings from '@/components/AdminSettings';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { processVideoUrl, getWorkingVideoExamples, formatDuration } from '@/utils/videoProcessor';
+import { processVideoUrl, getWorkingVideoExamples, formatDuration, testUrlDetection } from '@/utils/videoProcessor';
 
 interface Transaction {
   id: string;
@@ -61,6 +61,7 @@ const Admin = () => {
   const [isVideoManagerOpen, setIsVideoManagerOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<any>(null);
   const [videoList, setVideoList] = useState<any[]>([]);
+  const [urlTestResult, setUrlTestResult] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -262,13 +263,35 @@ const Admin = () => {
   
   const handleEditVideo = (video: any) => {
     setEditingVideo({...video});
+    setUrlTestResult(null);
     setIsVideoManagerOpen(true);
+  };
+  
+  const handleTestUrl = (url: string) => {
+    console.log('🧪 Testing URL from admin panel:', url);
+    const result = testUrlDetection(url);
+    setUrlTestResult(result);
+    
+    if (result.detected !== 'none') {
+      toast({
+        title: `Detected: ${result.detected}`,
+        description: `Found ${result.patterns.join(', ')} with ID: ${result.id}`,
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'URL Not Recognized',
+        description: 'This URL format is not supported. Please check the console for details.',
+      });
+    }
   };
   
   const handleProcessVideoUrl = (url: string) => {
     if (!editingVideo) return;
 
+    console.log('🎬 Processing URL from admin panel:', url);
     const processedVideo = processVideoUrl(url);
+    
     if (processedVideo) {
       setEditingVideo({
         ...editingVideo,
@@ -278,15 +301,21 @@ const Admin = () => {
         thumbnail: processedVideo.thumbnail
       });
       
+      setUrlTestResult({
+        detected: processedVideo.type,
+        id: processedVideo.id,
+        patterns: [processedVideo.type]
+      });
+      
       toast({
-        title: 'URL Processed',
-        description: `Automatically detected ${processedVideo.type} video and generated thumbnail.`,
+        title: `✅ URL Processed Successfully`,
+        description: `Detected as ${processedVideo.type} and generated embed URL.`,
       });
     } else {
       toast({
         variant: 'destructive',
-        title: 'Invalid URL',
-        description: 'Could not process this URL. Please enter a valid YouTube or Twitch URL.',
+        title: '❌ Invalid URL',
+        description: 'Could not process this URL. Check console logs for detailed debugging info.',
       });
     }
   };
@@ -317,6 +346,7 @@ const Admin = () => {
     // Close dialog and notify
     setIsVideoManagerOpen(false);
     setEditingVideo(null);
+    setUrlTestResult(null);
     toast({
       title: 'Video Updated',
       description: 'The video has been updated successfully.',
@@ -564,6 +594,7 @@ const Admin = () => {
                         url: '',
                         embedUrl: ''
                       });
+                      setUrlTestResult(null);
                       setIsVideoManagerOpen(true);
                     }}
                     className="bg-white text-black border-2 border-black hover:bg-black hover:text-white"
@@ -590,7 +621,7 @@ const Admin = () => {
                           {video.durationDisplay}
                         </div>
                         <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                          {video.type === 'twitch' ? 'Twitch' : 'YouTube'}
+                          {video.type === 'twitch-clip' ? 'Clip' : video.type === 'twitch' ? 'Twitch' : 'YouTube'}
                         </div>
                       </div>
                       <div className="p-4">
@@ -691,11 +722,11 @@ const Admin = () => {
       </Dialog>
       
       <Dialog open={isVideoManagerOpen} onOpenChange={setIsVideoManagerOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>{editingVideo && editingVideo.id ? 'Edit Video' : 'Add New Video'}</DialogTitle>
             <DialogDescription>
-              Enter a YouTube or Twitch URL to automatically fetch video details.
+              Enter a YouTube, Twitch, or Twitch clip URL to automatically fetch video details.
             </DialogDescription>
           </DialogHeader>
           
@@ -708,9 +739,18 @@ const Admin = () => {
                     id="video-url"
                     value={editingVideo.url}
                     onChange={(e) => setEditingVideo({...editingVideo, url: e.target.value})}
-                    placeholder="https://youtube.com/watch?v=... or https://twitch.tv/username"
+                    placeholder="https://youtube.com/watch?v=... or https://clips.twitch.tv/..."
                     className="flex-1"
                   />
+                  <Button 
+                    onClick={() => handleTestUrl(editingVideo.url)}
+                    variant="outline"
+                    disabled={!editingVideo.url}
+                    className="flex items-center gap-1"
+                  >
+                    <TestTube size={16} />
+                    Test
+                  </Button>
                   <Button 
                     onClick={() => handleProcessVideoUrl(editingVideo.url)}
                     variant="outline"
@@ -719,6 +759,28 @@ const Admin = () => {
                     Process
                   </Button>
                 </div>
+                
+                {urlTestResult && (
+                  <div className={`p-3 rounded border text-sm ${
+                    urlTestResult.detected !== 'none' 
+                      ? 'bg-green-50 border-green-200 text-green-800' 
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                    {urlTestResult.detected !== 'none' ? (
+                      <>
+                        <p className="font-medium">✅ URL Detection Success:</p>
+                        <p>Type: <strong>{urlTestResult.detected}</strong></p>
+                        <p>ID: <strong>{urlTestResult.id}</strong></p>
+                        <p>Patterns: {urlTestResult.patterns.join(', ')}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-medium">❌ URL Not Recognized</p>
+                        <p>Please check the console for detailed debugging information.</p>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="grid gap-2">
@@ -739,7 +801,8 @@ const Admin = () => {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <option value="youtube">YouTube</option>
-                  <option value="twitch">Twitch</option>
+                  <option value="twitch">Twitch Stream</option>
+                  <option value="twitch-clip">Twitch Clip</option>
                 </select>
               </div>
               
