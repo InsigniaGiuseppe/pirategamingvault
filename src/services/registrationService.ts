@@ -12,6 +12,20 @@ export interface CustomSession {
   expires_at: number;
 }
 
+// Generate a UUID-like string
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  
+  // Fallback UUID generation for older browsers
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 // Pure local registration with database integration
 export const registerUser = async (
   username: string,
@@ -46,20 +60,7 @@ export const registerUser = async (
     }
     
     // Generate proper UUID for new user
-    const { data: uuidData, error: uuidError } = await supabase.rpc('gen_random_uuid');
-    
-    let newUserId: string;
-    if (uuidError || !uuidData) {
-      // Fallback to crypto.randomUUID if available, otherwise timestamp-based
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        newUserId = crypto.randomUUID();
-      } else {
-        // Fallback for older browsers
-        newUserId = 'user-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 9);
-      }
-    } else {
-      newUserId = uuidData;
-    }
+    const newUserId = generateUUID();
     
     console.log('Creating user with ID:', newUserId);
     
