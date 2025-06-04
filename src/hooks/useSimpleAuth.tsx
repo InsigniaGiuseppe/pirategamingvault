@@ -50,7 +50,6 @@ const initialState: AuthState = {
 
 export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AuthState>(initialState);
-  const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -94,67 +93,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Navigation guard with timeout
-  const navigateWithGuard = useCallback((path: string, maxWaitTime = 3000) => {
-    console.log(`Attempting navigation to ${path} with ${maxWaitTime}ms timeout`);
-    
-    const startTime = Date.now();
-    const attemptNavigation = () => {
-      const elapsed = Date.now() - startTime;
-      
-      if (elapsed >= maxWaitTime) {
-        console.warn('Navigation timeout reached, forcing navigation');
-        navigate(path);
-        return;
-      }
-      
-      // Check if auth state is ready
-      if (state.isAuthenticated && state.user && !isProcessing) {
-        console.log('Auth state ready, navigating');
-        navigate(path);
-      } else {
-        console.log('Auth state not ready, retrying in 100ms');
-        setTimeout(attemptNavigation, 100);
-      }
-    };
-    
-    attemptNavigation();
-  }, [navigate, state.isAuthenticated, state.user, isProcessing]);
-
   const handleLogin = useCallback(async (username: string, password: string) => {
-    if (isProcessing) {
-      console.log('Login already in progress, skipping');
-      return;
-    }
-    
-    let timeoutId: NodeJS.Timeout;
-    
     try {
-      setIsProcessing(true);
       console.log('Starting login for:', username);
-      
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Set a timeout to prevent infinite loading
-      timeoutId = setTimeout(() => {
-        console.error('Login timeout reached');
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: 'Login timeout - please try again' 
-        }));
-        setIsProcessing(false);
-        toast({
-          variant: "destructive",
-          title: "Login Timeout",
-          description: "Login took too long. Please try again."
-        });
-      }, 15000); // 15 second timeout
-      
       const { user, session, error } = await login(username, password);
-      
-      // Clear timeout since we got a response
-      clearTimeout(timeoutId);
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
@@ -167,9 +111,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      console.log('Login successful, updating auth state');
+      console.log('Login successful, updating state and navigating');
       
-      // Update state synchronously first
+      // Update state
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
@@ -184,14 +128,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Welcome back, ${user.username}!`
       });
       
-      // Navigate with guard after state update
-      console.log('Login complete, navigating to dashboard');
-      setTimeout(() => {
-        navigateWithGuard('/dashboard');
-      }, 100);
+      // Navigate directly after state update
+      console.log('Navigating to dashboard...');
+      navigate('/dashboard');
       
     } catch (error) {
-      clearTimeout(timeoutId!);
       console.error('Login error:', error);
       setState(prev => ({ 
         ...prev, 
@@ -203,45 +144,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login Failed",
         description: error instanceof Error ? error.message : 'Login failed'
       });
-    } finally {
-      setIsProcessing(false);
     }
-  }, [isProcessing, toast, navigateWithGuard]);
+  }, [toast, navigate]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
-    if (isProcessing) {
-      console.log('Registration already in progress, skipping');
-      return;
-    }
-    
-    let timeoutId: NodeJS.Timeout;
-    
     try {
-      setIsProcessing(true);
       console.log('Starting registration for:', username);
-      
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // Set a timeout to prevent infinite loading
-      timeoutId = setTimeout(() => {
-        console.error('Registration timeout reached');
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: 'Registration timeout - please try again' 
-        }));
-        setIsProcessing(false);
-        toast({
-          variant: "destructive",
-          title: "Registration Timeout",
-          description: "Registration took too long. Please try again."
-        });
-      }, 20000); // 20 second timeout for registration
-      
       const { user, session, error } = await registerUser(username, password);
-      
-      // Clear timeout since we got a response
-      clearTimeout(timeoutId);
       
       if (error || !user) {
         console.error('Registration failed:', error);
@@ -254,9 +165,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      console.log('Registration successful, updating auth state');
+      console.log('Registration successful, updating state and navigating');
       
-      // Update state synchronously first
+      // Update state
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
@@ -275,14 +186,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome to Pirate Gaming!"
       });
       
-      // Navigate with guard after state update
-      console.log('Registration complete, navigating to dashboard');
-      setTimeout(() => {
-        navigateWithGuard('/dashboard');
-      }, 100);
+      // Navigate directly after state update
+      console.log('Navigating to dashboard...');
+      navigate('/dashboard');
       
     } catch (error) {
-      clearTimeout(timeoutId!);
       console.error('Registration error:', error);
       setState(prev => ({ 
         ...prev, 
@@ -294,10 +202,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Registration Failed",
         description: error instanceof Error ? error.message : 'Registration failed'
       });
-    } finally {
-      setIsProcessing(false);
     }
-  }, [isProcessing, toast, navigateWithGuard]);
+  }, [toast, navigate]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -360,7 +266,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const contextValue: AuthContextType = {
     ...state,
-    isLoading: state.isLoading || isProcessing,
     login: handleLogin,
     register: handleRegister,
     logout: handleLogout,
@@ -371,10 +276,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
 
   console.log('Auth context state:', { 
     isAuthenticated: state.isAuthenticated, 
-    isLoading: state.isLoading || isProcessing,
+    isLoading: state.isLoading,
     user: state.user?.username,
-    hasError: !!state.error,
-    isProcessing
+    hasError: !!state.error
   });
 
   return (
