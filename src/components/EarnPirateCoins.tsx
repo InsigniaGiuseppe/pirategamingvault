@@ -1,12 +1,13 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
-import { Twitch, Youtube, Clock, Coins, Play, CheckCircle, ExternalLink } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Twitch, Youtube, Clock, Coins, Play, CheckCircle, ExternalLink, Bomb } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
 import VideoPlayer from './VideoPlayer';
+import Minesweeper from './Minesweeper';
 import { getVideos, trackVideoAnalytics, Video } from '@/services/videoService';
 
 const EarnPirateCoins = () => {
@@ -33,7 +34,7 @@ const EarnPirateCoins = () => {
 
   const loadVideos = async () => {
     try {
-      const data = await getVideos(false); // Only active videos
+      const data = await getVideos(false);
       setVideos(data);
     } catch (error) {
       console.error('Failed to load videos:', error);
@@ -74,15 +75,12 @@ const EarnPirateCoins = () => {
     setNextRewardIn(60);
     setShowCoinAnimation(false);
     
-    // Track view analytics
     await trackVideoAnalytics(video.id, 'view', user?.id);
     
-    // Clear any existing timer
     if (progressInterval.current) {
       window.clearInterval(progressInterval.current);
     }
     
-    // Show helpful message for Twitch content
     if (video.platform_type === 'twitch' || video.platform_type === 'twitch-clip') {
       const message = video.platform_type === 'twitch-clip' 
         ? "If the clip doesn't embed, you can watch it directly on Twitch to earn coins!"
@@ -106,7 +104,7 @@ const EarnPirateCoins = () => {
     if (!activeVideo) return;
     
     const duration = activeVideo.duration;
-    const intervalStep = 1; // 1 second intervals for smooth progress
+    const intervalStep = 1;
     
     console.log('Starting progressive timer for', duration, 'seconds');
     
@@ -119,16 +117,14 @@ const EarnPirateCoins = () => {
       setNextRewardIn(prev => {
         const newTime = prev - intervalStep;
         
-        // Award coins every 60 seconds (1 minute)
         if (newTime <= 0) {
           awardProgressiveCoins();
-          return 60; // Reset to 60 seconds
+          return 60;
         }
         
         return newTime;
       });
       
-      // Check if video is complete
       setWatchProgress(currentProgress => {
         if (currentProgress >= 100) {
           if (progressInterval.current) window.clearInterval(progressInterval.current);
@@ -154,7 +150,6 @@ const EarnPirateCoins = () => {
       duration: 2000,
     });
     
-    // Hide animation after 2 seconds
     setTimeout(() => setShowCoinAnimation(false), 2000);
   };
 
@@ -175,7 +170,6 @@ const EarnPirateCoins = () => {
     setVideoReady(true);
     
     if (activeVideo.platform_type === 'twitch-clip') {
-      // For clips, complete quickly since they're short
       setTimeout(() => {
         completeVideo(activeVideo, activeVideo.duration);
       }, 2000);
@@ -186,7 +180,6 @@ const EarnPirateCoins = () => {
         duration: 3000,
       });
     } else {
-      // For other content, use progressive timer
       startProgressiveWatchTimer();
       
       toast({
@@ -199,7 +192,6 @@ const EarnPirateCoins = () => {
 
   const completeVideo = async (video: Video, watchDuration: number) => {
     if (!watchedVideos.has(video.id)) {
-      // Award any final coins if there's remaining time
       const remainingMinutes = Math.floor((100 - watchProgress) / 100 * video.duration / 60);
       if (remainingMinutes > 0) {
         const finalCoins = remainingMinutes * 3;
@@ -216,7 +208,6 @@ const EarnPirateCoins = () => {
         localStorage.setItem(`${user.username}_watchedVideos`, JSON.stringify(watchedArray));
       }
       
-      // Track completion analytics
       await trackVideoAnalytics(video.id, 'complete', user?.id, watchDuration);
       
       const totalEarned = coinsEarnedThisSession + (remainingMinutes > 0 ? remainingMinutes * 3 : 0);
@@ -286,205 +277,224 @@ const EarnPirateCoins = () => {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold font-heading">Earn Pirate Coins</h2>
         <div className="flex items-center gap-1">
-          <p className="text-sm text-gray-600">Watch videos to earn 3 coins per minute • {videos.length} videos available</p>
+          <p className="text-sm text-gray-600">Multiple ways to earn coins • Play games or watch videos</p>
         </div>
       </div>
       
-      {isWatching && activeVideo ? (
-        <div className="mb-8">
-          <VideoPlayer 
-            type={activeVideo.platform_type}
-            embedUrl={activeVideo.embed_url}
-            originalUrl={activeVideo.original_url}
-            title={activeVideo.title}
-            onError={handleVideoError}
-            onExternalWatch={handleExternalWatch}
-            onVideoReady={handleVideoReady}
-          />
-          
-          <div className="flex flex-col gap-4 mt-4">
-            <div>
-              <h3 className="text-lg font-medium mb-1">{activeVideo.title}</h3>
-              <p className="text-sm text-gray-500">
-                {getVideoTypeLabel(activeVideo.platform_type)} • 
-                {activeVideo.duration_display} • 
-                Up to {calculateTotalCoins(activeVideo.duration)} coins
-              </p>
-            </div>
-            
-            {videoError ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <p className="text-red-800 font-medium mb-2">
-                  Video failed to load
-                </p>
-                <p className="text-red-600 text-sm mb-3">
-                  This content cannot be embedded. Watch it externally to earn coins!
-                </p>
-                <Button 
-                  onClick={handleExternalWatch}
-                  className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
-                >
-                  <ExternalLink size={16} />
-                  Watch Externally
-                </Button>
-              </div>
-            ) : !videoReady && !externalWatchStarted ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                <p className="text-blue-800 font-medium">
-                  Waiting for video to load...
-                </p>
-                <p className="text-blue-600 text-sm mt-1">
-                  Progressive rewards will start once the video is ready
-                </p>
-              </div>
-            ) : externalWatchStarted ? (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                <p className="text-green-800 font-medium">
-                  External viewing in progress...
-                </p>
-                <p className="text-green-600 text-sm mt-1">
-                  Earning 3 coins per minute watched!
-                </p>
-              </div>
-            ) : watchProgress < 100 ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between text-sm">
-                  <span>Watch progress</span>
-                  <span>{Math.floor(watchProgress)}%</span>
+      <Tabs defaultValue="minesweeper" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="minesweeper" className="flex items-center gap-2">
+            <Bomb size={16} />
+            Minesweeper (Up to 30 coins)
+          </TabsTrigger>
+          <TabsTrigger value="videos" className="flex items-center gap-2">
+            <Play size={16} />
+            Watch Videos (3 coins/min)
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="minesweeper" className="mt-6">
+          <Minesweeper />
+        </TabsContent>
+        
+        <TabsContent value="videos" className="mt-6">
+          {isWatching && activeVideo ? (
+            <div className="mb-8">
+              <VideoPlayer 
+                type={activeVideo.platform_type}
+                embedUrl={activeVideo.embed_url}
+                originalUrl={activeVideo.original_url}
+                title={activeVideo.title}
+                onError={handleVideoError}
+                onExternalWatch={handleExternalWatch}
+                onVideoReady={handleVideoReady}
+              />
+              
+              <div className="flex flex-col gap-4 mt-4">
+                <div>
+                  <h3 className="text-lg font-medium mb-1">{activeVideo.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    {getVideoTypeLabel(activeVideo.platform_type)} • 
+                    {activeVideo.duration_display} • 
+                    Up to {calculateTotalCoins(activeVideo.duration)} coins
+                  </p>
                 </div>
-                <Progress value={watchProgress} className="h-3" />
                 
-                <div className="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <Coins size={16} className="text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-800">
-                      Coins earned this session: {coinsEarnedThisSession}
-                    </span>
-                    {showCoinAnimation && (
-                      <span className="text-green-600 font-bold animate-pulse">
-                        +3!
-                      </span>
-                    )}
+                {videoError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+                    <p className="text-red-800 font-medium mb-2">
+                      Video failed to load
+                    </p>
+                    <p className="text-red-600 text-sm mb-3">
+                      This content cannot be embedded. Watch it externally to earn coins!
+                    </p>
+                    <Button 
+                      onClick={handleExternalWatch}
+                      className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                    >
+                      <ExternalLink size={16} />
+                      Watch Externally
+                    </Button>
                   </div>
-                  <div className="text-sm text-yellow-600">
-                    Next reward in: {nextRewardIn}s
+                ) : !videoReady && !externalWatchStarted ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <p className="text-blue-800 font-medium">
+                      Waiting for video to load...
+                    </p>
+                    <p className="text-blue-600 text-sm mt-1">
+                      Progressive rewards will start once the video is ready
+                    </p>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <Button 
-                onClick={() => setActiveVideo(null)}
-                className="bg-white text-black border-2 border-black hover:bg-black hover:text-white flex items-center gap-2"
-              >
-                <CheckCircle size={16} />
-                Video Complete! ({coinsEarnedThisSession} coins earned)
-              </Button>
-            )}
-            
-            {!externalWatchStarted && watchProgress < 100 && (
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    if (progressInterval.current) {
-                      window.clearInterval(progressInterval.current);
-                    }
-                    setActiveVideo(null);
-                    setIsWatching(false);
-                    setWatchProgress(0);
-                    setVideoError(false);
-                    setVideoReady(false);
-                    setCoinsEarnedThisSession(0);
-                  }}
-                  className="border-gray-300 flex-1"
-                >
-                  Cancel Watching
-                </Button>
-                {(activeVideo.platform_type === 'twitch' || 
-                  activeVideo.platform_type === 'twitch-clip') && (
+                ) : externalWatchStarted ? (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                    <p className="text-green-800 font-medium">
+                      External viewing in progress...
+                    </p>
+                    <p className="text-green-600 text-sm mt-1">
+                      Earning 3 coins per minute watched!
+                    </p>
+                  </div>
+                ) : watchProgress < 100 ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex justify-between text-sm">
+                      <span>Watch progress</span>
+                      <span>{Math.floor(watchProgress)}%</span>
+                    </div>
+                    <Progress value={watchProgress} className="h-3" />
+                    
+                    <div className="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <Coins size={16} className="text-yellow-600" />
+                        <span className="text-sm font-medium text-yellow-800">
+                          Coins earned this session: {coinsEarnedThisSession}
+                        </span>
+                        {showCoinAnimation && (
+                          <span className="text-green-600 font-bold animate-pulse">
+                            +3!
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-yellow-600">
+                        Next reward in: {nextRewardIn}s
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <Button 
-                    onClick={handleExternalWatch}
-                    className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                    onClick={() => setActiveVideo(null)}
+                    className="bg-white text-black border-2 border-black hover:bg-black hover:text-white flex items-center gap-2"
                   >
-                    <ExternalLink size={16} />
-                    Watch Externally
+                    <CheckCircle size={16} />
+                    Video Complete! ({coinsEarnedThisSession} coins earned)
                   </Button>
                 )}
+                
+                {!externalWatchStarted && watchProgress < 100 && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        if (progressInterval.current) {
+                          window.clearInterval(progressInterval.current);
+                        }
+                        setActiveVideo(null);
+                        setIsWatching(false);
+                        setWatchProgress(0);
+                        setVideoError(false);
+                        setVideoReady(false);
+                        setCoinsEarnedThisSession(0);
+                      }}
+                      className="border-gray-300 flex-1"
+                    >
+                      Cancel Watching
+                    </Button>
+                    {(activeVideo.platform_type === 'twitch' || 
+                      activeVideo.platform_type === 'twitch-clip') && (
+                      <Button 
+                        onClick={handleExternalWatch}
+                        className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+                      >
+                        <ExternalLink size={16} />
+                        Watch Externally
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          {videos.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              <p>No videos available at the moment.</p>
-              <p className="text-sm mt-1">Normal YouTube videos will be added soon for better embedding!</p>
             </div>
           ) : (
-            videos.map((video) => (
-              <Card key={video.id} className="overflow-hidden bg-white shadow-saas">
-                <div className="relative">
-                  <img 
-                    src={video.thumbnail_url} 
-                    alt={video.title}
-                    className="w-full h-[160px] object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png';
-                    }}
-                  />
-                  <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
-                    <Clock size={12} />
-                    {video.duration_display}
-                  </div>
-                  <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
-                    {getVideoIcon(video.platform_type)}
-                    {getVideoTypeLabel(video.platform_type)}
-                  </div>
-                  {(video.platform_type === 'twitch' || video.platform_type === 'twitch-clip') && (
-                    <div className="absolute bottom-2 left-2 bg-purple-600/90 text-white px-2 py-1 text-xs rounded-md">
-                      May Open Externally
-                    </div>
-                  )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              {videos.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  <p>No videos available at the moment.</p>
+                  <p className="text-sm mt-1">Normal YouTube videos will be added soon for better embedding!</p>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-medium text-lg mb-2 line-clamp-2">{video.title}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                    <div className="flex items-center gap-1">
-                      <Coins size={14} className="text-yellow-500" />
-                      <span>Up to {calculateTotalCoins(video.duration)} coins (3/min)</span>
+              ) : (
+                videos.map((video) => (
+                  <Card key={video.id} className="overflow-hidden bg-white shadow-saas">
+                    <div className="relative">
+                      <img 
+                        src={video.thumbnail_url} 
+                        alt={video.title}
+                        className="w-full h-[160px] object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/lovable-uploads/69fae18f-9c67-48fd-8006-c6181610037b.png';
+                        }}
+                      />
+                      <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
+                        <Clock size={12} />
+                        {video.duration_display}
+                      </div>
+                      <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
+                        {getVideoIcon(video.platform_type)}
+                        {getVideoTypeLabel(video.platform_type)}
+                      </div>
+                      {(video.platform_type === 'twitch' || video.platform_type === 'twitch-clip') && (
+                        <div className="absolute bottom-2 left-2 bg-purple-600/90 text-white px-2 py-1 text-xs rounded-md">
+                          May Open Externally
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-4 pt-0">
-                  <Button
-                    onClick={() => handleWatchVideo(video)}
-                    disabled={watchedVideos.has(video.id)}
-                    className={`w-full flex items-center justify-center gap-2 ${
-                      watchedVideos.has(video.id)
-                        ? "bg-gray-100 text-gray-400 border-gray-200"
-                        : "bg-white text-black border-2 border-black hover:bg-black hover:text-white"
-                    }`}
-                  >
-                    {watchedVideos.has(video.id) ? (
-                      <>
-                        <CheckCircle size={16} />
-                        Already Watched
-                      </>
-                    ) : (
-                      <>
-                        <Play size={16} />
-                        Watch & Earn
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))
+                    <CardContent className="p-4">
+                      <h3 className="font-medium text-lg mb-2 line-clamp-2">{video.title}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Coins size={14} className="text-yellow-500" />
+                          <span>Up to {calculateTotalCoins(video.duration)} coins (3/min)</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-4 pt-0">
+                      <Button
+                        onClick={() => handleWatchVideo(video)}
+                        disabled={watchedVideos.has(video.id)}
+                        className={`w-full flex items-center justify-center gap-2 ${
+                          watchedVideos.has(video.id)
+                            ? "bg-gray-100 text-gray-400 border-gray-200"
+                            : "bg-white text-black border-2 border-black hover:bg-black hover:text-white"
+                        }`}
+                      >
+                        {watchedVideos.has(video.id) ? (
+                          <>
+                            <CheckCircle size={16} />
+                            Already Watched
+                          </>
+                        ) : (
+                          <>
+                            <Play size={16} />
+                            Watch & Earn
+                          </>
+                        )}
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))
+              )}
+            </div>
           )}
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
 import { Tag, Info, Lock, Coins, ExternalLink } from 'lucide-react';
@@ -24,10 +24,13 @@ const GameTile = ({ game }: GameTileProps) => {
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useSimpleAuth();
   const { toast } = useToast();
+  const imageRef = useRef<HTMLImageElement>(null);
   
   const canAfford = pirateCoins >= game.coinCost;
+  const maxRetries = 2;
   
   const handleUnlock = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -77,17 +80,26 @@ const GameTile = ({ game }: GameTileProps) => {
   const handleImageLoad = () => {
     setIsImageLoading(false);
     setImageError(false);
+    setRetryCount(0);
   };
 
   const handleImageError = () => {
-    if (!imageError) {
+    if (retryCount < maxRetries) {
+      // Retry with exponential backoff
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        if (imageRef.current) {
+          imageRef.current.src = imageRef.current.src + '?retry=' + Date.now();
+        }
+      }, Math.pow(2, retryCount) * 1000);
+    } else {
       setImageError(true);
       setIsImageLoading(false);
     }
   };
 
   const getImageSource = (game: Game) => {
-    if (imageError) {
+    if (imageError || retryCount >= maxRetries) {
       return `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
     }
     return game.imgSrc;
@@ -128,22 +140,24 @@ const GameTile = ({ game }: GameTileProps) => {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="relative h-full">
                   {isImageLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse">
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                       <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                   
                   <div className="relative">
                     <img 
+                      ref={imageRef}
                       src={imageSource} 
                       alt={game.title}
                       className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${
                         !isUnlocked 
-                          ? 'saturate-50 brightness-75 contrast-90' // Changed from full grayscale to subtle desaturation
+                          ? 'saturate-50 brightness-75 contrast-90' 
                           : ''
                       } transition-all duration-200 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
                       onLoad={handleImageLoad}
                       onError={handleImageError}
+                      loading="lazy"
                     />
                     
                     {!isUnlocked && (
@@ -164,7 +178,7 @@ const GameTile = ({ game }: GameTileProps) => {
                   </div>
                   
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
-                    <span className="text-white text-sm font-medium truncate pr-2">{game.title}</span>
+                    <span className="text-white text-sm font-medium truncate pr-2 max-w-[120px]">{game.title}</span>
                     {!isUnlocked ? (
                       <Button 
                         onClick={handleUnlock}
