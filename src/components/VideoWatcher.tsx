@@ -57,6 +57,10 @@ const VideoWatcher: React.FC<VideoWatcherProps> = ({ onCancel, onComplete }) => 
     resetState();
   };
 
+  const handleExternalWatchAsync = async () => {
+    await handleExternalWatch();
+  };
+
   return (
     <div className="mb-8">
       <VideoPlayer 
@@ -65,7 +69,7 @@ const VideoWatcher: React.FC<VideoWatcherProps> = ({ onCancel, onComplete }) => 
         originalUrl={activeVideo.original_url}
         title={activeVideo.title}
         onError={handleVideoError}
-        onExternalWatch={handleExternalWatch}
+        onExternalWatch={handleExternalWatchAsync}
         onVideoReady={handleVideoReady}
       />
       
