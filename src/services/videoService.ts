@@ -43,6 +43,24 @@ export interface YouTubeVideoData {
   };
 }
 
+interface VideoInsert {
+  video_id: string;
+  platform_type: 'youtube' | 'twitch' | 'twitch-clip';
+  title: string;
+  description?: string;
+  duration: number;
+  duration_display: string;
+  thumbnail_url: string;
+  embed_url: string;
+  original_url: string;
+  reward_amount: number;
+  is_active: boolean;
+  view_count: number;
+  completion_count: number;
+  category?: string;
+  tags?: string[];
+}
+
 const parseDuration = (isoDuration: string): number => {
   const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!match) return 0;
@@ -82,7 +100,7 @@ export const fetchYouTubeVideoData = async (videoIds: string[]): Promise<YouTube
   return data.items || [];
 };
 
-export const processYouTubeUrls = async (urls: string[]): Promise<Partial<Video>[]> => {
+export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]> => {
   const videoIds: string[] = [];
   const urlMap: { [key: string]: string } = {};
   
@@ -125,14 +143,16 @@ export const processYouTubeUrls = async (urls: string[]): Promise<Partial<Video>
   });
 };
 
-export const saveVideos = async (videos: Partial<Video>[]): Promise<Video[]> => {
+export const saveVideos = async (videos: VideoInsert[]): Promise<Video[]> => {
   const { data, error } = await supabase
     .from('videos')
     .insert(videos)
     .select();
 
   if (error) throw error;
-  return data || [];
+  
+  // Type assertion since we know the data matches our Video interface
+  return (data || []) as Video[];
 };
 
 export const getVideos = async (includeInactive = false): Promise<Video[]> => {
@@ -145,7 +165,9 @@ export const getVideos = async (includeInactive = false): Promise<Video[]> => {
   const { data, error } = await query;
 
   if (error) throw error;
-  return data || [];
+  
+  // Type assertion since we know the data matches our Video interface
+  return (data || []) as Video[];
 };
 
 export const updateVideo = async (id: string, updates: Partial<Video>): Promise<Video> => {
@@ -157,7 +179,9 @@ export const updateVideo = async (id: string, updates: Partial<Video>): Promise<
     .single();
 
   if (error) throw error;
-  return data;
+  
+  // Type assertion since we know the data matches our Video interface
+  return data as Video;
 };
 
 export const deleteVideo = async (id: string): Promise<void> => {

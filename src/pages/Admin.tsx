@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { EnhancedUserTable } from '@/components/EnhancedUserTable';
-import { EnhancedTransactionHistory } from '@/components/EnhancedTransactionHistory';
-import { UserDetailsModal } from '@/components/UserDetailsModal';
+import EnhancedUserTable from '@/components/EnhancedUserTable';
+import EnhancedTransactionHistory from '@/components/EnhancedTransactionHistory';
+import UserDetailsModal from '@/components/UserDetailsModal';
 import { Button } from '@/components/ui/button';
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,10 +11,18 @@ import { BarChart, Users, Settings, History, Video } from 'lucide-react';
 
 import AdminVideoManager from '@/components/AdminVideoManager';
 
+interface User {
+  id: string;
+  username: string;
+  balance: number;
+  created_at: string;
+  transactions?: any[];
+}
+
 const Admin = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshUsers, setRefreshUsers] = useState(false);
 
@@ -157,7 +166,7 @@ const Admin = () => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart },
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'videos', label: 'Video Management', icon: Video }, // Add this line
+    { id: 'videos', label: 'Video Management', icon: Video },
     { id: 'transactions', label: 'Transaction History', icon: History },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -221,7 +230,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <EnhancedTransactionHistory />
+            <EnhancedTransactionHistory transactions={[]} databaseUsers={users} />
           </TabsContent>
 
           <TabsContent value="settings">
