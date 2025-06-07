@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,9 +89,22 @@ const AdminOverview = () => {
 
       setRecentTransactions(transactions.slice(0, 10));
 
-      // Fetch recent activity
+      // Fetch recent activity with proper type handling
       const { logs } = await activityLogger.getActivityLogs(10);
-      setRecentActivity(logs);
+      
+      // Convert the logs to match our ActivityLog interface
+      const typedLogs: ActivityLog[] = logs.map(log => ({
+        id: log.id,
+        user_id: log.user_id,
+        activity_type: log.activity_type,
+        description: log.description,
+        created_at: log.created_at,
+        metadata: typeof log.metadata === 'object' && log.metadata !== null 
+          ? log.metadata as Record<string, any>
+          : {}
+      }));
+      
+      setRecentActivity(typedLogs);
 
       setLastRefresh(new Date());
     } catch (error) {
