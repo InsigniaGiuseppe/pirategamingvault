@@ -47,7 +47,7 @@ export const games: Game[] = [
     unlocked: true,
     category: "strategy"
   },
-  // Popular current games
+  // Popular current games with updated pricing
   {
     id: "5",
     title: "Call of Duty: Black Ops 6",
@@ -62,7 +62,7 @@ export const games: Game[] = [
     title: "Fortnite",
     imgSrc: "https://cdn2.unrealengine.com/14br-consoles-1920x1080-wlogo-f010219b1dbf.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 15, // Updated from 0 to 15
     unlocked: false,
     category: "battle-royale"
   },
@@ -71,16 +71,16 @@ export const games: Game[] = [
     title: "Counter-Strike 2",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 10, // Updated from 0 to 10
     unlocked: false,
     category: "fps"
   },
   {
     id: "8",
     title: "Valorant",
-    imgSrc: "https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt6b9e27cc54b2e7d9/60ee1fc8e74d174034d7ae5e/lol-champion-rumble-splash-art.jpg",
+    imgSrc: "https://images.contentstack.io/v3/assets/blt77c3b57b9cab6afd/blt23b8b3973a24cb3e/647ec2a6ad11a3177cad2ad4/VAL_ChampionSelect_Banner_EP7-A1_2560x1440.jpg", // Fixed Valorant image
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 12, // Updated from 0 to 12
     unlocked: false,
     category: "fps"
   },
@@ -143,7 +143,7 @@ export const games: Game[] = [
     title: "Apex Legends",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 14, // Updated from 0 to 14
     unlocked: false,
     category: "battle-royale"
   },
@@ -152,7 +152,7 @@ export const games: Game[] = [
     title: "League of Legends",
     imgSrc: "https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt6b9e27cc54b2e7d9/60ee1fc8e74d174034d7ae5e/lol-champion-rumble-splash-art.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 10, // Updated from 0 to 10
     unlocked: false,
     category: "moba"
   },
@@ -204,7 +204,7 @@ export const games: Game[] = [
   },
   {
     id: "22",
-    title: "Warhammer 40,000: Space Marine 2",
+    title: "Warhammer 40K: Space Marine 2", // Shortened title to fix text overflow
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2183900/header.jpg",
     isPiratePun: false,
     coinCost: 44,
@@ -270,7 +270,7 @@ export const games: Game[] = [
     title: "Fall Guys",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1097150/header.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 12, // Updated from 0 to 12
     unlocked: false,
     category: "party"
   },
@@ -279,7 +279,7 @@ export const games: Game[] = [
     title: "Rocket League",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/252950/header.jpg",
     isPiratePun: false,
-    coinCost: 0,
+    coinCost: 10, // Updated from 0 to 10
     unlocked: false,
     category: "sports"
   }

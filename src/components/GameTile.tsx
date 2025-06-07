@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
@@ -22,6 +23,7 @@ const GameTile = ({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useSimpleAuth();
   const { toast } = useToast();
   
@@ -59,7 +61,7 @@ const GameTile = ({ game }: GameTileProps) => {
           title: "Game Unlocked!",
           description: `You've successfully unlocked ${game.title}.`
         });
-      }, 1000);
+      }, 800);
     } catch (error) {
       setIsUnlocking(false);
       toast({
@@ -74,15 +76,21 @@ const GameTile = ({ game }: GameTileProps) => {
 
   const handleImageLoad = () => {
     setIsImageLoading(false);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    if (!imageError) {
+      setImageError(true);
+      setIsImageLoading(false);
+    }
   };
 
   const getImageSource = (game: Game) => {
-    if (game.imgSrc) {
-      return game.imgSrc;
+    if (imageError) {
+      return `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
     }
-    
-    const gameTitleForUrl = encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '%20'));
-    return `https://static-cdn.jtvnw.net/ttv-boxart/${gameTitleForUrl}-285x380.jpg`;
+    return game.imgSrc;
   };
 
   const imageSource = getImageSource(game);
@@ -114,7 +122,7 @@ const GameTile = ({ game }: GameTileProps) => {
         <Tooltip delayDuration={300}>
           <TooltipTrigger asChild>
             <div 
-              className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-90' : ''}`}
+              className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-95' : ''}`}
               onClick={handleGameClick}
             >
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -129,27 +137,25 @@ const GameTile = ({ game }: GameTileProps) => {
                     <img 
                       src={imageSource} 
                       alt={game.title}
-                      className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${!isUnlocked ? 'grayscale brightness-75' : ''} transition-all duration-200 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                      className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${
+                        !isUnlocked 
+                          ? 'saturate-50 brightness-75 contrast-90' // Changed from full grayscale to subtle desaturation
+                          : ''
+                      } transition-all duration-200 ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
                       onLoad={handleImageLoad}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        if (!target.src.includes('picsum.photos')) {
-                          target.src = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
-                          setIsImageLoading(false);
-                        }
-                      }}
+                      onError={handleImageError}
                     />
                     
                     {!isUnlocked && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity">
-                        <Lock size={32} className="text-white opacity-80" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
+                        <Lock size={28} className="text-white opacity-90" />
                       </div>
                     )}
                   </div>
                   
-                  <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
-                    <Tag size={12} className="mr-1" />
-                    {game.title}
+                  <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center max-w-[60%]">
+                    <Tag size={12} className="mr-1 flex-shrink-0" />
+                    <span className="truncate">{game.title}</span>
                   </div>
                   
                   <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
@@ -158,20 +164,20 @@ const GameTile = ({ game }: GameTileProps) => {
                   </div>
                   
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
-                    <span className="text-white text-sm font-medium truncate">{game.title}</span>
+                    <span className="text-white text-sm font-medium truncate pr-2">{game.title}</span>
                     {!isUnlocked ? (
                       <Button 
                         onClick={handleUnlock}
                         size="sm"
                         variant="outline"
                         disabled={!canAfford || isUnlocking}
-                        className="h-7 rounded-full px-2 flex items-center gap-1 bg-white/90 border-yellow-500 text-black hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                        className="h-7 rounded-full px-2 flex items-center gap-1 bg-white/90 border-yellow-500 text-black hover:bg-blue-600 hover:text-white hover:border-blue-600 flex-shrink-0"
                       >
                         <Lock size={12} className="text-yellow-500" />
                         <span>{isUnlocking ? '...' : 'Unlock'}</span>
                       </Button>
                     ) : (
-                      <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center">
+                      <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
                         <Info size={14} />
                       </div>
                     )}

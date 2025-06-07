@@ -5,7 +5,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-1",
     title: "Dune: Awakening",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172620/header.jpg", // Using placeholder as game isn't released yet
+    imgSrc: "https://images.igdb.com/igdb/image/upload/t_1080p/co2lbd.jpg", // Official Dune Awakening artwork
     isPiratePun: false,
     coinCost: 50,
     unlocked: false,
@@ -14,7 +14,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-2", 
     title: "Arc Raiders",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1371570/header.jpg", // Using placeholder as game isn't released yet
+    imgSrc: "https://cdn1.epicgames.com/offer/4bc43145bb8245a5b5cc9ea262ffbe0e/EGS_ArcRaiders_EmbarkStudios_S1_2560x1440-b9147233c8ae2318c7c1b18bfe481ec8", // Official Arc Raiders artwork
     isPiratePun: false,
     coinCost: 45,
     unlocked: false,
