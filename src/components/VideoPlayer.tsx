@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
@@ -10,18 +9,43 @@ interface VideoPlayerProps {
   title: string;
   onError?: () => void;
   onExternalWatch?: () => void;
+  onVideoReady?: () => void; // New callback for when video is ready
 }
 
-const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWatch }: VideoPlayerProps) => {
+const VideoPlayer = ({ 
+  type, 
+  embedUrl, 
+  originalUrl, 
+  title, 
+  onError, 
+  onExternalWatch, 
+  onVideoReady 
+}: VideoPlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
+  const [readyNotified, setReadyNotified] = useState(false);
 
   useEffect(() => {
     console.log('VideoPlayer rendering with:', { type, embedUrl, originalUrl });
     setLoaded(false);
     setError(false);
     setShowFallback(false);
+    setReadyNotified(false);
+    
+    // For YouTube Shorts, show fallback more quickly due to embedding restrictions
+    if (type === 'youtube' && originalUrl.includes('/shorts/')) {
+      const timer = setTimeout(() => {
+        if (!loaded && !error) {
+          console.log('YouTube Short failed to load, showing fallback');
+          setShowFallback(true);
+          setError(true);
+          if (onError) onError();
+        }
+      }, 3000); // 3 second timeout for Shorts
+      
+      return () => clearTimeout(timer);
+    }
     
     // For Twitch content, show fallback more quickly due to embedding restrictions
     if (type === 'twitch' || type === 'twitch-clip') {
@@ -34,12 +58,18 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
       
       return () => clearTimeout(timer);
     }
-  }, [embedUrl, type, loaded]);
+  }, [embedUrl, type, loaded, error, originalUrl, onError]);
 
   const handleLoad = () => {
     console.log('Video content loaded successfully');
     setLoaded(true);
     setShowFallback(false);
+    
+    // Notify parent that video is ready to watch
+    if (!readyNotified && onVideoReady) {
+      setReadyNotified(true);
+      onVideoReady();
+    }
   };
 
   const handleError = () => {
@@ -98,13 +128,16 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
       case 'twitch':
         return 'stream';
       case 'youtube':
-        return 'video';
+        return originalUrl.includes('/shorts/') ? 'Short' : 'video';
       default:
         return 'content';
     }
   };
 
   const getErrorTitle = () => {
+    if (type === 'youtube' && originalUrl.includes('/shorts/')) {
+      return 'YouTube Short Cannot Be Embedded';
+    }
     switch (type) {
       case 'twitch-clip':
         return 'Clip Unavailable for Embedding';
@@ -118,6 +151,9 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
   };
 
   const getErrorMessage = () => {
+    if (type === 'youtube' && originalUrl.includes('/shorts/')) {
+      return "YouTube Shorts cannot be embedded. Watch it directly on YouTube to earn your coins!";
+    }
     switch (type) {
       case 'twitch-clip':
         return "This Twitch clip cannot be embedded due to platform restrictions. Watch it directly on Twitch to earn your coins!";
@@ -130,8 +166,9 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
     }
   };
 
-  // Show fallback for errors or Twitch timeout
-  if (error || ((type === 'twitch' || type === 'twitch-clip') && showFallback && !loaded)) {
+  // Show fallback for errors or timeout
+  if (error || ((type === 'twitch' || type === 'twitch-clip') && showFallback && !loaded) || 
+      (type === 'youtube' && originalUrl.includes('/shorts/') && showFallback)) {
     return (
       <div className="bg-black rounded-lg overflow-hidden aspect-video flex items-center justify-center">
         <div className="text-center p-6">
@@ -162,9 +199,10 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
             <p className="text-gray-400 text-sm">
               Loading {getContentType()}...
             </p>
-            {(type === 'twitch' || type === 'twitch-clip') && (
+            {(type === 'twitch' || type === 'twitch-clip' || 
+              (type === 'youtube' && originalUrl.includes('/shorts/'))) && (
               <p className="text-gray-500 text-xs mt-1">
-                If this takes too long, try watching on Twitch
+                If this takes too long, try watching externally
               </p>
             )}
           </div>
@@ -182,8 +220,9 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
         referrerPolicy="no-referrer-when-downgrade"
       />
       
-      {/* Quick external link button for Twitch content */}
-      {(type === 'twitch' || type === 'twitch-clip') && (
+      {/* Quick external link button for problematic content */}
+      {(type === 'twitch' || type === 'twitch-clip' || 
+        (type === 'youtube' && originalUrl.includes('/shorts/'))) && (
         <div className="absolute top-2 right-2">
           <Button 
             onClick={handleWatchExternal}
@@ -191,7 +230,8 @@ const VideoPlayer = ({ type, embedUrl, originalUrl, title, onError, onExternalWa
             className="bg-purple-600/90 hover:bg-purple-700 text-white flex items-center gap-1 text-xs"
           >
             <ExternalLink size={12} />
-            {type === 'twitch-clip' ? 'Clip' : 'Stream'}
+            {type === 'twitch-clip' ? 'Clip' : 
+             type === 'youtube' && originalUrl.includes('/shorts/') ? 'Short' : 'Stream'}
           </Button>
         </div>
       )}
