@@ -32,6 +32,7 @@ export const useVideoWatcher = () => {
   }, []);
 
   const startWatching = useCallback((video: Video) => {
+    console.log('Starting to watch video:', video.title);
     setActiveVideo(video);
     setWatchProgress(0);
     setIsWatching(true);
@@ -59,41 +60,6 @@ export const useVideoWatcher = () => {
     }
   }, [toast]);
 
-  const startProgressiveTimer = useCallback(() => {
-    if (!activeVideo) return;
-    
-    const duration = activeVideo.duration;
-    const intervalStep = 1;
-    
-    progressInterval.current = setInterval(() => {
-      setWatchProgress(prev => {
-        const newProgress = prev + (intervalStep / duration * 100);
-        return Math.min(newProgress, 100);
-      });
-      
-      setNextRewardIn(prev => {
-        const newTime = prev - intervalStep;
-        
-        if (newTime <= 0) {
-          awardProgressiveCoins();
-          return 60;
-        }
-        
-        return newTime;
-      });
-      
-      setWatchProgress(currentProgress => {
-        if (currentProgress >= 100) {
-          if (progressInterval.current) {
-            clearInterval(progressInterval.current);
-          }
-          return currentProgress;
-        }
-        return currentProgress;
-      });
-    }, intervalStep * 1000);
-  }, [activeVideo]);
-
   const awardProgressiveCoins = useCallback(() => {
     if (!activeVideo) return;
     
@@ -118,12 +84,47 @@ export const useVideoWatcher = () => {
     }, 2000);
   }, [activeVideo, addPirateCoins, toast]);
 
+  const startProgressiveTimer = useCallback(() => {
+    if (!activeVideo) return;
+    
+    console.log('Starting progressive timer for video watching');
+    const duration = activeVideo.duration;
+    const intervalStep = 1; // 1 second intervals
+    
+    progressInterval.current = setInterval(() => {
+      setWatchProgress(prev => {
+        const newProgress = prev + (intervalStep / duration * 100);
+        const finalProgress = Math.min(newProgress, 100);
+        
+        if (finalProgress >= 100 && progressInterval.current) {
+          clearInterval(progressInterval.current);
+          console.log('Video watching completed');
+        }
+        
+        return finalProgress;
+      });
+      
+      setNextRewardIn(prev => {
+        const newTime = prev - intervalStep;
+        
+        if (newTime <= 0) {
+          awardProgressiveCoins();
+          return 60; // Reset to 60 seconds
+        }
+        
+        return newTime;
+      });
+    }, intervalStep * 1000);
+  }, [activeVideo, awardProgressiveCoins]);
+
   const handleVideoReady = useCallback(() => {
+    console.log('Video ready, starting progressive timer');
     setVideoReady(true);
     startProgressiveTimer();
   }, [startProgressiveTimer]);
 
   const handleVideoError = useCallback(() => {
+    console.log('Video error occurred');
     setVideoError(true);
     setVideoReady(false);
     if (progressInterval.current) {
@@ -134,12 +135,14 @@ export const useVideoWatcher = () => {
   const handleExternalWatch = useCallback(() => {
     if (!activeVideo) return;
     
+    console.log('Starting external watch mode');
     setExternalWatchStarted(true);
     setVideoReady(true);
     
     if (activeVideo.platform_type === 'twitch-clip') {
+      // For clips, award coins immediately since they're short
       setTimeout(() => {
-        // Complete video logic would go here
+        awardProgressiveCoins();
       }, 2000);
       
       toast({
@@ -148,6 +151,7 @@ export const useVideoWatcher = () => {
         duration: 3000,
       });
     } else {
+      // For longer content, start progressive rewards
       startProgressiveTimer();
       
       toast({
@@ -156,9 +160,10 @@ export const useVideoWatcher = () => {
         duration: 5000,
       });
     }
-  }, [activeVideo, startProgressiveTimer, toast]);
+  }, [activeVideo, startProgressiveTimer, toast, awardProgressiveCoins]);
 
   const resetState = useCallback(() => {
+    console.log('Resetting video watcher state');
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
     }

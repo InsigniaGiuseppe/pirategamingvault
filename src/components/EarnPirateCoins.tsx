@@ -80,23 +80,17 @@ const EarnPirateCoins = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="minesweeper" className="w-full">
+        <Tabs defaultValue="videos" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="minesweeper" className="flex items-center gap-2">
-              <Bomb size={16} />
-              Minesweeper (Up to 30 coins)
-            </TabsTrigger>
             <TabsTrigger value="videos" className="flex items-center gap-2">
               <Play size={16} />
               Watch Videos (3 coins/min)
             </TabsTrigger>
+            <TabsTrigger value="minesweeper" className="flex items-center gap-2">
+              <Bomb size={16} />
+              Minesweeper (Up to 30 coins)
+            </TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="minesweeper" className="mt-6">
-            <ErrorBoundary>
-              <MinesweeperGame />
-            </ErrorBoundary>
-          </TabsContent>
           
           <TabsContent value="videos" className="mt-6">
             {isWatching ? (
@@ -111,6 +105,12 @@ const EarnPirateCoins = () => {
                 onWatchVideo={handleWatchVideo}
               />
             )}
+          </TabsContent>
+          
+          <TabsContent value="minesweeper" className="mt-6">
+            <ErrorBoundary>
+              <MinesweeperGame />
+            </ErrorBoundary>
           </TabsContent>
         </Tabs>
       </div>

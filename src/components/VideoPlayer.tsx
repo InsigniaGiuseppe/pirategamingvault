@@ -39,7 +39,7 @@ const VideoPlayer = React.memo(({
   const { toast } = useToast();
 
   const MAX_RETRIES = 2;
-  const LOAD_TIMEOUT = 5000; // Reduced from 8s to 5s
+  const LOAD_TIMEOUT = 10000; // Increased to 10 seconds
 
   useEffect(() => {
     const watched = localStorage.getItem(`watched-${embedUrl}`);
@@ -60,10 +60,13 @@ const VideoPlayer = React.memo(({
       clearTimeout(timeoutRef.current);
     }
 
+    // Set a more generous timeout for video loading
     timeoutRef.current = setTimeout(() => {
       if (isLoading && !videoError) {
+        console.log('Video loading timeout reached');
         setLoadTimeout(true);
         setIsLoading(false);
+        // Don't automatically call onError here, let user choose external watch
       }
     }, LOAD_TIMEOUT);
 
@@ -84,8 +87,10 @@ const VideoPlayer = React.memo(({
   }, []);
 
   const handleVideoStart = async () => {
+    console.log('Video started successfully');
     setVideoStarted(true);
     setIsLoading(false);
+    setLoadTimeout(false);
     
     if (user?.id) {
       try {
@@ -104,15 +109,19 @@ const VideoPlayer = React.memo(({
   };
 
   const handleVideoLoad = () => {
+    console.log('Video iframe loaded');
     setIsLoading(false);
     setLoadTimeout(false);
     setVideoError(false);
+    
+    // Give a brief moment for the iframe content to initialize
     setTimeout(() => {
       handleVideoStart();
-    }, 500);
+    }, 1000);
   };
 
   const handleVideoError = () => {
+    console.log('Video loading error occurred');
     setVideoError(true);
     setIsLoading(false);
     
@@ -122,11 +131,13 @@ const VideoPlayer = React.memo(({
   };
 
   const handleExternalWatch = async () => {
+    console.log('Opening external watch');
+    
     if (onExternalWatch) {
       try {
         await onExternalWatch();
       } catch (error) {
-        // Silent fail
+        console.error('External watch error:', error);
       }
     }
     
@@ -151,6 +162,7 @@ const VideoPlayer = React.memo(({
       return;
     }
 
+    console.log(`Retrying video load (attempt ${retryCount + 1})`);
     setVideoError(false);
     setIsLoading(true);
     setLoadTimeout(false);
@@ -163,7 +175,7 @@ const VideoPlayer = React.memo(({
         if (iframeRef.current) {
           iframeRef.current.src = currentSrc;
         }
-      }, 200);
+      }, 500);
     }
   };
 
@@ -188,10 +200,12 @@ const VideoPlayer = React.memo(({
                 <AlertCircle size={48} className="text-gray-400 mx-auto" />
                 <div>
                   <p className="text-gray-600 mb-2 font-medium">
-                    {loadTimeout ? 'Video loading timed out' : 'Video could not be loaded'}
+                    {loadTimeout ? 'Video loading is taking longer than expected' : 'Video could not be loaded'}
                   </p>
                   <p className="text-sm text-gray-500 mb-4">
-                    This might be due to network issues or video restrictions
+                    {loadTimeout 
+                      ? 'The video might still be loading. You can wait or watch externally.' 
+                      : 'This might be due to network issues or video restrictions'}
                   </p>
                   {retryCount > 0 && (
                     <p className="text-xs text-gray-400">
@@ -255,7 +269,7 @@ const VideoPlayer = React.memo(({
             <ExternalLink className="mr-2 h-4 w-4" />
             Watch Externally
           </Button>
-          {retryCount < MAX_RETRIES && (
+          {shouldShowError && retryCount < MAX_RETRIES && (
             <Button variant="secondary" onClick={handleRetry}>
               <RotateCcw className="mr-2 h-4 w-4" />
               Reload ({retryCount}/{MAX_RETRIES})
