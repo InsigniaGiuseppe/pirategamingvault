@@ -17,10 +17,19 @@ import { Badge } from '@/components/ui/badge';
 import { Coins, Calendar, TrendingUp, TrendingDown, Plus, Minus } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface User {
+  id: string;
+  username: string;
+  balance: number;
+  created_at: string;
+  transactions?: any[];
+  source: 'profiles' | 'custom_users';
+}
+
 interface UserDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  user: any;
+  user: User | null;
   onUpdateBalance: (userId: string, amount: number, description: string, action: 'add' | 'remove') => void;
 }
 
@@ -61,6 +70,12 @@ const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetail
           <DialogTitle className="flex items-center gap-2">
             <span>User Details: {user.username}</span>
             <Badge variant="outline">ID: {user.id?.slice(0, 8)}...</Badge>
+            <Badge 
+              variant={user.source === 'profiles' ? 'default' : 'secondary'}
+              className="text-xs"
+            >
+              {user.source === 'profiles' ? 'Auth User' : 'Custom User'}
+            </Badge>
           </DialogTitle>
           <DialogDescription>
             Comprehensive account overview and management tools
@@ -136,6 +151,15 @@ const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetail
                   </div>
                   <div>
                     <span className="font-medium">User ID:</span> {user.id}
+                  </div>
+                  <div>
+                    <span className="font-medium">Account Type:</span> 
+                    <Badge 
+                      variant={user.source === 'profiles' ? 'default' : 'secondary'}
+                      className="ml-2 text-xs"
+                    >
+                      {user.source === 'profiles' ? 'Auth User' : 'Custom User'}
+                    </Badge>
                   </div>
                   <div>
                     <span className="font-medium">Registered:</span> {user.created_at ? format(new Date(user.created_at), 'PPP') : 'Unknown'}

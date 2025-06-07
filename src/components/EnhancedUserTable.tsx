@@ -15,9 +15,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coins, Search, Eye, Plus, Minus, Users, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface User {
+  id: string;
+  username: string;
+  balance: number;
+  created_at: string;
+  transactions?: any[];
+  source: 'profiles' | 'custom_users';
+}
+
 interface EnhancedUserTableProps {
-  users: any[];
-  onViewDetails: (user: any) => void;
+  users: User[];
+  onViewDetails: (user: User) => void;
   onAddCoins: (username: string, userId: string) => void;
   onRemoveCoins: (username: string, userId: string) => void;
   onRefresh: () => void;
@@ -28,13 +37,17 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
 
   const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.id.toLowerCase().includes(searchTerm.toLowerCase())
+    user.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.source.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalUsers = users.length;
   const totalBalance = users.reduce((sum, user) => sum + (user.balance || 0), 0);
   const totalTransactions = users.reduce((sum, user) => sum + (user.transactions?.length || 0), 0);
   const averageBalance = totalUsers > 0 ? Math.round(totalBalance / totalUsers) : 0;
+
+  const profilesCount = users.filter(u => u.source === 'profiles').length;
+  const customUsersCount = users.filter(u => u.source === 'custom_users').length;
 
   return (
     <div className="space-y-6">
@@ -49,6 +62,9 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">{totalUsers}</span>
+            <div className="text-xs text-gray-500 mt-1">
+              Auth: {profilesCount} | Custom: {customUsersCount}
+            </div>
           </CardContent>
         </Card>
 
@@ -100,7 +116,7 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-gray-500" />
             <Input
-              placeholder="Search by username or user ID..."
+              placeholder="Search by username, user ID, or source..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-md"
@@ -115,6 +131,7 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
                 <TableRow>
                   <TableHead>Username</TableHead>
                   <TableHead>User ID</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Balance</TableHead>
                   <TableHead>Transactions</TableHead>
                   <TableHead>Activity</TableHead>
@@ -135,6 +152,14 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
                         <div className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
                           {user.id.slice(0, 8)}...
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={user.source === 'profiles' ? 'default' : 'secondary'}
+                          className="text-xs"
+                        >
+                          {user.source === 'profiles' ? 'Auth' : 'Custom'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -196,7 +221,7 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
                 })}
                 {filteredUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       {searchTerm ? 'No users found matching your search.' : 'No registered users found.'}
                     </TableCell>
                   </TableRow>

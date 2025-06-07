@@ -16,6 +16,7 @@ interface User {
   balance: number;
   created_at: string;
   transactions?: any[];
+  source: 'profiles' | 'custom_users';
 }
 
 const Admin = () => {
@@ -40,13 +41,16 @@ const Admin = () => {
 
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch users",
-          variant: "destructive",
-        });
-        setUsers([]);
-        return;
+      }
+
+      // Get users from custom_users table
+      const { data: customUsers, error: customUsersError } = await supabase
+        .from('custom_users')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (customUsersError) {
+        console.error('Error fetching custom users:', customUsersError);
       }
 
       // Get balances for all users
@@ -59,18 +63,38 @@ const Admin = () => {
       }
 
       // Combine profiles with balances
-      const usersWithBalances: User[] = (profiles || []).map(profile => {
+      const profileUsers: User[] = (profiles || []).map(profile => {
         const userBalance = balances?.find(b => b.user_id === profile.id);
         return {
           id: profile.id,
           username: profile.username,
           balance: userBalance?.balance || 0,
           created_at: profile.created_at,
-          transactions: []
+          transactions: [],
+          source: 'profiles' as const
         };
       });
 
-      setUsers(usersWithBalances);
+      // Combine custom users with balances
+      const customUsersList: User[] = (customUsers || []).map(customUser => {
+        const userBalance = balances?.find(b => b.user_id === customUser.id);
+        return {
+          id: customUser.id,
+          username: customUser.username,
+          balance: userBalance?.balance || 0,
+          created_at: customUser.created_at,
+          transactions: [],
+          source: 'custom_users' as const
+        };
+      });
+
+      // Combine both arrays and sort by created_at
+      const allUsers = [...profileUsers, ...customUsersList].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setUsers(allUsers);
+      console.log('Fetched users:', allUsers.length, 'from profiles:', profileUsers.length, 'from custom_users:', customUsersList.length);
     } catch (error) {
       console.error('Unexpected error fetching users:', error);
       toast({
@@ -207,12 +231,19 @@ const Admin = () => {
   const totalTransactions = users.reduce((sum, user) => sum + (user.transactions?.length || 0), 0);
   const averageBalance = totalUsers > 0 ? Math.round(totalBalance / totalUsers) : 0;
 
+  // Count users by source
+  const profilesCount = users.filter(u => u.source === 'profiles').length;
+  const customUsersCount = users.filter(u => u.source === 'custom_users').length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage users, transactions, and system settings</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Users: {profilesCount} from profiles, {customUsersCount} from custom_users
+          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -230,6 +261,7 @@ const Admin = () => {
               <div className="bg-white rounded-lg shadow-md p-4">
                 <h3 className="text-lg font-semibold text-gray-800">Total Users</h3>
                 <p className="text-2xl font-bold text-blue-600">{totalUsers}</p>
+                <p className="text-xs text-gray-500">Auth: {profilesCount}, Custom: {customUsersCount}</p>
               </div>
               <div className="bg-white rounded-lg shadow-md p-4">
                 <h3 className="text-lg font-semibold text-gray-800">Total Balance</h3>
