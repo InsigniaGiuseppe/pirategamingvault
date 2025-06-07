@@ -18,7 +18,7 @@ interface VideoPlayerProps {
   onVideoReady?: () => void;
 }
 
-const VideoPlayer = ({ 
+const VideoPlayer = React.memo(({ 
   type, 
   embedUrl, 
   originalUrl, 
@@ -34,11 +34,12 @@ const VideoPlayer = ({
   const [loadTimeout, setLoadTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
   const { user } = useSimpleAuth();
   const { toast } = useToast();
 
   const MAX_RETRIES = 2;
-  const LOAD_TIMEOUT = 8000; // 8 seconds
+  const LOAD_TIMEOUT = 5000; // Reduced from 8s to 5s
 
   useEffect(() => {
     const watched = localStorage.getItem(`watched-${embedUrl}`);
@@ -54,15 +55,33 @@ const VideoPlayer = ({
   }, [onVideoReady, isLoading, videoError]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = setTimeout(() => {
       if (isLoading && !videoError) {
         setLoadTimeout(true);
         setIsLoading(false);
       }
     }, LOAD_TIMEOUT);
 
-    return () => clearTimeout(timeout);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [isLoading, videoError, retryCount]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleVideoStart = async () => {
     setVideoStarted(true);
@@ -246,6 +265,8 @@ const VideoPlayer = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+VideoPlayer.displayName = 'VideoPlayer';
 
 export default VideoPlayer;

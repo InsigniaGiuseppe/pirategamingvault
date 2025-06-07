@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { extractYouTubeVideoId, processVideoUrl } from '@/utils/videoProcessor';
 
@@ -94,27 +95,21 @@ const calculateReward = (duration: number, isShort: boolean = false): number => 
 };
 
 export const fetchYouTubeVideoData = async (videoIds: string[]): Promise<YouTubeVideoData[]> => {
-  console.log('🎬 Fetching YouTube data for', videoIds.length, 'videos');
-  
   try {
     const { data, error } = await supabase.functions.invoke('youtube-api', {
       body: { action: 'getVideoDetails', videoIds }
     });
 
     if (error) {
-      console.error('Supabase function error:', error);
       throw error;
     }
     
     if (data.error) {
-      console.error('YouTube API error:', data.error);
       throw new Error(data.error);
     }
     
-    console.log('✅ Successfully fetched YouTube data for', data.items?.length || 0, 'videos');
     return data.items || [];
   } catch (error) {
-    console.error('Error fetching YouTube video data:', error);
     throw error;
   }
 };
@@ -124,8 +119,6 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
   const urlMap: { [key: string]: string } = {};
   const shortsMap: { [key: string]: boolean } = {};
   
-  console.log('🔍 Processing', urls.length, 'URLs...');
-  
   // Extract video IDs and create mapping
   urls.forEach(url => {
     const videoId = extractYouTubeVideoId(url);
@@ -133,9 +126,6 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
       videoIds.push(videoId);
       urlMap[videoId] = url;
       shortsMap[videoId] = url.includes('/shorts/');
-      console.log(`📹 ${shortsMap[videoId] ? 'Short' : 'Video'} detected:`, videoId);
-    } else {
-      console.warn('❌ Could not extract video ID from URL:', url);
     }
   });
 
@@ -143,27 +133,21 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
     throw new Error('No valid YouTube video URLs found');
   }
 
-  console.log('🎯 Processing', videoIds.length, 'valid video IDs');
-
   // Process videos in smaller batches to prevent timeouts
   const batchSize = 10;
   const allVideoData: YouTubeVideoData[] = [];
   
   for (let i = 0; i < videoIds.length; i += batchSize) {
     const batch = videoIds.slice(i, i + batchSize);
-    console.log(`📦 Processing batch ${Math.floor(i / batchSize) + 1}:`, batch.length, 'videos');
     
     try {
       const batchData = await fetchYouTubeVideoData(batch);
       allVideoData.push(...batchData);
-      console.log(`✅ Batch ${Math.floor(i / batchSize) + 1} completed`);
     } catch (error) {
-      console.error(`❌ Batch ${Math.floor(i / batchSize) + 1} failed:`, error);
       // Continue with other batches instead of failing completely
+      continue;
     }
   }
-  
-  console.log('🎬 Processing', allVideoData.length, 'videos from YouTube API');
   
   return allVideoData.map(video => {
     const duration = parseDuration(video.contentDetails.duration);
@@ -171,8 +155,6 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
     const thumbnail = video.snippet.thumbnails.maxres?.url || 
                      video.snippet.thumbnails.high.url || 
                      video.snippet.thumbnails.medium.url;
-    
-    console.log(`📋 ${isShort ? 'Short' : 'Video'} "${video.snippet.title}": ${formatDuration(duration)}, ${calculateReward(duration, isShort)} coins`);
     
     return {
       video_id: video.id,
@@ -202,23 +184,29 @@ export const saveVideos = async (videos: VideoInsert[]): Promise<Video[]> => {
 
   if (error) throw error;
   
-  // Type assertion since we know the data matches our Video interface
   return (data || []) as Video[];
 };
 
 export const getVideos = async (includeInactive = false): Promise<Video[]> => {
-  let query = supabase.from('videos').select('*').order('created_at', { ascending: false });
-  
-  if (!includeInactive) {
-    query = query.eq('is_active', true);
+  try {
+    let query = supabase.from('videos').select('*').order('created_at', { ascending: false });
+    
+    if (!includeInactive) {
+      query = query.eq('is_active', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      // Return empty array on error instead of throwing
+      return [];
+    }
+    
+    return (data || []) as Video[];
+  } catch (error) {
+    // Return empty array on any error
+    return [];
   }
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-  
-  // Type assertion since we know the data matches our Video interface
-  return (data || []) as Video[];
 };
 
 export const updateVideo = async (id: string, updates: Partial<Video>): Promise<Video> => {
@@ -231,7 +219,6 @@ export const updateVideo = async (id: string, updates: Partial<Video>): Promise<
 
   if (error) throw error;
   
-  // Type assertion since we know the data matches our Video interface
   return data as Video;
 };
 
@@ -250,17 +237,17 @@ export const trackVideoAnalytics = async (
   userId?: string,
   watchDuration?: number
 ): Promise<void> => {
-  const { error } = await supabase
-    .from('video_analytics')
-    .insert({
-      video_id: videoId,
-      user_id: userId,
-      action,
-      watch_duration: watchDuration,
-      session_id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    });
-
-  if (error) {
-    console.error('Failed to track video analytics:', error);
+  try {
+    await supabase
+      .from('video_analytics')
+      .insert({
+        video_id: videoId,
+        user_id: userId,
+        action,
+        watch_duration: watchDuration,
+        session_id: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      });
+  } catch (error) {
+    // Silent fail for analytics
   }
 };

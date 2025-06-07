@@ -25,23 +25,36 @@ const EarnPirateCoins = () => {
   const [showCoinAnimation, setShowCoinAnimation] = useState<boolean>(false);
   const { addPirateCoins, user } = useSimpleAuth();
   const { toast } = useToast();
-  const progressInterval = useRef<number | null>(null);
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
+  const coinAnimationTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadVideos();
     loadWatchedVideos();
   }, [user]);
 
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+      if (coinAnimationTimeout.current) {
+        clearTimeout(coinAnimationTimeout.current);
+      }
+    };
+  }, []);
+
   const loadVideos = async () => {
     try {
       const data = await getVideos(false);
       setVideos(data);
     } catch (error) {
-      console.error('Failed to load videos:', error);
+      setVideos([]); // Fallback to empty array
       toast({
-        title: "Error",
-        description: "Failed to load videos",
-        variant: "destructive",
+        title: "Notice",
+        description: "Videos are temporarily unavailable",
+        variant: "default",
       });
     } finally {
       setLoading(false);
@@ -56,15 +69,14 @@ const EarnPirateCoins = () => {
           const watchedIds = JSON.parse(watchedVideosStr);
           setWatchedVideos(new Set(watchedIds));
         } catch (e) {
-          console.error('Error parsing watched videos', e);
+          // Silent fail and reset to empty set
+          setWatchedVideos(new Set());
         }
       }
     }
   };
 
   const handleWatchVideo = async (video: Video) => {
-    console.log('Starting to watch video:', video);
-    
     setActiveVideo(video);
     setWatchProgress(0);
     setIsWatching(true);
@@ -75,10 +87,15 @@ const EarnPirateCoins = () => {
     setNextRewardIn(60);
     setShowCoinAnimation(false);
     
-    await trackVideoAnalytics(video.id, 'view', user?.id);
+    try {
+      await trackVideoAnalytics(video.id, 'view', user?.id);
+    } catch (error) {
+      // Silent fail for analytics
+    }
     
+    // Clear any existing intervals
     if (progressInterval.current) {
-      window.clearInterval(progressInterval.current);
+      clearInterval(progressInterval.current);
     }
     
     if (video.platform_type === 'twitch' || video.platform_type === 'twitch-clip') {
@@ -95,7 +112,6 @@ const EarnPirateCoins = () => {
   };
 
   const handleVideoReady = () => {
-    console.log('Video is ready, starting progressive timer');
     setVideoReady(true);
     startProgressiveWatchTimer();
   };
@@ -106,9 +122,7 @@ const EarnPirateCoins = () => {
     const duration = activeVideo.duration;
     const intervalStep = 1;
     
-    console.log('Starting progressive timer for', duration, 'seconds');
-    
-    progressInterval.current = window.setInterval(() => {
+    progressInterval.current = setInterval(() => {
       setWatchProgress(prev => {
         const newProgress = prev + (intervalStep / duration * 100);
         return Math.min(newProgress, 100);
@@ -127,12 +141,14 @@ const EarnPirateCoins = () => {
       
       setWatchProgress(currentProgress => {
         if (currentProgress >= 100) {
-          if (progressInterval.current) window.clearInterval(progressInterval.current);
+          if (progressInterval.current) {
+            clearInterval(progressInterval.current);
+          }
           completeVideo(activeVideo, duration);
         }
         return currentProgress;
       });
-    }, intervalStep * 1000) as unknown as number;
+    }, intervalStep * 1000);
   };
 
   const awardProgressiveCoins = () => {
@@ -150,22 +166,27 @@ const EarnPirateCoins = () => {
       duration: 2000,
     });
     
-    setTimeout(() => setShowCoinAnimation(false), 2000);
+    // Clear existing timeout before setting new one
+    if (coinAnimationTimeout.current) {
+      clearTimeout(coinAnimationTimeout.current);
+    }
+    
+    coinAnimationTimeout.current = setTimeout(() => {
+      setShowCoinAnimation(false);
+    }, 2000);
   };
 
   const handleVideoError = () => {
-    console.log('Video error occurred for:', activeVideo);
     setVideoError(true);
     setVideoReady(false);
     if (progressInterval.current) {
-      window.clearInterval(progressInterval.current);
+      clearInterval(progressInterval.current);
     }
   };
 
   const handleExternalWatch = async () => {
     if (!activeVideo) return;
     
-    console.log('External watch started for:', activeVideo.platform_type, activeVideo.video_id);
     setExternalWatchStarted(true);
     setVideoReady(true);
     
@@ -208,7 +229,11 @@ const EarnPirateCoins = () => {
         localStorage.setItem(`${user.username}_watchedVideos`, JSON.stringify(watchedArray));
       }
       
-      await trackVideoAnalytics(video.id, 'complete', user?.id, watchDuration);
+      try {
+        await trackVideoAnalytics(video.id, 'complete', user?.id, watchDuration);
+      } catch (error) {
+        // Silent fail for analytics
+      }
       
       const totalEarned = coinsEarnedThisSession + (remainingMinutes > 0 ? remainingMinutes * 3 : 0);
       toast({
@@ -218,14 +243,39 @@ const EarnPirateCoins = () => {
       });
       
       setTimeout(() => {
-        setActiveVideo(null);
-        setIsWatching(false);
-        setVideoError(false);
-        setExternalWatchStarted(false);
-        setVideoReady(false);
-        setCoinsEarnedThisSession(0);
+        resetVideoState();
       }, 2000);
     }
+  };
+
+  const resetVideoState = () => {
+    // Clear all intervals and timeouts
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+    }
+    if (coinAnimationTimeout.current) {
+      clearTimeout(coinAnimationTimeout.current);
+    }
+    
+    setActiveVideo(null);
+    setIsWatching(false);
+    setVideoError(false);
+    setExternalWatchStarted(false);
+    setVideoReady(false);
+    setCoinsEarnedThisSession(0);
+    setWatchProgress(0);
+    setNextRewardIn(60);
+    setShowCoinAnimation(false);
+  };
+
+  const handleCancelWatching = () => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+    }
+    if (coinAnimationTimeout.current) {
+      clearTimeout(coinAnimationTimeout.current);
+    }
+    resetVideoState();
   };
 
   const getVideoIcon = (type: string) => {
@@ -265,7 +315,7 @@ const EarnPirateCoins = () => {
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <div className="w-10 h-10 border-4 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-gray-600">Loading videos...</p>
+            <p className="text-gray-600">Loading activities...</p>
           </div>
         </div>
       </div>
@@ -381,7 +431,7 @@ const EarnPirateCoins = () => {
                   </div>
                 ) : (
                   <Button 
-                    onClick={() => setActiveVideo(null)}
+                    onClick={resetVideoState}
                     className="bg-white text-black border-2 border-black hover:bg-black hover:text-white flex items-center gap-2"
                   >
                     <CheckCircle size={16} />
@@ -393,17 +443,7 @@ const EarnPirateCoins = () => {
                   <div className="flex gap-2">
                     <Button 
                       variant="outline" 
-                      onClick={() => {
-                        if (progressInterval.current) {
-                          window.clearInterval(progressInterval.current);
-                        }
-                        setActiveVideo(null);
-                        setIsWatching(false);
-                        setWatchProgress(0);
-                        setVideoError(false);
-                        setVideoReady(false);
-                        setCoinsEarnedThisSession(0);
-                      }}
+                      onClick={handleCancelWatching}
                       className="border-gray-300 flex-1"
                     >
                       Cancel Watching
@@ -427,7 +467,7 @@ const EarnPirateCoins = () => {
               {videos.length === 0 ? (
                 <div className="col-span-full text-center py-8 text-gray-500">
                   <p>No videos available at the moment.</p>
-                  <p className="text-sm mt-1">Normal YouTube videos will be added soon for better embedding!</p>
+                  <p className="text-sm mt-1">Videos will be added soon!</p>
                 </div>
               ) : (
                 videos.map((video) => (
