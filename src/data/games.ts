@@ -48,11 +48,11 @@ export const games: Game[] = [
     category: "rpg"
   },
 
-  // FPS Games - Using reliable placeholders for games without Steam pages
+  // FPS Games - Using reliable Steam images where available
   {
     id: "valorant",
     title: "Valorant",
-    imgSrc: "https://picsum.photos/seed/valorant-fps-game/600/800",
+    imgSrc: "https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c8bfe84d31ef9dc/6364b56b84a1b1083e7c3a84/VALORANT_YR3_Announcement_Banner_Article.jpg",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
@@ -61,7 +61,7 @@ export const games: Game[] = [
   {
     id: "call-of-duty-warzone",
     title: "Call of Duty: Warzone",
-    imgSrc: "https://picsum.photos/seed/cod-warzone-battle/600/800",
+    imgSrc: "https://www.callofduty.com/content/dam/atvi/callofduty/cod-touchui/global/features/meta-share-mw2.jpg",
     isPiratePun: false,
     coinCost: 20,
     unlocked: false,
@@ -79,7 +79,7 @@ export const games: Game[] = [
   {
     id: "overwatch-2",
     title: "Overwatch 2",
-    imgSrc: "https://picsum.photos/seed/overwatch-hero-shooter/600/800",
+    imgSrc: "https://blz-contentstack-images.akamaized.net/v3/assets/blt9c12f249ac15c7ec/blt9ebab0efdc4aa4a7/6512c6cce3e9b96b3b38f8b0/ow2_keyart.jpg",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
@@ -90,7 +90,7 @@ export const games: Game[] = [
   {
     id: "league-of-legends",
     title: "League of Legends",
-    imgSrc: "https://picsum.photos/seed/league-legends-moba/600/800",
+    imgSrc: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/e02afea7dd4b2d28f1b1d2c4ed91b6e3a9642aa0-1920x1080.jpg",
     isPiratePun: false,
     coinCost: 20,
     unlocked: false,
@@ -130,7 +130,7 @@ export const games: Game[] = [
   {
     id: "fortnite",
     title: "Fortnite",
-    imgSrc: "https://picsum.photos/seed/fortnite-battle-royale/600/800",
+    imgSrc: "https://cdn2.unrealengine.com/fortnite-chapter-5-season-1-1920x1080-d35912cc2dc4.jpg",
     isPiratePun: false,
     coinCost: 15,
     unlocked: false,
@@ -150,7 +150,7 @@ export const games: Game[] = [
   {
     id: "world-of-warcraft",
     title: "World of Warcraft",
-    imgSrc: "https://picsum.photos/seed/wow-mmorpg-classic/600/800",
+    imgSrc: "https://bnetcmsus-a.akamaihd.net/cms/page_media/w4/W4DKWRNPCXL81665783006021.jpg",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
@@ -190,7 +190,7 @@ export const games: Game[] = [
   {
     id: "fifa-24",
     title: "EA Sports FC 24",
-    imgSrc: "https://picsum.photos/seed/fifa-football-sports/600/800",
+    imgSrc: "https://media.contentapi.ea.com/content/dam/ea/easportsfc/fc-24/common/fc24-featured-image-16x9.jpg.adapt.crop16x9.1023w.jpg",
     isPiratePun: false,
     coinCost: 35,
     unlocked: false,
@@ -250,7 +250,7 @@ export const games: Game[] = [
   {
     id: "forza-horizon-5",
     title: "Forza Horizon 5",
-    imgSrc: "https://picsum.photos/seed/forza-racing-cars/600/800",
+    imgSrc: "https://compass-ssl.xbox.com/assets/73/2a/732a850c-6c8d-4fad-b3db-6cd5e108b7b5.jpg?n=Forza-Horizon-5_GLP-Page-Hero-1084_1920x1080.jpg",
     isPiratePun: false,
     coinCost: 35,
     unlocked: false,

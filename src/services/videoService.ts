@@ -189,7 +189,12 @@ export const saveVideos = async (videos: VideoInsert[]): Promise<Video[]> => {
 
 export const getVideos = async (includeInactive = false): Promise<Video[]> => {
   try {
-    let query = supabase.from('videos').select('*').order('created_at', { ascending: false });
+    console.log('Fetching videos from database...');
+    
+    let query = supabase
+      .from('videos')
+      .select('*')
+      .order('created_at', { ascending: false });
     
     if (!includeInactive) {
       query = query.eq('is_active', true);
@@ -198,13 +203,14 @@ export const getVideos = async (includeInactive = false): Promise<Video[]> => {
     const { data, error } = await query;
 
     if (error) {
-      // Return empty array on error instead of throwing
+      console.error('Error fetching videos:', error);
       return [];
     }
     
+    console.log('Videos fetched successfully:', data?.length || 0);
     return (data || []) as Video[];
   } catch (error) {
-    // Return empty array on any error
+    console.error('Unexpected error fetching videos:', error);
     return [];
   }
 };
