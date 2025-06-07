@@ -211,6 +211,107 @@ export type Database = {
           },
         ]
       }
+      video_analytics: {
+        Row: {
+          action: string
+          id: string
+          session_id: string | null
+          timestamp: string | null
+          user_id: string | null
+          video_id: string | null
+          watch_duration: number | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+          video_id?: string | null
+          watch_duration?: number | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          session_id?: string | null
+          timestamp?: string | null
+          user_id?: string | null
+          video_id?: string | null
+          watch_duration?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_analytics_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      videos: {
+        Row: {
+          category: string | null
+          completion_count: number | null
+          created_at: string | null
+          description: string | null
+          duration: number
+          duration_display: string
+          embed_url: string
+          id: string
+          is_active: boolean
+          original_url: string
+          platform_type: string
+          reward_amount: number
+          tags: string[] | null
+          thumbnail_url: string
+          title: string
+          updated_at: string | null
+          video_id: string
+          view_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          completion_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration: number
+          duration_display: string
+          embed_url: string
+          id?: string
+          is_active?: boolean
+          original_url: string
+          platform_type: string
+          reward_amount?: number
+          tags?: string[] | null
+          thumbnail_url: string
+          title: string
+          updated_at?: string | null
+          video_id: string
+          view_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          completion_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number
+          duration_display?: string
+          embed_url?: string
+          id?: string
+          is_active?: boolean
+          original_url?: string
+          platform_type?: string
+          reward_amount?: number
+          tags?: string[] | null
+          thumbnail_url?: string
+          title?: string
+          updated_at?: string | null
+          video_id?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
