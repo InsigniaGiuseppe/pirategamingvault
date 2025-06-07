@@ -33,21 +33,53 @@ const Admin = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Get users from profiles table
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching users:', error);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
         toast({
           title: "Error",
           description: "Failed to fetch users",
           variant: "destructive",
         });
-      } else {
-        setUsers(data || []);
+        setUsers([]);
+        return;
       }
+
+      // Get balances for all users
+      const { data: balances, error: balanceError } = await supabase
+        .from('user_balance')
+        .select('*');
+
+      if (balanceError) {
+        console.error('Error fetching balances:', balanceError);
+      }
+
+      // Combine profiles with balances
+      const usersWithBalances: User[] = (profiles || []).map(profile => {
+        const userBalance = balances?.find(b => b.user_id === profile.id);
+        return {
+          id: profile.id,
+          username: profile.username,
+          balance: userBalance?.balance || 0,
+          created_at: profile.created_at,
+          transactions: []
+        };
+      });
+
+      setUsers(usersWithBalances);
+    } catch (error) {
+      console.error('Unexpected error fetching users:', error);
+      toast({
+        title: "Error",
+        description: "Unexpected error fetching users",
+        variant: "destructive",
+      });
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -65,7 +97,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
-      });
+      } as any);
 
       if (error) {
         console.error('Error adding coins:', error);
@@ -103,7 +135,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
-      });
+      } as any);
 
       if (error) {
         console.error('Error removing coins:', error);
@@ -136,7 +168,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
-      });
+      } as any);
 
       if (error) {
         console.error(`Error ${action === 'add' ? 'adding' : 'removing'} coins:`, error);
