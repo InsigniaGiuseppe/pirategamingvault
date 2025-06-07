@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
@@ -97,7 +96,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
-      } as any);
+      });
 
       if (error) {
         console.error('Error adding coins:', error);
@@ -135,7 +134,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
-      } as any);
+      });
 
       if (error) {
         console.error('Error removing coins:', error);
@@ -168,7 +167,7 @@ const Admin = () => {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
-      } as any);
+      });
 
       if (error) {
         console.error(`Error ${action === 'add' ? 'adding' : 'removing'} coins:`, error);
