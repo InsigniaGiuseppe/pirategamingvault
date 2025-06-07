@@ -30,7 +30,7 @@ const GameTile = ({ game }: GameTileProps) => {
   const imageRef = useRef<HTMLImageElement>(null);
   
   const canAfford = pirateCoins >= game.coinCost;
-  const maxRetries = 2;
+  const maxRetries = 1; // Reduced retries for better performance
   
   const handleUnlock = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,19 +80,20 @@ const GameTile = ({ game }: GameTileProps) => {
   const handleImageLoad = () => {
     setIsImageLoading(false);
     setImageError(false);
-    setRetryCount(0);
   };
 
   const handleImageError = () => {
+    console.log(`Image failed to load for ${game.title}, retry count: ${retryCount}`);
     if (retryCount < maxRetries) {
-      // Retry with exponential backoff
+      setRetryCount(prev => prev + 1);
+      // Try again with a small delay
       setTimeout(() => {
-        setRetryCount(prev => prev + 1);
         if (imageRef.current) {
-          imageRef.current.src = imageRef.current.src + '?retry=' + Date.now();
+          imageRef.current.src = getImageSource(game);
         }
-      }, Math.pow(2, retryCount) * 1000);
+      }, 1000);
     } else {
+      console.log(`Max retries reached for ${game.title}, using fallback`);
       setImageError(true);
       setIsImageLoading(false);
     }
@@ -100,7 +101,9 @@ const GameTile = ({ game }: GameTileProps) => {
 
   const getImageSource = (game: Game) => {
     if (imageError || retryCount >= maxRetries) {
-      return `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/\s+/g, '-'))}/600/800`;
+      // Use consistent placeholder based on game title
+      const seed = encodeURIComponent(game.title.toLowerCase().replace(/[^a-z0-9]/g, '-'));
+      return `https://picsum.photos/seed/${seed}/600/800`;
     }
     return game.imgSrc;
   };
@@ -140,7 +143,7 @@ const GameTile = ({ game }: GameTileProps) => {
               <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="relative h-full">
                   {isImageLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
                       <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}

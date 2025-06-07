@@ -5,7 +5,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-1",
     title: "Dune: Awakening",
-    imgSrc: "https://picsum.photos/seed/dune-awakening/600/800", // Using reliable placeholder
+    imgSrc: "https://picsum.photos/seed/dune-awakening-mmo/600/800", // Reliable placeholder
     isPiratePun: false,
     coinCost: 50,
     unlocked: false,
@@ -14,7 +14,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-2", 
     title: "Arc Raiders",
-    imgSrc: "https://picsum.photos/seed/arc-raiders/600/800", // Using reliable placeholder
+    imgSrc: "https://picsum.photos/seed/arc-raiders-game/600/800", // Reliable placeholder
     isPiratePun: false,
     coinCost: 45,
     unlocked: false,
