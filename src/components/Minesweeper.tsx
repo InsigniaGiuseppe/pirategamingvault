@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { activityLogger } from '@/services/activityLoggingService';
-import { Bomb, Flag, RotateCcw, Trophy, Clock, Zap } from 'lucide-react';
+import { Bomb, Flag, RotateCcw, Trophy, Clock, Zap, Coins } from 'lucide-react';
 
 interface Cell {
   isMine: boolean;
@@ -121,7 +122,7 @@ const Minesweeper = () => {
     }
 
     checkWin();
-  }, [board, gameState, endGame, checkWin]);
+  }, [board, gameState]);
 
   const flagCell = (row: number, col: number) => {
     if (gameState !== 'playing' || board[row][col].isRevealed) {
@@ -146,7 +147,7 @@ const Minesweeper = () => {
     if (unrevealedCount === 0) {
       endGame(true);
     }
-  }, [board, endGame]);
+  }, [board]);
 
   const resetGame = () => {
     setBoard(initializeBoard(difficulty));
@@ -226,38 +227,36 @@ const Minesweeper = () => {
             <span>Time: {Math.floor((Date.now() - startTime) / 1000)}s</span>
           </div>
         </div>
-        <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${difficultySettings[difficulty].cols, 24px)` }}>
+        <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${difficultySettings[difficulty].cols}, 24px)` }}>
           {board.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex">
-              {row.map((cell, colIndex) => (
-                <Button
-                  key={colIndex}
-                  className={`w-6 h-6 p-0 flex items-center justify-center text-sm font-medium ${cell.isRevealed
-                    ? cell.isMine
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                    : 'bg-blue-200 hover:bg-blue-300'
-                    }`}
-                  variant="secondary"
-                  onClick={() => revealCell(rowIndex, colIndex)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    flagCell(rowIndex, colIndex);
-                  }}
-                  disabled={gameState !== 'playing'}
-                >
-                  {cell.isRevealed ? (
-                    cell.isMine ? (
-                      <Bomb className="h-4 w-4" />
-                    ) : cell.adjacentMines > 0 ? (
-                      cell.adjacentMines
-                    ) : null
-                  ) : cell.isFlagged ? (
-                    <Flag className="h-4 w-4 text-red-600" />
-                  ) : null}
-                </Button>
-              ))}
-            </div>
+            row.map((cell, colIndex) => (
+              <Button
+                key={`${rowIndex}-${colIndex}`}
+                className={`w-6 h-6 p-0 flex items-center justify-center text-sm font-medium ${cell.isRevealed
+                  ? cell.isMine
+                    ? 'bg-red-500 text-white'
+                    : 'bg-gray-100 text-gray-900'
+                  : 'bg-blue-200 hover:bg-blue-300'
+                  }`}
+                variant="secondary"
+                onClick={() => revealCell(rowIndex, colIndex)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  flagCell(rowIndex, colIndex);
+                }}
+                disabled={gameState !== 'playing'}
+              >
+                {cell.isRevealed ? (
+                  cell.isMine ? (
+                    <Bomb className="h-4 w-4" />
+                  ) : cell.adjacentMines > 0 ? (
+                    cell.adjacentMines
+                  ) : null
+                ) : cell.isFlagged ? (
+                  <Flag className="h-4 w-4 text-red-600" />
+                ) : null}
+              </Button>
+            ))
           ))}
         </div>
         <div className="flex items-center justify-between">
