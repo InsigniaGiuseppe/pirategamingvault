@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getVideos, trackVideoAnalytics, Video } from '@/services/videoService';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +9,6 @@ export const useVideoManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [watchedVideos, setWatchedVideos] = useState<Set<string>>(new Set());
-  const loadingTimeout = useRef<NodeJS.Timeout | null>(null);
   const { user } = useSimpleAuth();
   const { toast } = useToast();
 
@@ -18,31 +17,14 @@ export const useVideoManagement = () => {
     loadWatchedVideos();
   }, [user]);
 
-  useEffect(() => {
-    return () => {
-      if (loadingTimeout.current) {
-        clearTimeout(loadingTimeout.current);
-      }
-    };
-  }, []);
-
   const loadVideos = useCallback(async () => {
     try {
+      console.log('Loading videos from database...');
       setLoading(true);
       setError(null);
       
-      loadingTimeout.current = setTimeout(() => {
-        if (loading) {
-          setError('Loading timeout - videos may be temporarily unavailable');
-          setLoading(false);
-        }
-      }, 10000);
-
       const data = await getVideos(false);
-      
-      if (loadingTimeout.current) {
-        clearTimeout(loadingTimeout.current);
-      }
+      console.log('Videos loaded successfully:', data);
       
       setVideos(data);
       setLoading(false);
@@ -55,12 +37,8 @@ export const useVideoManagement = () => {
       setError('Failed to load videos. Please try again.');
       setVideos([]);
       setLoading(false);
-      
-      if (loadingTimeout.current) {
-        clearTimeout(loadingTimeout.current);
-      }
     }
-  }, [loading]);
+  }, []);
 
   const loadWatchedVideos = useCallback(() => {
     if (user) {
@@ -99,16 +77,12 @@ export const useVideoManagement = () => {
     }
   }, [user?.id]);
 
-  const retryLoad = useCallback(() => {
-    loadVideos();
-  }, [loadVideos]);
-
   return {
     videos,
     loading,
     error,
     watchedVideos,
-    loadVideos: retryLoad,
+    loadVideos,
     markVideoWatched,
     trackAnalytics
   };

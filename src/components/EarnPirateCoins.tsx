@@ -5,19 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bomb, Play, AlertCircle, RefreshCw } from 'lucide-react';
 import ErrorBoundary from './ErrorBoundary';
-import VideoWatcher from './VideoWatcher';
+import SimpleVideoWatcher from './SimpleVideoWatcher';
 import VideoGrid from './VideoGrid';
 import MinesweeperGame from './MinesweeperGame';
 import { useVideoManagement } from '@/hooks/useVideoManagement';
-import { useVideoWatcher } from '@/hooks/useVideoWatcher';
-import { Video } from '@/services/videoService';
 
 const EarnPirateCoins = () => {
   const { videos, loading, error, watchedVideos, loadVideos, markVideoWatched, trackAnalytics } = useVideoManagement();
-  const { startWatching, isWatching, activeVideo } = useVideoWatcher();
+  const [watchingVideo, setWatchingVideo] = useState(null);
 
-  const handleWatchVideo = async (video: Video) => {
-    startWatching(video);
+  const handleWatchVideo = async (video) => {
+    console.log('Starting to watch video:', video.title);
+    setWatchingVideo(video);
     try {
       await trackAnalytics(video.id, 'view');
     } catch (error) {
@@ -25,14 +24,15 @@ const EarnPirateCoins = () => {
     }
   };
 
-  const handleWatchComplete = (coinsEarned: number) => {
-    if (activeVideo) {
-      markVideoWatched(activeVideo.id);
+  const handleWatchComplete = (coinsEarned) => {
+    if (watchingVideo) {
+      markVideoWatched(watchingVideo.id);
     }
+    setWatchingVideo(null);
   };
 
   const handleCancelWatching = () => {
-    // Reset handled by VideoWatcher component
+    setWatchingVideo(null);
   };
 
   if (loading) {
@@ -93,8 +93,9 @@ const EarnPirateCoins = () => {
           </TabsList>
           
           <TabsContent value="videos" className="mt-6">
-            {isWatching ? (
-              <VideoWatcher 
+            {watchingVideo ? (
+              <SimpleVideoWatcher 
+                video={watchingVideo}
                 onCancel={handleCancelWatching}
                 onComplete={handleWatchComplete}
               />

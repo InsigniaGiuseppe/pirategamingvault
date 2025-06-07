@@ -98,9 +98,26 @@ const Admin = () => {
   };
 
   const validateUserId = (userId: string): boolean => {
-    // Check if it's a valid UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(userId);
+  };
+
+  const executeRPCWithTimeout = async (rpcFunction: string, params: any, timeoutMs: number = 30000) => {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`Operation timed out after ${timeoutMs/1000} seconds`));
+      }, timeoutMs);
+
+      supabase.rpc(rpcFunction, params)
+        .then(result => {
+          clearTimeout(timeoutId);
+          resolve(result);
+        })
+        .catch(error => {
+          clearTimeout(timeoutId);
+          reject(error);
+        });
+    });
   };
 
   const handleAddCoins = async (username: string, userId: string) => {
@@ -131,14 +148,15 @@ const Admin = () => {
     setOperationLoading(operationId);
 
     try {
-      console.log('Calling add_coins RPC with:', { user_id: userId, amount, description: `Admin added ${amount} coins` });
+      console.log('Calling add_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin added ${amount} coins` });
       
-      const { data, error } = await supabase.rpc('add_coins', {
+      const result = await executeRPCWithTimeout('add_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
-      });
+      }, 30000);
 
+      const { data, error } = result as any;
       console.log('RPC response:', { data, error });
 
       if (error) {
@@ -163,16 +181,24 @@ const Admin = () => {
         description: `Successfully added ${amount} coins to ${username}'s balance`,
       });
       
-      // Refresh data to show updated balance
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error('Unexpected error in handleAddCoins:', error);
-      toast({
-        title: "Error",
-        description: `Failed to add coins: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
+      console.error('Error in handleAddCoins:', error);
+      
+      if (error.message.includes('timed out')) {
+        toast({
+          title: "Operation Timeout",
+          description: `The operation took too long to complete. Please check if the coins were added and try again if needed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to add coins: ${error.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setOperationLoading(null);
     }
@@ -206,14 +232,15 @@ const Admin = () => {
     setOperationLoading(operationId);
 
     try {
-      console.log('Calling remove_coins RPC with:', { user_id: userId, amount, description: `Admin removed ${amount} coins` });
+      console.log('Calling remove_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin removed ${amount} coins` });
       
-      const { data, error } = await supabase.rpc('remove_coins', {
+      const result = await executeRPCWithTimeout('remove_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
-      });
+      }, 30000);
 
+      const { data, error } = result as any;
       console.log('RPC response:', { data, error });
 
       if (error) {
@@ -238,16 +265,24 @@ const Admin = () => {
         description: `Successfully removed ${amount} coins from ${username}'s balance`,
       });
       
-      // Refresh data to show updated balance
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error('Unexpected error in handleRemoveCoins:', error);
-      toast({
-        title: "Error",
-        description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
+      console.error('Error in handleRemoveCoins:', error);
+      
+      if (error.message.includes('timed out')) {
+        toast({
+          title: "Operation Timeout",
+          description: `The operation took too long to complete. Please check if the coins were removed and try again if needed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setOperationLoading(null);
     }
@@ -289,18 +324,19 @@ const Admin = () => {
 
     try {
       const rpcFunctionName = action === 'add' ? 'add_coins' : 'remove_coins';
-      console.log(`Calling ${rpcFunctionName} RPC with:`, {
+      console.log(`Calling ${rpcFunctionName} RPC with timeout protection:`, {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
       });
       
-      const { data, error } = await supabase.rpc(rpcFunctionName, {
+      const result = await executeRPCWithTimeout(rpcFunctionName, {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
-      });
+      }, 30000);
 
+      const { data, error } = result as any;
       console.log('RPC response:', { data, error });
 
       if (error) {
@@ -329,12 +365,21 @@ const Admin = () => {
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error(`Unexpected error in handleUpdateBalance (${action}):`, error);
-      toast({
-        title: "Error",
-        description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
-        variant: "destructive",
-      });
+      console.error(`Error in handleUpdateBalance (${action}):`, error);
+      
+      if (error.message.includes('timed out')) {
+        toast({
+          title: "Operation Timeout",
+          description: `The operation took too long to complete. Please check if the coins were ${action === 'add' ? 'added' : 'removed'} and try again if needed.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setOperationLoading(null);
     }
