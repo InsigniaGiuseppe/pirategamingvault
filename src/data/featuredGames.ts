@@ -5,7 +5,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-1",
     title: "Dune: Awakening",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172620/header.jpg",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172620/header.jpg", // Using placeholder as game isn't released yet
     isPiratePun: false,
     coinCost: 50,
     unlocked: false,
@@ -14,7 +14,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-2", 
     title: "Arc Raiders",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1371570/header.jpg",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1371570/header.jpg", // Using placeholder as game isn't released yet
     isPiratePun: false,
     coinCost: 45,
     unlocked: false,

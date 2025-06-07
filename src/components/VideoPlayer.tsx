@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -25,50 +25,63 @@ const VideoPlayer = ({
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
-  const [readyNotified, setReadyNotified] = useState(false);
+  const readyNotifiedRef = useRef(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     console.log('VideoPlayer rendering with:', { type, embedUrl, originalUrl });
     setLoaded(false);
     setError(false);
     setShowFallback(false);
-    setReadyNotified(false);
+    readyNotifiedRef.current = false;
+    
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
     
     // For Twitch content, show fallback more quickly due to embedding restrictions
     if (type === 'twitch' || type === 'twitch-clip') {
-      const timer = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         if (!loaded) {
           console.log('Twitch content failed to load, showing fallback');
           setShowFallback(true);
         }
-      }, 2000); // Reduced timeout for faster fallback
-      
-      return () => clearTimeout(timer);
+      }, 2000);
     }
     
     // For YouTube videos, give more time since normal videos should embed properly
     if (type === 'youtube') {
-      const timer = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         if (!loaded && !error) {
           console.log('YouTube video failed to load, showing fallback');
           setShowFallback(true);
           setError(true);
           if (onError) onError();
         }
-      }, 5000); // Longer timeout for normal YouTube videos
-      
-      return () => clearTimeout(timer);
+      }, 5000);
     }
-  }, [embedUrl, type, loaded, error, originalUrl, onError]);
+    
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [embedUrl, type, loaded, error, onError]);
 
   const handleLoad = () => {
     console.log('Video content loaded successfully');
     setLoaded(true);
     setShowFallback(false);
     
+    // Clear timeout when video loads successfully
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
     // Notify parent that video is ready to watch
-    if (!readyNotified && onVideoReady) {
-      setReadyNotified(true);
+    if (!readyNotifiedRef.current && onVideoReady) {
+      readyNotifiedRef.current = true;
       onVideoReady();
     }
   };
