@@ -5,7 +5,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-1",
     title: "Dune: Awakening",
-    imgSrc: "https://images.igdb.com/igdb/image/upload/t_1080p/co2oit.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 50,
     unlocked: false,
@@ -14,7 +14,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-2", 
     title: "Arc Raiders",
-    imgSrc: "https://images.igdb.com/igdb/image/upload/t_1080p/co3k0j.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 45,
     unlocked: false,
@@ -32,7 +32,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-4",
     title: "Indiana Jones and the Great Circle",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2677660/header.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 55,
     unlocked: false,
@@ -50,7 +50,7 @@ export const featuredGames: Game[] = [
   {
     id: "featured-6",
     title: "S.T.A.L.K.E.R. 2: Heart of Chornobyl",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1643320/header.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 48,
     unlocked: false,

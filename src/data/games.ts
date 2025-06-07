@@ -47,26 +47,17 @@ export const games: Game[] = [
     unlocked: false,
     category: "rpg"
   },
-
-  // FPS Games - Using reliable Steam images where available
   {
-    id: "valorant",
-    title: "Valorant",
-    imgSrc: "https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5c8bfe84d31ef9dc/6364b56b84a1b1083e7c3a84/VALORANT_YR3_Announcement_Banner_Article.jpg",
+    id: "skyrim",
+    title: "The Elder Scrolls V: Skyrim",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/489830/header.jpg",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
-    category: "fps"
+    category: "rpg"
   },
-  {
-    id: "call-of-duty-warzone",
-    title: "Call of Duty: Warzone",
-    imgSrc: "https://www.callofduty.com/content/dam/atvi/callofduty/cod-touchui/global/features/meta-share-mw2.jpg",
-    isPiratePun: false,
-    coinCost: 20,
-    unlocked: false,
-    category: "fps"
-  },
+
+  // FPS Games
   {
     id: "counter-strike-2",
     title: "Counter-Strike 2",
@@ -77,33 +68,69 @@ export const games: Game[] = [
     category: "fps"
   },
   {
-    id: "overwatch-2",
-    title: "Overwatch 2",
-    imgSrc: "https://blz-contentstack-images.akamaized.net/v3/assets/blt9c12f249ac15c7ec/blt9ebab0efdc4aa4a7/6512c6cce3e9b96b3b38f8b0/ow2_keyart.jpg",
+    id: "call-of-duty-mw3",
+    title: "Call of Duty: Modern Warfare III",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2519060/header.jpg",
+    isPiratePun: false,
+    coinCost: 30,
+    unlocked: false,
+    category: "fps"
+  },
+  {
+    id: "valorant",
+    title: "Valorant",
+    imgSrc: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
     category: "fps"
   },
-
-  // MOBA Games
   {
-    id: "league-of-legends",
-    title: "League of Legends",
-    imgSrc: "https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/e02afea7dd4b2d28f1b1d2c4ed91b6e3a9642aa0-1920x1080.jpg",
+    id: "overwatch-2",
+    title: "Overwatch 2",
+    imgSrc: "https://images.unsplash.com/photo-1560253023-3ec5d502959f?w=600&h=337&fit=crop",
     isPiratePun: false,
-    coinCost: 20,
+    coinCost: 25,
     unlocked: false,
-    category: "moba"
+    category: "fps"
   },
   {
-    id: "dota-2",
-    title: "Dota 2",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg",
+    id: "doom-eternal",
+    title: "DOOM Eternal",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/782330/header.jpg",
     isPiratePun: false,
-    coinCost: 20,
+    coinCost: 30,
     unlocked: false,
-    category: "moba"
+    category: "fps"
+  },
+
+  // Adventure Games
+  {
+    id: "red-dead-redemption-2",
+    title: "Red Dead Redemption 2",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
+    isPiratePun: false,
+    coinCost: 40,
+    unlocked: false,
+    category: "adventure"
+  },
+  {
+    id: "gta-v",
+    title: "Grand Theft Auto V",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",
+    isPiratePun: false,
+    coinCost: 25,
+    unlocked: false,
+    category: "adventure"
+  },
+  {
+    id: "horizon-zero-dawn",
+    title: "Horizon Zero Dawn",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1151640/header.jpg",
+    isPiratePun: false,
+    coinCost: 30,
+    unlocked: false,
+    category: "adventure"
   },
 
   // Strategy Games
@@ -125,12 +152,21 @@ export const games: Game[] = [
     unlocked: false,
     category: "strategy"
   },
+  {
+    id: "total-war-warhammer-3",
+    title: "Total War: WARHAMMER III",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1142710/header.jpg",
+    isPiratePun: false,
+    coinCost: 35,
+    unlocked: false,
+    category: "strategy"
+  },
 
   // Battle Royale
   {
     id: "fortnite",
     title: "Fortnite",
-    imgSrc: "https://cdn2.unrealengine.com/fortnite-chapter-5-season-1-1920x1080-d35912cc2dc4.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1551103782-8ab07afd45c1?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 15,
     unlocked: false,
@@ -146,11 +182,11 @@ export const games: Game[] = [
     category: "battle-royale"
   },
 
-  // MMO Games
+  // MMORPG Games
   {
     id: "world-of-warcraft",
     title: "World of Warcraft",
-    imgSrc: "https://bnetcmsus-a.akamaihd.net/cms/page_media/w4/W4DKWRNPCXL81665783006021.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 25,
     unlocked: false,
@@ -188,9 +224,9 @@ export const games: Game[] = [
 
   // Sports Games
   {
-    id: "fifa-24",
+    id: "fc-24",
     title: "EA Sports FC 24",
-    imgSrc: "https://media.contentapi.ea.com/content/dam/ea/easportsfc/fc-24/common/fc24-featured-image-16x9.jpg.adapt.crop16x9.1023w.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 35,
     unlocked: false,
@@ -204,26 +240,6 @@ export const games: Game[] = [
     coinCost: 20,
     unlocked: false,
     category: "sports"
-  },
-
-  // Adventure Games
-  {
-    id: "red-dead-redemption-2",
-    title: "Red Dead Redemption 2",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
-    isPiratePun: false,
-    coinCost: 40,
-    unlocked: false,
-    category: "adventure"
-  },
-  {
-    id: "gta-v",
-    title: "Grand Theft Auto V",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",
-    isPiratePun: false,
-    coinCost: 25,
-    unlocked: false,
-    category: "adventure"
   },
 
   // Simulation Games
@@ -250,7 +266,7 @@ export const games: Game[] = [
   {
     id: "forza-horizon-5",
     title: "Forza Horizon 5",
-    imgSrc: "https://compass-ssl.xbox.com/assets/73/2a/732a850c-6c8d-4fad-b3db-6cd5e108b7b5.jpg?n=Forza-Horizon-5_GLP-Page-Hero-1084_1920x1080.jpg",
+    imgSrc: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=600&h=337&fit=crop",
     isPiratePun: false,
     coinCost: 35,
     unlocked: false,
@@ -284,6 +300,35 @@ export const games: Game[] = [
     coinCost: 15,
     unlocked: false,
     category: "indie"
+  },
+  {
+    id: "hollow-knight",
+    title: "Hollow Knight",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/367520/header.jpg",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "indie"
+  },
+
+  // MOBA Games
+  {
+    id: "league-of-legends",
+    title: "League of Legends",
+    imgSrc: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&h=337&fit=crop",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "moba"
+  },
+  {
+    id: "dota-2",
+    title: "Dota 2",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "moba"
   }
 ];
 

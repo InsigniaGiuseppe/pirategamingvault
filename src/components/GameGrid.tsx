@@ -1,5 +1,5 @@
 
-import GameTile from './GameTile';
+import OptimizedGameTile from './OptimizedGameTile';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { 
@@ -14,6 +14,9 @@ import { Game } from '@/data/games';
 import { games as localGames } from '@/data/games';
 import { featuredGames } from '@/data/featuredGames';
 import GameSearch from './GameSearch';
+import { Button } from './ui/button';
+
+const GAMES_PER_PAGE = 24;
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useSimpleAuth();
@@ -26,9 +29,11 @@ const GameGrid = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    console.log(`GameGrid: ${games.length} games loaded immediately`);
+    console.log(`GameGrid: ${games.length} games loaded`);
   }, [games.length]);
   
   const availableCategories = useMemo(() => {
@@ -44,6 +49,11 @@ const GameGrid = () => {
       return matchesSearch && matchesCategory;
     });
   }, [games, searchTerm, selectedCategories]);
+
+  const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
+  const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
+  const endIndex = startIndex + GAMES_PER_PAGE;
+  const currentPageGames = filteredGames.slice(startIndex, endIndex);
   
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories(prev => 
@@ -51,6 +61,26 @@ const GameGrid = () => {
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  const handlePageChange = (page: number) => {
+    setIsLoading(true);
+    setCurrentPage(page);
+    
+    // Smooth scroll to top of games section
+    setTimeout(() => {
+      const gamesSection = document.getElementById('games-collection');
+      if (gamesSection) {
+        gamesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      setIsLoading(false);
+    }, 100);
   };
   
   return (
@@ -73,7 +103,7 @@ const GameGrid = () => {
           <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
           
           <CarouselContent>
-            {featuredGames.map((game) => (
+            {featuredGames.map((game, index) => (
               <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
                 <div className="relative">
                   <div className="absolute -top-2 -right-2 z-10">
@@ -81,7 +111,7 @@ const GameGrid = () => {
                       NEW
                     </div>
                   </div>
-                  <GameTile game={game} />
+                  <OptimizedGameTile game={game} priority={index < 4} />
                 </div>
               </CarouselItem>
             ))}
@@ -96,7 +126,7 @@ const GameGrid = () => {
       </div>
 
       {/* Main Collection section with Search */}
-      <div className="mb-16">
+      <div className="mb-16" id="games-collection">
         <div className="flex items-center justify-between mb-8">
           <div>
             <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">01 / Collections</span>
@@ -106,23 +136,84 @@ const GameGrid = () => {
         
         <GameSearch
           searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
+          onSearchChange={handleSearchChange}
           selectedCategories={selectedCategories}
           onCategoryToggle={handleCategoryToggle}
           availableCategories={availableCategories}
           gameCount={filteredGames.length}
         />
+
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         
-        {/* Dense Grid Layout */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-          {filteredGames.map((game) => (
-            <div key={game.id} className="w-full">
-              <GameTile game={game} />
+        {/* Games Grid */}
+        {!isLoading && (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 mb-8">
+              {currentPageGames.map((game, index) => (
+                <div key={game.id} className="w-full">
+                  <OptimizedGameTile 
+                    game={game} 
+                    priority={currentPage === 1 && index < 12} 
+                  />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </>
+        )}
         
-        {filteredGames.length === 0 && (
+        {filteredGames.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No games found matching your criteria.</p>
             <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filters.</p>
