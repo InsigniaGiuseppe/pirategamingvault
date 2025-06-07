@@ -28,6 +28,7 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshUsers, setRefreshUsers] = useState(false);
+  const [operationLoading, setOperationLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (activeTab === 'users') {
@@ -96,128 +97,246 @@ const Admin = () => {
     }
   };
 
+  const validateUserId = (userId: string): boolean => {
+    // Check if it's a valid UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(userId);
+  };
+
   const handleAddCoins = async (username: string, userId: string) => {
+    console.log('Starting add coins operation:', { username, userId });
+    
+    if (!validateUserId(userId)) {
+      console.error('Invalid user ID format:', userId);
+      toast({
+        title: "Error",
+        description: "Invalid user ID format",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const amount = parseInt(prompt(`Enter amount of coins to add to ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid positive number.');
       return;
     }
 
+    if (amount > 10000) {
+      const confirmed = confirm(`You're about to add ${amount} coins. This is a large amount. Are you sure?`);
+      if (!confirmed) return;
+    }
+
+    const operationId = `add-${userId}`;
+    setOperationLoading(operationId);
+
     try {
-      const { error } = await supabase.rpc('add_coins', {
+      console.log('Calling add_coins RPC with:', { user_id: userId, amount, description: `Admin added ${amount} coins` });
+      
+      const { data, error } = await supabase.rpc('add_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
       });
 
+      console.log('RPC response:', { data, error });
+
       if (error) {
+        console.error('Database error in add_coins:', error);
         toast({
-          title: "Error",
-          description: "Failed to add coins",
+          title: "Database Error",
+          description: `Failed to add coins: ${error.message || 'Unknown error'}`,
           variant: "destructive",
         });
-      } else {
-        await activityLogger.logAdminAction(
-          'admin-user-id',
-          `Added ${amount} coins to ${username}`,
-          userId,
-          { amount, username }
-        );
-        
-        toast({
-          title: "Success",
-          description: `Successfully added ${amount} coins to ${username}'s balance`,
-        });
-        setRefreshUsers(prev => !prev);
+        return;
       }
-    } catch (error) {
+
+      await activityLogger.logAdminAction(
+        'admin-user-id',
+        `Added ${amount} coins to ${username}`,
+        userId,
+        { amount, username }
+      );
+      
+      toast({
+        title: "Success",
+        description: `Successfully added ${amount} coins to ${username}'s balance`,
+      });
+      
+      // Refresh data to show updated balance
+      setRefreshUsers(prev => !prev);
+      
+    } catch (error: any) {
+      console.error('Unexpected error in handleAddCoins:', error);
       toast({
         title: "Error",
-        description: "Failed to add coins",
+        description: `Failed to add coins: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
+    } finally {
+      setOperationLoading(null);
     }
   };
 
   const handleRemoveCoins = async (username: string, userId: string) => {
+    console.log('Starting remove coins operation:', { username, userId });
+    
+    if (!validateUserId(userId)) {
+      console.error('Invalid user ID format:', userId);
+      toast({
+        title: "Error",
+        description: "Invalid user ID format",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const amount = parseInt(prompt(`Enter amount of coins to remove from ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
       alert('Please enter a valid positive number.');
       return;
     }
 
+    if (amount > 10000) {
+      const confirmed = confirm(`You're about to remove ${amount} coins. This is a large amount. Are you sure?`);
+      if (!confirmed) return;
+    }
+
+    const operationId = `remove-${userId}`;
+    setOperationLoading(operationId);
+
     try {
-      const { error } = await supabase.rpc('remove_coins', {
+      console.log('Calling remove_coins RPC with:', { user_id: userId, amount, description: `Admin removed ${amount} coins` });
+      
+      const { data, error } = await supabase.rpc('remove_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
       });
 
+      console.log('RPC response:', { data, error });
+
       if (error) {
+        console.error('Database error in remove_coins:', error);
         toast({
-          title: "Error",
-          description: "Failed to remove coins",
+          title: "Database Error",
+          description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
           variant: "destructive",
         });
-      } else {
-        await activityLogger.logAdminAction(
-          'admin-user-id',
-          `Removed ${amount} coins from ${username}`,
-          userId,
-          { amount, username }
-        );
-        
-        toast({
-          title: "Success",
-          description: `Successfully removed ${amount} coins from ${username}'s balance`,
-        });
-        setRefreshUsers(prev => !prev);
+        return;
       }
-    } catch (error) {
+
+      await activityLogger.logAdminAction(
+        'admin-user-id',
+        `Removed ${amount} coins from ${username}`,
+        userId,
+        { amount, username }
+      );
+      
+      toast({
+        title: "Success",
+        description: `Successfully removed ${amount} coins from ${username}'s balance`,
+      });
+      
+      // Refresh data to show updated balance
+      setRefreshUsers(prev => !prev);
+      
+    } catch (error: any) {
+      console.error('Unexpected error in handleRemoveCoins:', error);
       toast({
         title: "Error",
-        description: "Failed to remove coins",
+        description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
+    } finally {
+      setOperationLoading(null);
     }
   };
 
   const handleUpdateBalance = async (userId: string, amount: number, description: string, action: 'add' | 'remove') => {
+    console.log('Starting update balance operation:', { userId, amount, description, action });
+    
+    if (!validateUserId(userId)) {
+      console.error('Invalid user ID format:', userId);
+      toast({
+        title: "Error",
+        description: "Invalid user ID format",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (amount <= 0 || isNaN(amount)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid positive amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!description.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a description for this operation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const operationId = `${action}-${userId}`;
+    setOperationLoading(operationId);
+
     try {
       const rpcFunctionName = action === 'add' ? 'add_coins' : 'remove_coins';
-      const { error } = await supabase.rpc(rpcFunctionName, {
+      console.log(`Calling ${rpcFunctionName} RPC with:`, {
+        user_id: userId,
+        amount: amount,
+        description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
+      });
+      
+      const { data, error } = await supabase.rpc(rpcFunctionName, {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
       });
 
+      console.log('RPC response:', { data, error });
+
       if (error) {
+        console.error(`Database error in ${rpcFunctionName}:`, error);
         toast({
-          title: "Error",
-          description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins`,
+          title: "Database Error",
+          description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
           variant: "destructive",
         });
-      } else {
-        await activityLogger.logAdminAction(
-          'admin-user-id',
-          `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
-          userId,
-          { amount, description, action }
-        );
-        
-        toast({
-          title: "Success",
-          description: `Successfully ${action === 'add' ? 'added' : 'removed'} ${amount} coins`,
-        });
-        setSelectedUser(null);
-        setRefreshUsers(prev => !prev);
+        return;
       }
-    } catch (error) {
+
+      await activityLogger.logAdminAction(
+        'admin-user-id',
+        `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
+        userId,
+        { amount, description, action }
+      );
+      
+      toast({
+        title: "Success",
+        description: `Successfully ${action === 'add' ? 'added' : 'removed'} ${amount} coins`,
+      });
+      
+      setSelectedUser(null);
+      setRefreshUsers(prev => !prev);
+      
+    } catch (error: any) {
+      console.error(`Unexpected error in handleUpdateBalance (${action}):`, error);
       toast({
         title: "Error",
-        description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins`,
+        description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
         variant: "destructive",
       });
+    } finally {
+      setOperationLoading(null);
     }
   };
 
@@ -264,6 +383,7 @@ const Admin = () => {
                 onAddCoins={handleAddCoins}
                 onRemoveCoins={handleRemoveCoins}
                 onRefresh={fetchUsers}
+                operationLoading={operationLoading}
               />
             )}
           </TabsContent>
@@ -294,6 +414,7 @@ const Admin = () => {
           onClose={() => setSelectedUser(null)}
           user={selectedUser}
           onUpdateBalance={handleUpdateBalance}
+          operationLoading={operationLoading}
         />
       </div>
     </div>

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Search, Eye, Plus, Minus, Users, TrendingUp } from 'lucide-react';
+import { Coins, Search, Eye, Plus, Minus, Users, TrendingUp, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface User {
@@ -30,9 +30,10 @@ interface EnhancedUserTableProps {
   onAddCoins: (username: string, userId: string) => void;
   onRemoveCoins: (username: string, userId: string) => void;
   onRefresh: () => void;
+  operationLoading?: string | null;
 }
 
-const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, onRefresh }: EnhancedUserTableProps) => {
+const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, onRefresh, operationLoading }: EnhancedUserTableProps) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredUsers = users.filter(user =>
@@ -48,6 +49,10 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
 
   const profilesCount = users.filter(u => u.source === 'profiles').length;
   const customUsersCount = users.filter(u => u.source === 'custom_users').length;
+
+  const isOperationLoading = (operationType: string, userId: string) => {
+    return operationLoading === `${operationType}-${userId}`;
+  };
 
   return (
     <div className="space-y-6">
@@ -203,16 +208,26 @@ const EnhancedUserTable = ({ users, onViewDetails, onAddCoins, onRemoveCoins, on
                             variant="outline"
                             size="sm"
                             className="h-8 px-2 border-green-300 text-green-600 hover:bg-green-50"
+                            disabled={isOperationLoading('add', user.id)}
                           >
-                            <Plus size={14} />
+                            {isOperationLoading('add', user.id) ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                              <Plus size={14} />
+                            )}
                           </Button>
                           <Button
                             onClick={() => onRemoveCoins(user.username, user.id)}
                             variant="outline"
                             size="sm"
                             className="h-8 px-2 border-orange-300 text-orange-600 hover:bg-orange-50"
+                            disabled={isOperationLoading('remove', user.id)}
                           >
-                            <Minus size={14} />
+                            {isOperationLoading('remove', user.id) ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                              <Minus size={14} />
+                            )}
                           </Button>
                         </div>
                       </TableCell>

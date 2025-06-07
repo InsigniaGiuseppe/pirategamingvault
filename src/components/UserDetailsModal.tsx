@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { Coins, Calendar, TrendingUp, TrendingDown, Plus, Minus } from 'lucide-react';
+import { Coins, Calendar, TrendingUp, TrendingDown, Plus, Minus, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface User {
@@ -31,11 +31,22 @@ interface UserDetailsModalProps {
   onClose: () => void;
   user: User | null;
   onUpdateBalance: (userId: string, amount: number, description: string, action: 'add' | 'remove') => void;
+  operationLoading?: string | null;
 }
 
-const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetailsModalProps) => {
+const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance, operationLoading }: UserDetailsModalProps) => {
   const [coinAmount, setCoinAmount] = useState(10);
   const [coinReason, setCoinReason] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      // Reset form when modal opens
+      setCoinAmount(10);
+      setCoinReason('');
+      setValidationError('');
+    }
+  }, [isOpen]);
 
   if (!user) return null;
 
@@ -43,11 +54,35 @@ const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetail
   const totalSpent = user.transactions?.filter((tx: any) => tx.amount < 0).reduce((sum: number, tx: any) => sum + Math.abs(tx.amount), 0) || 0;
   const transactionCount = user.transactions?.length || 0;
 
+  const validateForm = () => {
+    if (!coinReason.trim()) {
+      setValidationError('Please provide a reason for this operation');
+      return false;
+    }
+    if (coinAmount <= 0 || isNaN(coinAmount)) {
+      setValidationError('Please enter a valid positive amount');
+      return false;
+    }
+    if (coinAmount > 10000) {
+      setValidationError('Amount cannot exceed 10,000 coins');
+      return false;
+    }
+    setValidationError('');
+    return true;
+  };
+
   const handleQuickAction = (action: 'add' | 'remove') => {
-    if (!coinReason.trim() || coinAmount <= 0) return;
+    if (!validateForm()) return;
+    
+    const confirmMessage = `Are you sure you want to ${action === 'add' ? 'add' : 'remove'} ${coinAmount} coins ${action === 'add' ? 'to' : 'from'} ${user.username}'s balance?\n\nReason: ${coinReason}`;
+    
+    if (!confirm(confirmMessage)) return;
+    
     onUpdateBalance(user.id, coinAmount, coinReason, action);
-    setCoinReason('');
-    setCoinAmount(10);
+  };
+
+  const isOperationLoading = (operationType: string) => {
+    return operationLoading === `${operationType}-${user.id}`;
   };
 
   const getTransactionTypeIcon = (type: string) => {
@@ -229,37 +264,59 @@ const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetail
                       id="coin-amount"
                       type="number"
                       value={coinAmount}
-                      onChange={(e) => setCoinAmount(parseInt(e.target.value) || 0)}
+                      onChange={(e) => {
+                        setCoinAmount(parseInt(e.target.value) || 0);
+                        setValidationError('');
+                      }}
                       min="1"
+                      max="10000"
                       placeholder="Enter amount"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="coin-reason">Reason</Label>
+                    <Label htmlFor="coin-reason">Reason *</Label>
                     <Input
                       id="coin-reason"
                       value={coinReason}
-                      onChange={(e) => setCoinReason(e.target.value)}
+                      onChange={(e) => {
+                        setCoinReason(e.target.value);
+                        setValidationError('');
+                      }}
                       placeholder="Enter reason for balance change"
+                      maxLength={200}
                     />
                   </div>
+
+                  {validationError && (
+                    <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                      {validationError}
+                    </div>
+                  )}
                   
                   <div className="flex gap-2">
                     <Button 
                       onClick={() => handleQuickAction('add')}
                       className="flex-1 bg-green-600 hover:bg-green-700"
-                      disabled={!coinReason.trim() || coinAmount <= 0}
+                      disabled={isOperationLoading('add') || isOperationLoading('remove')}
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      {isOperationLoading('add') ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Plus className="h-4 w-4 mr-2" />
+                      )}
                       Add {coinAmount} Coins
                     </Button>
                     <Button 
                       onClick={() => handleQuickAction('remove')}
                       className="flex-1 bg-orange-600 hover:bg-orange-700"
-                      disabled={!coinReason.trim() || coinAmount <= 0}
+                      disabled={isOperationLoading('add') || isOperationLoading('remove')}
                     >
-                      <Minus className="h-4 w-4 mr-2" />
+                      {isOperationLoading('remove') ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <Minus className="h-4 w-4 mr-2" />
+                      )}
                       Remove {coinAmount} Coins
                     </Button>
                   </div>
