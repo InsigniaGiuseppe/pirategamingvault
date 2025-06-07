@@ -41,14 +41,10 @@ export const fetchTransactions = async (filters: TransactionFilters = {}): Promi
       offset = 0
     } = filters;
 
-    // Build query with filters
+    // Build query for transactions
     let query = supabase
       .from('transactions')
-      .select(`
-        *,
-        profiles!inner(username),
-        custom_users!inner(username)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -57,11 +53,7 @@ export const fetchTransactions = async (filters: TransactionFilters = {}): Promi
     }
 
     if (searchTerm) {
-      query = query.or(`description.ilike.%${searchTerm}%,profiles.username.ilike.%${searchTerm}%,custom_users.username.ilike.%${searchTerm}%`);
-    }
-
-    if (userFilter !== 'all') {
-      query = query.or(`profiles.username.eq.${userFilter},custom_users.username.eq.${userFilter}`);
+      query = query.ilike('description', `%${searchTerm}%`);
     }
 
     // Get total count for pagination
@@ -72,10 +64,10 @@ export const fetchTransactions = async (filters: TransactionFilters = {}): Promi
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
 
-    const { data, error } = await query;
+    const { data: transactionsData, error: transactionsError } = await query;
 
-    if (error) {
-      console.error('Error fetching transactions:', error);
+    if (transactionsError) {
+      console.error('Error fetching transactions:', transactionsError);
       return {
         transactions: [],
         stats: { total: 0, totalEarn: 0, totalSpend: 0, netFlow: 0 },
@@ -83,22 +75,50 @@ export const fetchTransactions = async (filters: TransactionFilters = {}): Promi
       };
     }
 
+    // Fetch usernames separately to avoid join issues
+    const [profilesResult, customUsersResult] = await Promise.all([
+      supabase.from('profiles').select('id, username'),
+      supabase.from('custom_users').select('id, username')
+    ]);
+
+    const profiles = profilesResult.data || [];
+    const customUsers = customUsersResult.data || [];
+
     // Transform data and add usernames
-    const transactions: Transaction[] = (data || []).map(tx => ({
-      id: tx.id,
-      user_id: tx.user_id,
-      amount: tx.amount,
-      description: tx.description,
-      type: tx.type,
-      created_at: tx.created_at,
-      username: tx.profiles?.username || tx.custom_users?.username || 'Unknown'
-    }));
+    const transactions: Transaction[] = (transactionsData || []).map(tx => {
+      const profileUser = profiles.find(p => p.id === tx.user_id);
+      const customUser = customUsers.find(u => u.id === tx.user_id);
+      
+      return {
+        id: tx.id,
+        user_id: tx.user_id,
+        amount: tx.amount,
+        description: tx.description,
+        type: tx.type,
+        created_at: tx.created_at,
+        username: profileUser?.username || customUser?.username || 'Unknown'
+      };
+    });
+
+    // Apply user filter after username resolution
+    const filteredTransactions = userFilter !== 'all' 
+      ? transactions.filter(tx => tx.username === userFilter)
+      : transactions;
+
+    // Apply search filter on username if needed
+    const finalTransactions = searchTerm && !filteredTransactions.some(tx => 
+      tx.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    ) 
+      ? filteredTransactions.filter(tx => 
+          tx.username?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      : filteredTransactions;
 
     // Calculate stats
-    const stats = calculateStats(transactions);
+    const stats = calculateStats(finalTransactions);
     const hasMore = (count || 0) > offset + limit;
 
-    return { transactions, stats, hasMore };
+    return { transactions: finalTransactions, stats, hasMore };
   } catch (error) {
     console.error('Unexpected error in fetchTransactions:', error);
     return {

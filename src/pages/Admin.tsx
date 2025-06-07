@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Settings, History, Video, Activity } from 'lucide-react';
 import { activityLogger } from '@/services/activityLoggingService';
 import AdminVideoManager from '@/components/AdminVideoManager';
-import { OptimizedTransactionHistory } from '@/components/OptimizedTransactionHistory';
+import OptimizedTransactionHistory from '@/components/OptimizedTransactionHistory';
 
 interface User {
   id: string;
