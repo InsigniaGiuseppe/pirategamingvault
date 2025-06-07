@@ -36,6 +36,9 @@ import Navigation from '@/components/Navigation';
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { processVideoUrl, getWorkingVideoExamples, formatDuration, testUrlDetection } from '@/utils/videoProcessor';
+import EnhancedUserTable from '@/components/EnhancedUserTable';
+import UserDetailsModal from '@/components/UserDetailsModal';
+import EnhancedTransactionHistory from '@/components/EnhancedTransactionHistory';
 
 interface Transaction {
   id: string;
@@ -64,6 +67,8 @@ const Admin = () => {
   const [editingVideo, setEditingVideo] = useState<any>(null);
   const [videoList, setVideoList] = useState<any[]>([]);
   const [urlTestResult, setUrlTestResult] = useState<any>(null);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<any | null>(null);
+  const [isUserDetailsOpen, setIsUserDetailsOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -404,6 +409,48 @@ const Admin = () => {
     });
   };
 
+  const handleViewUserDetails = (user: any) => {
+    setSelectedUserForDetails(user);
+    setIsUserDetailsOpen(true);
+  };
+
+  const handleUpdateBalanceFromModal = async (userId: string, amount: number, description: string, action: 'add' | 'remove') => {
+    const finalAmount = action === 'add' ? amount : -amount;
+    
+    try {
+      const { updateDatabaseUserBalance } = await import('@/services/databaseUserService');
+      const success = await updateDatabaseUserBalance(
+        userId,
+        finalAmount,
+        `${description} [admin]`,
+        'admin'
+      );
+      
+      if (success) {
+        loadDatabaseUsers();
+        
+        // Update the selected user for details modal
+        const updatedUsers = await import('@/services/databaseUserService').then(module => module.getAllDatabaseUsers());
+        const updatedUser = updatedUsers.find(u => u.id === userId);
+        if (updatedUser) {
+          setSelectedUserForDetails(updatedUser);
+        }
+        
+        toast({
+          title: 'Balance Updated',
+          description: `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error updating balance:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: 'Failed to update user balance.',
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navigation />
@@ -453,83 +500,20 @@ const Admin = () => {
 
         <Tabs defaultValue="users">
           <TabsList className="mb-6">
-            <TabsTrigger value="users">Registered Users</TabsTrigger>
+            <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="credentials">Admin Credentials</TabsTrigger>
-            <TabsTrigger value="transactions">Transaction History</TabsTrigger>
+            <TabsTrigger value="transactions">Transaction Analytics</TabsTrigger>
             <TabsTrigger value="videos">Watch & Earn Videos</TabsTrigger>
           </TabsList>
           
           <TabsContent value="users">
-            <div className="bg-white rounded-xl p-6 shadow-saas">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-black">Registered Users</h2>
-                <Button
-                  onClick={loadDatabaseUsers}
-                  variant="outline"
-                  className="border-2 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-black"
-                >
-                  Refresh Users
-                </Button>
-              </div>
-
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Username</TableHead>
-                      <TableHead>User ID</TableHead>
-                      <TableHead>Coins</TableHead>
-                      <TableHead>Transactions</TableHead>
-                      <TableHead>Registered</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {databaseUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.username}</TableCell>
-                        <TableCell className="font-mono text-xs">{user.id}</TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center gap-1">
-                            <Coins size={16} className="text-yellow-500" />
-                            {user.balance}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">{user.transactions.length}</TableCell>
-                        <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Button 
-                              onClick={() => handleOpenCoinDialog(user.username, 'add', user.id)}
-                              variant="outline" 
-                              size="sm"
-                              className="h-8 px-2 border border-green-300 text-green-600 hover:bg-green-50"
-                            >
-                              Add Coins
-                            </Button>
-                            <Button 
-                              onClick={() => handleOpenCoinDialog(user.username, 'remove', user.id)}
-                              variant="outline" 
-                              size="sm"
-                              className="h-8 px-2 border border-orange-300 text-orange-600 hover:bg-orange-50"
-                            >
-                              Remove Coins
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {databaseUsers.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                          No registered users found. Users who register through the app will appear here.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <EnhancedUserTable
+              users={databaseUsers}
+              onViewDetails={handleViewUserDetails}
+              onAddCoins={(username, userId) => handleOpenCoinDialog(username, 'add', userId)}
+              onRemoveCoins={(username, userId) => handleOpenCoinDialog(username, 'remove', userId)}
+              onRefresh={loadDatabaseUsers}
+            />
           </TabsContent>
           
           <TabsContent value="credentials">
@@ -624,54 +608,10 @@ const Admin = () => {
           </TabsContent>
           
           <TabsContent value="transactions">
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-4">Transaction History</h2>
-                <ScrollArea className="h-[500px] rounded-md border p-4">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Description</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {allTransactions.map((tx) => (
-                        <TableRow key={tx.id}>
-                          <TableCell className="font-mono text-xs">
-                            {new Date(tx.timestamp).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="font-medium">{tx.username}</TableCell>
-                          <TableCell className={tx.amount >= 0 ? "text-green-600" : "text-red-600"}>
-                            {tx.amount >= 0 ? `+${tx.amount}` : tx.amount}
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              tx.type === 'earn' ? 'bg-emerald-100 text-emerald-800' : 
-                              tx.type === 'spend' ? 'bg-orange-100 text-orange-800' : 
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {tx.type}
-                            </span>
-                          </TableCell>
-                          <TableCell>{tx.description}</TableCell>
-                        </TableRow>
-                      ))}
-                      {allTransactions.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                            No transactions found.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <EnhancedTransactionHistory
+              transactions={allTransactions}
+              databaseUsers={databaseUsers}
+            />
           </TabsContent>
           
           <TabsContent value="videos">
@@ -981,6 +921,13 @@ const Admin = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <UserDetailsModal
+        isOpen={isUserDetailsOpen}
+        onClose={() => setIsUserDetailsOpen(false)}
+        user={selectedUserForDetails}
+        onUpdateBalance={handleUpdateBalanceFromModal}
+      />
     </div>
   );
 };
