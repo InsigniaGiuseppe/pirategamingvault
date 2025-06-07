@@ -1,3 +1,4 @@
+
 export interface Game {
   id: string;
   title: string;
@@ -78,7 +79,7 @@ export const games: Game[] = [
     id: "8",
     title: "Valorant",
     imgSrc: "https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt6b9e27cc54b2e7d9/60ee1fc8e74d174034d7ae5e/lol-champion-rumble-splash-art.jpg",
-    iPiratePun: false,
+    isPiratePun: false,
     coinCost: 0,
     unlocked: false,
     category: "fps"
@@ -150,7 +151,7 @@ export const games: Game[] = [
     id: "16",
     title: "League of Legends",
     imgSrc: "https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt6b9e27cc54b2e7d9/60ee1fc8e74d174034d7ae5e/lol-champion-rumble-splash-art.jpg",
-    iPiratePun: false,
+    isPiratePun: false,
     coinCost: 0,
     unlocked: false,
     category: "moba"
