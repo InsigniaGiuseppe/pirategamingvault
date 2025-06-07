@@ -11,14 +11,23 @@ export interface VideoInfo {
 
 export const extractYouTubeVideoId = (url: string): string | null => {
   const patterns = [
+    // YouTube Shorts patterns (check these first)
+    /(?:youtube\.com\/shorts\/|youtu\.be\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /(?:m\.youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    // Regular YouTube patterns
     /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
     /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/
   ];
   
   for (const pattern of patterns) {
     const match = url.match(pattern);
-    if (match) return match[1];
+    if (match) {
+      console.log('✅ Extracted YouTube video ID:', match[1], 'from URL:', url);
+      return match[1];
+    }
   }
+  
+  console.log('❌ No YouTube video ID found in URL:', url);
   return null;
 };
 
@@ -89,12 +98,17 @@ export const testUrlDetection = (url: string): { detected: string; id: string | 
     return results;
   }
   
-  // Test YouTube patterns
+  // Test YouTube patterns (including Shorts)
   const youtubeId = extractYouTubeVideoId(url);
   if (youtubeId) {
     results.detected = 'youtube';
     results.id = youtubeId;
-    results.patterns.push('YouTube Video');
+    // Check if it's a YouTube Short
+    if (url.includes('/shorts/')) {
+      results.patterns.push('YouTube Short');
+    } else {
+      results.patterns.push('YouTube Video');
+    }
     return results;
   }
   
@@ -135,7 +149,8 @@ export const processVideoUrl = (url: string): VideoInfo | null => {
   }
 
   if (detection.detected === 'youtube' && detection.id) {
-    console.log('✅ Detected as YouTube video with ID:', detection.id);
+    const isShort = url.includes('/shorts/');
+    console.log(`✅ Detected as YouTube ${isShort ? 'Short' : 'video'} with ID:`, detection.id);
     return {
       id: detection.id,
       type: 'youtube' as const,

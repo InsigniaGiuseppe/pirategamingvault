@@ -42,6 +42,7 @@ const AdminVideoManager = () => {
   const [loading, setLoading] = useState(false);
   const [bulkUrls, setBulkUrls] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -77,22 +78,44 @@ const AdminVideoManager = () => {
 
     try {
       setIsProcessing(true);
+      setProcessingProgress('Parsing URLs...');
+      
       const urls = bulkUrls.split('\n').filter(url => url.trim());
+      console.log('🎬 Starting bulk video processing for', urls.length, 'URLs');
+      
+      // Check for Shorts URLs and inform user
+      const shortsCount = urls.filter(url => url.includes('/shorts/')).length;
+      if (shortsCount > 0) {
+        setProcessingProgress(`Found ${shortsCount} YouTube Shorts. Processing...`);
+      }
+      
+      setProcessingProgress('Fetching video details from YouTube...');
       const processedVideos = await processYouTubeUrls(urls);
+      
+      if (processedVideos.length === 0) {
+        throw new Error('No videos could be processed. Please check your URLs and try again.');
+      }
+      
+      setProcessingProgress('Saving videos to database...');
       const savedVideos = await saveVideos(processedVideos);
       
       setVideos(prev => [...savedVideos, ...prev]);
       setBulkUrls('');
+      setProcessingProgress('');
+      
+      const shortsAdded = savedVideos.filter(v => v.category === 'shorts').length;
+      const regularAdded = savedVideos.length - shortsAdded;
       
       toast({
         title: "Success",
-        description: `Successfully added ${savedVideos.length} videos`,
+        description: `Successfully added ${savedVideos.length} videos${shortsAdded > 0 ? ` (${shortsAdded} Shorts, ${regularAdded} regular videos)` : ''}`,
       });
     } catch (error) {
       console.error('Failed to process videos:', error);
+      setProcessingProgress('');
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to process videos",
+        description: error instanceof Error ? error.message : "Failed to process videos. Check console for details.",
         variant: "destructive",
       });
     } finally {
@@ -252,18 +275,24 @@ const AdminVideoManager = () => {
                 <Textarea
                   id="bulk-urls"
                   placeholder={`https://www.youtube.com/watch?v=dQw4w9WgXcQ
-https://www.youtube.com/watch?v=jfKfPfyJRdk
-https://www.youtube.com/watch?v=W6NZfCO5SIk`}
+https://www.youtube.com/shorts/abc123def45
+https://youtu.be/jfKfPfyJRdk`}
                   value={bulkUrls}
                   onChange={(e) => setBulkUrls(e.target.value)}
                   className="min-h-[200px]"
                 />
               </div>
               <div className="text-sm text-gray-600">
+                <p>• Supports regular YouTube videos and YouTube Shorts</p>
                 <p>• Videos will be automatically processed with titles, descriptions, and durations</p>
-                <p>• Rewards are calculated based on video length (1 coin per 30 seconds)</p>
+                <p>• Rewards: Regular videos (1 coin per 30s), Shorts (3-4 coins based on length)</p>
                 <p>• All videos are set as active by default</p>
               </div>
+              {processingProgress && (
+                <div className="text-sm text-blue-600 font-medium">
+                  {processingProgress}
+                </div>
+              )}
               <Button 
                 onClick={processBulkVideos} 
                 disabled={isProcessing || !bulkUrls.trim()}

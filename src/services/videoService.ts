@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { extractYouTubeVideoId, processVideoUrl } from '@/utils/videoProcessor';
 
@@ -83,26 +82,49 @@ const formatDuration = (seconds: number): string => {
   return `${minutes}:${secs.toString().padStart(2, '0')}`;
 };
 
-const calculateReward = (duration: number): number => {
+const calculateReward = (duration: number, isShort: boolean = false): number => {
+  // Special handling for YouTube Shorts (typically under 60 seconds)
+  if (isShort || duration <= 60) {
+    return Math.max(3, Math.ceil(duration / 15)); // 3-4 coins for shorts
+  }
+  
   // Base reward calculation: 1 coin per 30 seconds, minimum 5, maximum 50
   const baseReward = Math.ceil(duration / 30);
   return Math.max(5, Math.min(50, baseReward));
 };
 
 export const fetchYouTubeVideoData = async (videoIds: string[]): Promise<YouTubeVideoData[]> => {
-  const { data, error } = await supabase.functions.invoke('youtube-api', {
-    body: { action: 'getVideoDetails', videoIds }
-  });
-
-  if (error) throw error;
-  if (data.error) throw new Error(data.error);
+  console.log('🎬 Fetching YouTube data for', videoIds.length, 'videos');
   
-  return data.items || [];
+  try {
+    const { data, error } = await supabase.functions.invoke('youtube-api', {
+      body: { action: 'getVideoDetails', videoIds }
+    });
+
+    if (error) {
+      console.error('Supabase function error:', error);
+      throw error;
+    }
+    
+    if (data.error) {
+      console.error('YouTube API error:', data.error);
+      throw new Error(data.error);
+    }
+    
+    console.log('✅ Successfully fetched YouTube data for', data.items?.length || 0, 'videos');
+    return data.items || [];
+  } catch (error) {
+    console.error('Error fetching YouTube video data:', error);
+    throw error;
+  }
 };
 
 export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]> => {
   const videoIds: string[] = [];
   const urlMap: { [key: string]: string } = {};
+  const shortsMap: { [key: string]: boolean } = {};
+  
+  console.log('🔍 Processing', urls.length, 'URLs...');
   
   // Extract video IDs and create mapping
   urls.forEach(url => {
@@ -110,6 +132,10 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
     if (videoId) {
       videoIds.push(videoId);
       urlMap[videoId] = url;
+      shortsMap[videoId] = url.includes('/shorts/');
+      console.log(`📹 ${shortsMap[videoId] ? 'Short' : 'Video'} detected:`, videoId);
+    } else {
+      console.warn('❌ Could not extract video ID from URL:', url);
     }
   });
 
@@ -117,13 +143,36 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
     throw new Error('No valid YouTube video URLs found');
   }
 
-  const youtubeData = await fetchYouTubeVideoData(videoIds);
+  console.log('🎯 Processing', videoIds.length, 'valid video IDs');
+
+  // Process videos in smaller batches to prevent timeouts
+  const batchSize = 10;
+  const allVideoData: YouTubeVideoData[] = [];
   
-  return youtubeData.map(video => {
+  for (let i = 0; i < videoIds.length; i += batchSize) {
+    const batch = videoIds.slice(i, i + batchSize);
+    console.log(`📦 Processing batch ${Math.floor(i / batchSize) + 1}:`, batch.length, 'videos');
+    
+    try {
+      const batchData = await fetchYouTubeVideoData(batch);
+      allVideoData.push(...batchData);
+      console.log(`✅ Batch ${Math.floor(i / batchSize) + 1} completed`);
+    } catch (error) {
+      console.error(`❌ Batch ${Math.floor(i / batchSize) + 1} failed:`, error);
+      // Continue with other batches instead of failing completely
+    }
+  }
+  
+  console.log('🎬 Processing', allVideoData.length, 'videos from YouTube API');
+  
+  return allVideoData.map(video => {
     const duration = parseDuration(video.contentDetails.duration);
+    const isShort = shortsMap[video.id];
     const thumbnail = video.snippet.thumbnails.maxres?.url || 
                      video.snippet.thumbnails.high.url || 
                      video.snippet.thumbnails.medium.url;
+    
+    console.log(`📋 ${isShort ? 'Short' : 'Video'} "${video.snippet.title}": ${formatDuration(duration)}, ${calculateReward(duration, isShort)} coins`);
     
     return {
       video_id: video.id,
@@ -135,10 +184,12 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
       thumbnail_url: thumbnail,
       embed_url: `https://www.youtube.com/embed/${video.id}`,
       original_url: urlMap[video.id],
-      reward_amount: calculateReward(duration),
+      reward_amount: calculateReward(duration, isShort),
       is_active: true,
       view_count: 0,
-      completion_count: 0
+      completion_count: 0,
+      category: isShort ? 'shorts' : undefined,
+      tags: isShort ? ['shorts'] : undefined
     };
   });
 };
