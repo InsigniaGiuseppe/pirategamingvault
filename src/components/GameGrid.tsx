@@ -1,6 +1,7 @@
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GameTile from './GameTile';
-import { ChevronLeft, ChevronRight, SortAsc, SortDesc } from 'lucide-react';
+import { ChevronLeft, ChevronRight, SortAsc, SortDesc, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { 
   Carousel,
@@ -18,22 +19,21 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { games as localGames } from '@/data/games';
+import { featuredGames } from '@/data/featuredGames';
 
 const GameGrid = () => {
   const { checkIfGameUnlocked } = useSimpleAuth();
-  // Emergency fix: Load games synchronously from local data
+  // Load games synchronously from local data
   const [games, setGames] = useState<Game[]>(() => {
     return localGames.map(game => ({
       ...game,
-      coinCost: game.coinCost < 10 ? Math.floor(Math.random() * 41) + 10 : game.coinCost,
       unlocked: false
     }));
   });
   const [sortByPrice, setSortByPrice] = useState<'asc' | 'desc' | null>(null);
   
-  // Remove all async loading - games are available immediately
   useEffect(() => {
-    console.log(`GameGrid: ${games.length} games loaded immediately (emergency mode)`);
+    console.log(`GameGrid: ${games.length} games loaded immediately`);
   }, [games.length]);
   
   const handleSort = () => {
@@ -57,7 +57,7 @@ const GameGrid = () => {
     'fps', 'action', 'adventure', 'rpg', 'strategy', 
     'puzzle', 'indie', 'classic', 'party', 'horror', 
     'battle-royale', 'moba', 'sports', 'sandbox', 
-    'mmorpg', 'card'
+    'mmorpg', 'card', 'survival'
   ];
   
   const categoryGroups: Record<string, Game[]> = {};
@@ -68,8 +68,6 @@ const GameGrid = () => {
       categoryGroups[category] = gamesInCategory;
     }
   });
-  
-  const featuredGames = sortedGames.slice(0, 8);
   
   const getCategoryDisplayName = (category: string): string => {
     const categoryMap: Record<string, string> = {
@@ -88,7 +86,8 @@ const GameGrid = () => {
       'sports': 'Sports Games',
       'sandbox': 'Sandbox Games',
       'mmorpg': 'MMORPGs',
-      'card': 'Card Games'
+      'card': 'Card Games',
+      'survival': 'Survival Games'
     };
     
     return categoryMap[category] || `${category.charAt(0).toUpperCase()}${category.slice(1)} Games`;
@@ -96,7 +95,47 @@ const GameGrid = () => {
   
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Featured Collection section */}
+      {/* Featured Games section */}
+      <div className="mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <span className="text-gray-500 text-sm font-medium uppercase tracking-wider flex items-center gap-2">
+              <Star className="h-4 w-4 text-yellow-500" />
+              00 / Featured
+            </span>
+            <h2 className="text-2xl md:text-3xl font-bold text-black mt-1">TRENDING NOW</h2>
+            <p className="text-gray-600 mt-2">The hottest games everyone is playing</p>
+          </div>
+        </div>
+        
+        <Carousel className="w-full relative">
+          <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
+          <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
+          
+          <CarouselContent>
+            {featuredGames.map((game) => (
+              <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
+                <div className="relative">
+                  <div className="absolute -top-2 -right-2 z-10">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-2 py-1 rounded-full shadow-lg">
+                      NEW
+                    </div>
+                  </div>
+                  <GameTile game={game} />
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
+            <ChevronLeft className="h-4 w-4" />
+          </CarouselPrevious>
+          <CarouselNext className="right-6 z-20 bg-white/80 hover:bg-white border border-gray-200">
+            <ChevronRight className="h-4 w-4" />
+          </CarouselNext>
+        </Carousel>
+      </div>
+
+      {/* Main Collection section */}
       <div className="mb-16">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -126,13 +165,13 @@ const GameGrid = () => {
           </HoverCard>
         </div>
         
-        {/* Featured Games - Netflix Style Carousel */}
+        {/* Popular Games - Netflix Style Carousel */}
         <Carousel className="w-full relative">
           <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white to-transparent z-10"></div>
           <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white to-transparent z-10"></div>
           
           <CarouselContent>
-            {featuredGames.map((game) => (
+            {sortedGames.slice(0, 12).map((game) => (
               <CarouselItem key={game.id} className="basis-full md:basis-1/2 lg:basis-1/3 xl:basis-1/4 p-2">
                 <GameTile game={game} />
               </CarouselItem>

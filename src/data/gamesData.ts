@@ -1,5 +1,6 @@
 
 import { games as localGames } from './games';
+import { featuredGames } from './featuredGames';
 
 export interface Game {
   id: string;
@@ -11,29 +12,28 @@ export interface Game {
   unlocked?: boolean;
 }
 
-// Prepare local games with proper coin costs
+// Prepare local games
 const prepareLocalGames = (): Game[] => {
-  return localGames.map(game => ({
+  return [...featuredGames, ...localGames].map(game => ({
     ...game,
-    coinCost: game.coinCost < 10 ? Math.floor(Math.random() * 41) + 10 : game.coinCost,
     unlocked: false
   }));
 };
 
-// Emergency fix: Always return local games immediately to prevent freezing
+// Always return local games immediately to prevent freezing
 export const getGames = async (): Promise<Game[]> => {
-  console.log('Loading games locally only (emergency mode)');
+  console.log('Loading games locally with proper Steam images');
   
-  // Return local games immediately - no Supabase calls
-  const localOnlyGames = prepareLocalGames();
-  console.log(`Loaded ${localOnlyGames.length} games locally`);
+  // Return local games immediately - no external calls
+  const updatedGames = prepareLocalGames();
+  console.log(`Loaded ${updatedGames.length} games with proper images`);
   
-  return localOnlyGames;
+  return updatedGames;
 };
 
 // Disabled function to prevent any database calls
 export const randomizeGamePrices = async (): Promise<boolean> => {
-  console.log('Price randomization disabled in emergency mode');
+  console.log('Price randomization disabled in local mode');
   return true;
 };
 

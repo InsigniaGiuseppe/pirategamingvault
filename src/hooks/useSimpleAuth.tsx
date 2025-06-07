@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -127,11 +126,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
-        setState(prev => ({ ...prev, isLoading: false, error: error || 'Login failed' }));
+        // FIXED: Always reset loading state on error
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: error || 'Login failed' 
+        }));
         toast({
           variant: "destructive",
           title: "Login Failed",
-          description: error || 'Login failed'
+          description: error || 'Invalid credentials. Please check your username and password.'
         });
         return;
       }
@@ -164,15 +168,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
     } catch (error) {
       console.error('Login error:', error);
+      // FIXED: Always reset loading state on catch
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
+        error: 'Login failed. Please try again.' 
       }));
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error instanceof Error ? error.message : 'Login failed'
+        description: 'Login failed. Please check your credentials and try again.'
       });
     }
   }, [toast, navigate, loadUserData]);
@@ -186,7 +191,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error || !user) {
         console.error('Registration failed:', error);
-        setState(prev => ({ ...prev, isLoading: false, error: error || 'Registration failed' }));
+        // FIXED: Always reset loading state on error
+        setState(prev => ({ 
+          ...prev, 
+          isLoading: false, 
+          error: error || 'Registration failed' 
+        }));
         toast({
           variant: "destructive",
           title: "Registration Failed",
@@ -227,15 +237,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
     } catch (error) {
       console.error('Registration error:', error);
+      // FIXED: Always reset loading state on catch
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
+        error: 'Registration failed. Please try again.' 
       }));
       toast({
         variant: "destructive",
         title: "Registration Failed",
-        description: error instanceof Error ? error.message : 'Registration failed'
+        description: 'Registration failed. Please try again.'
       });
     }
   }, [toast, navigate, loadUserData]);
