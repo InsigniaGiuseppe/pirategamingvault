@@ -61,12 +61,12 @@ export const useLoadAuthState = () => {
       console.log('Fetching mock user data for:', userId);
       
       // All data is now mock and returns immediately
-      const balance = 100; // Mock balance
+      const balance = 5; // Updated to 5 coins starter balance
       const userTransactions = [
         {
           id: 'welcome-1',
           timestamp: Date.now(),
-          amount: 100,
+          amount: 5, // Updated to 5 coins
           description: 'Welcome bonus',
           type: 'admin' as const
         }
@@ -118,12 +118,12 @@ export const useLoadAuthState = () => {
               user: user,
               session: session,
               isLoading: false,
-              pirateCoins: 100, // Default mock value
+              pirateCoins: 5, // Updated to 5 coins starter balance
               transactions: [
                 {
                   id: 'welcome-1',
                   timestamp: Date.now(),
-                  amount: 100,
+                  amount: 5, // Updated to 5 coins
                   description: 'Welcome bonus',
                   type: 'admin'
                 }
