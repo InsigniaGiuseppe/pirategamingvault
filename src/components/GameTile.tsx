@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, memo } from 'react';
 import { Game } from '@/data/games';
 import SecretCodeModal from './SecretCodeModal';
 import { Tag, Info, Lock, Coins, ExternalLink } from 'lucide-react';
@@ -19,18 +19,19 @@ interface GameTileProps {
   game: Game;
 }
 
-const GameTile = ({ game }: GameTileProps) => {
+const GameTile = memo(({ game }: GameTileProps) => {
   const [showModal, setShowModal] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const { pirateCoins, addPirateCoins, checkIfGameUnlocked, unlockGame } = useSimpleAuth();
+  const { pirateCoins, unlockGame, checkIfGameUnlocked } = useSimpleAuth();
   const { toast } = useToast();
   const imageRef = useRef<HTMLImageElement>(null);
   
   const canAfford = pirateCoins >= game.coinCost;
-  const maxRetries = 1; // Reduced retries for better performance
+  const maxRetries = 1;
+  const isUnlocked = checkIfGameUnlocked(game.id);
   
   const handleUnlock = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -42,7 +43,7 @@ const GameTile = ({ game }: GameTileProps) => {
         action: (
           <Button 
             size="sm"
-            variant="payment"
+            variant="outline"
             onClick={() => window.open(PAYMENT_LINK, '_blank')}
           >
             <ExternalLink size={14} className="mr-1" />
@@ -74,8 +75,6 @@ const GameTile = ({ game }: GameTileProps) => {
       });
     }
   };
-  
-  const isUnlocked = checkIfGameUnlocked(game.id);
 
   const handleImageLoad = () => {
     setIsImageLoading(false);
@@ -83,17 +82,14 @@ const GameTile = ({ game }: GameTileProps) => {
   };
 
   const handleImageError = () => {
-    console.log(`Image failed to load for ${game.title}, retry count: ${retryCount}`);
     if (retryCount < maxRetries) {
       setRetryCount(prev => prev + 1);
-      // Try again with a small delay
       setTimeout(() => {
         if (imageRef.current) {
           imageRef.current.src = getImageSource(game);
         }
       }, 1000);
     } else {
-      console.log(`Max retries reached for ${game.title}, using fallback`);
       setImageError(true);
       setIsImageLoading(false);
     }
@@ -101,7 +97,6 @@ const GameTile = ({ game }: GameTileProps) => {
 
   const getImageSource = (game: Game) => {
     if (imageError || retryCount >= maxRetries) {
-      // Use consistent placeholder based on game title
       const seed = encodeURIComponent(game.title.toLowerCase().replace(/[^a-z0-9]/g, '-'));
       return `https://picsum.photos/seed/${seed}/600/800`;
     }
@@ -120,7 +115,7 @@ const GameTile = ({ game }: GameTileProps) => {
         action: (
           <Button 
             size="sm"
-            variant="payment"
+            variant="outline"
             onClick={() => window.open(PAYMENT_LINK, '_blank')}
           >
             <ExternalLink size={14} className="mr-1" />
@@ -170,12 +165,12 @@ const GameTile = ({ game }: GameTileProps) => {
                     )}
                   </div>
                   
-                  <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center max-w-[60%]">
+                  <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-medium text-white flex items-center max-w-[60%]">
                     <Tag size={12} className="mr-1 flex-shrink-0" />
                     <span className="truncate">{game.title}</span>
                   </div>
                   
-                  <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-heading text-white flex items-center">
+                  <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-medium text-white flex items-center">
                     <Coins size={12} className="mr-1 text-yellow-500" />
                     {game.coinCost}
                   </div>
@@ -216,6 +211,8 @@ const GameTile = ({ game }: GameTileProps) => {
       />
     </>
   );
-};
+});
+
+GameTile.displayName = 'GameTile';
 
 export default GameTile;

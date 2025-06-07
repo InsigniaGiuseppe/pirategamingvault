@@ -1,15 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
 import EnhancedTransactionHistory from '@/components/EnhancedTransactionHistory';
 import UserDetailsModal from '@/components/UserDetailsModal';
 import ActivityLogViewer from '@/components/ActivityLogViewer';
+import AdminOverview from '@/components/AdminOverview';
 import { Button } from '@/components/ui/button';
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Users, Settings, History, Video, Activity } from 'lucide-react';
+import { Users, Settings, History, Video, Activity } from 'lucide-react';
 import { activityLogger } from '@/services/activityLoggingService';
-
 import AdminVideoManager from '@/components/AdminVideoManager';
 
 interface User {
@@ -23,59 +24,34 @@ interface User {
 
 const Admin = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshUsers, setRefreshUsers] = useState(false);
 
   useEffect(() => {
-    fetchUsers();
-  }, [refreshUsers]);
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [refreshUsers, activeTab]);
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Get users from profiles table
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [profilesResult, customUsersResult, balancesResult, transactionsResult] = await Promise.all([
+        supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabase.from('custom_users').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_balance').select('*'),
+        supabase.from('transactions').select('*').order('created_at', { ascending: false })
+      ]);
 
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-      }
-
-      // Get users from custom_users table
-      const { data: customUsers, error: customUsersError } = await supabase
-        .from('custom_users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (customUsersError) {
-        console.error('Error fetching custom users:', customUsersError);
-      }
-
-      // Get balances for all users
-      const { data: balances, error: balanceError } = await supabase
-        .from('user_balance')
-        .select('*');
-
-      if (balanceError) {
-        console.error('Error fetching balances:', balanceError);
-      }
-
-      // Get transactions for all users
-      const { data: transactions, error: transactionError } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (transactionError) {
-        console.error('Error fetching transactions:', transactionError);
-      }
+      const profiles = profilesResult.data || [];
+      const customUsers = customUsersResult.data || [];
+      const balances = balancesResult.data || [];
+      const transactions = transactionsResult.data || [];
 
       // Combine profiles with balances and transactions
-      const profileUsers: User[] = (profiles || []).map(profile => {
+      const profileUsers: User[] = profiles.map(profile => {
         const userBalance = balances?.find(b => b.user_id === profile.id);
         const userTransactions = transactions?.filter(t => t.user_id === profile.id) || [];
         return {
@@ -89,7 +65,7 @@ const Admin = () => {
       });
 
       // Combine custom users with balances and transactions
-      const customUsersList: User[] = (customUsers || []).map(customUser => {
+      const customUsersList: User[] = customUsers.map(customUser => {
         const userBalance = balances?.find(b => b.user_id === customUser.id);
         const userTransactions = transactions?.filter(t => t.user_id === customUser.id) || [];
         return {
@@ -102,19 +78,16 @@ const Admin = () => {
         };
       });
 
-      // Combine both arrays and sort by created_at
       const allUsers = [...profileUsers, ...customUsersList].sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
       setUsers(allUsers);
-      console.log('Fetched users:', allUsers.length, 'from profiles:', profileUsers.length, 'from custom_users:', customUsersList.length);
-      console.log('Total transactions found:', transactions?.length || 0);
     } catch (error) {
-      console.error('Unexpected error fetching users:', error);
+      console.error('Error fetching users:', error);
       toast({
         title: "Error",
-        description: "Unexpected error fetching users",
+        description: "Failed to fetch users",
         variant: "destructive",
       });
       setUsers([]);
@@ -138,16 +111,14 @@ const Admin = () => {
       });
 
       if (error) {
-        console.error('Error adding coins:', error);
         toast({
           title: "Error",
           description: "Failed to add coins",
           variant: "destructive",
         });
       } else {
-        // Log admin activity
         await activityLogger.logAdminAction(
-          'admin-user-id', // You'll need to get the actual admin user ID
+          'admin-user-id',
           `Added ${amount} coins to ${username}`,
           userId,
           { amount, username }
@@ -160,10 +131,9 @@ const Admin = () => {
         setRefreshUsers(prev => !prev);
       }
     } catch (error) {
-      console.error('Unexpected error adding coins:', error);
       toast({
         title: "Error",
-        description: "Unexpected error adding coins",
+        description: "Failed to add coins",
         variant: "destructive",
       });
     }
@@ -184,32 +154,29 @@ const Admin = () => {
       });
 
       if (error) {
-        console.error('Error removing coins:', error);
         toast({
           title: "Error",
           description: "Failed to remove coins",
           variant: "destructive",
         });
       } else {
-        // Log admin activity
         await activityLogger.logAdminAction(
-          'admin-user-id', // You'll need to get the actual admin user ID
+          'admin-user-id',
           `Removed ${amount} coins from ${username}`,
           userId,
           { amount, username }
         );
         
-         toast({
+        toast({
           title: "Success",
           description: `Successfully removed ${amount} coins from ${username}'s balance`,
         });
         setRefreshUsers(prev => !prev);
       }
     } catch (error) {
-      console.error('Unexpected error removing coins:', error);
       toast({
         title: "Error",
-        description: "Unexpected error removing coins",
+        description: "Failed to remove coins",
         variant: "destructive",
       });
     }
@@ -225,16 +192,14 @@ const Admin = () => {
       });
 
       if (error) {
-        console.error(`Error ${action === 'add' ? 'adding' : 'removing'} coins:`, error);
         toast({
           title: "Error",
           description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins`,
           variant: "destructive",
         });
       } else {
-        // Log admin activity
         await activityLogger.logAdminAction(
-          'admin-user-id', // You'll need to get the actual admin user ID
+          'admin-user-id',
           `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
           userId,
           { amount, description, action }
@@ -248,32 +213,22 @@ const Admin = () => {
         setRefreshUsers(prev => !prev);
       }
     } catch (error) {
-      console.error(`Unexpected error ${action === 'add' ? 'adding' : 'removing'} coins:`, error);
       toast({
         title: "Error",
-        description: `Unexpected error ${action === 'add' ? 'adding' : 'removing'} coins`,
+        description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins`,
         variant: "destructive",
       });
     }
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: BarChart },
-    { id: 'users', label: 'User Management', icon: Users },
-    { id: 'videos', label: 'Video Management', icon: Video },
-    { id: 'transactions', label: 'Transaction History', icon: History },
-    { id: 'activity', label: 'Activity Log', icon: Activity },
+    { id: 'overview', label: 'Overview', icon: Activity },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'videos', label: 'Videos', icon: Video },
+    { id: 'transactions', label: 'Transactions', icon: History },
+    { id: 'activity', label: 'Activity', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
-
-  const totalUsers = users.length;
-  const totalBalance = users.reduce((sum, user) => sum + (user.balance || 0), 0);
-  const totalTransactions = users.reduce((sum, user) => sum + (user.transactions?.length || 0), 0);
-  const averageBalance = totalUsers > 0 ? Math.round(totalBalance / totalUsers) : 0;
-
-  // Count users by source
-  const profilesCount = users.filter(u => u.source === 'profiles').length;
-  const customUsersCount = users.filter(u => u.source === 'custom_users').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -281,9 +236,6 @@ const Admin = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage users, transactions, and system settings</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Users: {profilesCount} from profiles, {customUsersCount} from custom_users
-          </p>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -297,35 +249,23 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-semibold text-gray-800">Total Users</h3>
-                <p className="text-2xl font-bold text-blue-600">{totalUsers}</p>
-                <p className="text-xs text-gray-500">Auth: {profilesCount}, Custom: {customUsersCount}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-semibold text-gray-800">Total Balance</h3>
-                <p className="text-2xl font-bold text-green-600">{totalBalance}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-semibold text-gray-800">Avg. Balance</h3>
-                <p className="text-2xl font-bold text-purple-600">{averageBalance}</p>
-              </div>
-              <div className="bg-white rounded-lg shadow-md p-4">
-                <h3 className="text-lg font-semibold text-gray-800">Total Transactions</h3>
-                <p className="text-2xl font-bold text-yellow-600">{totalTransactions}</p>
-              </div>
-            </div>
+            <AdminOverview />
           </TabsContent>
 
           <TabsContent value="users">
-            <EnhancedUserTable
-              users={users}
-              onViewDetails={setSelectedUser}
-              onAddCoins={handleAddCoins}
-              onRemoveCoins={handleRemoveCoins}
-              onRefresh={fetchUsers}
-            />
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <EnhancedUserTable
+                users={users}
+                onViewDetails={setSelectedUser}
+                onAddCoins={handleAddCoins}
+                onRemoveCoins={handleRemoveCoins}
+                onRefresh={fetchUsers}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="videos">
@@ -343,7 +283,7 @@ const Admin = () => {
           <TabsContent value="settings">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>
-              <p className="text-gray-700">Here you can manage various system settings.</p>
+              <p className="text-gray-700">System configuration and preferences.</p>
               <Button onClick={() => alert('Settings saved!')} className="mt-4">Save Settings</Button>
             </div>
           </TabsContent>

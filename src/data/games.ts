@@ -3,284 +3,288 @@ export interface Game {
   id: string;
   title: string;
   imgSrc: string;
-  isPiratePun: boolean;
+  isPiratePun?: boolean;
   coinCost: number;
   unlocked: boolean;
-  category?: string;
+  category: string;
 }
 
 export const games: Game[] = [
-  // First 4 games are free
+  // RPG Games
   {
-    id: "1",
-    title: "Sea of Thieves",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172620/header.jpg",
+    id: "witcher-3",
+    title: "The Witcher 3: Wild Hunt",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/292030/header.jpg",
     isPiratePun: false,
-    coinCost: 0,
-    unlocked: true,
-    category: "action"
-  },
-  {
-    id: "2",
-    title: "Assassin's Creed IV: Black Flag",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/242050/header.jpg",
-    isPiratePun: false,
-    coinCost: 0,
-    unlocked: true,
-    category: "action"
-  },
-  {
-    id: "3",
-    title: "The Secret of Monkey Island",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/32360/header.jpg",
-    isPiratePun: false,
-    coinCost: 0,
-    unlocked: true,
-    category: "adventure"
-  },
-  {
-    id: "4",
-    title: "Sid Meier's Pirates!",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/3920/header.jpg",
-    isPiratePun: false,
-    coinCost: 0,
-    unlocked: true,
-    category: "strategy"
-  },
-  // Popular current games with updated pricing
-  {
-    id: "5",
-    title: "Call of Duty: Black Ops 6",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2933620/header.jpg",
-    isPiratePun: false,
-    coinCost: 45,
+    coinCost: 30,
     unlocked: false,
-    category: "fps"
+    category: "rpg"
   },
   {
-    id: "6",
-    title: "Fortnite",
-    imgSrc: "https://cdn2.unrealengine.com/14br-consoles-1920x1080-wlogo-f010219b1dbf.jpg",
-    isPiratePun: false,
-    coinCost: 15, // Updated from 0 to 15
-    unlocked: false,
-    category: "battle-royale"
-  },
-  {
-    id: "7",
-    title: "Counter-Strike 2",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg",
-    isPiratePun: false,
-    coinCost: 10, // Updated from 0 to 10
-    unlocked: false,
-    category: "fps"
-  },
-  {
-    id: "8",
-    title: "Valorant",
-    imgSrc: "https://images.contentstack.io/v3/assets/blt77c3b57b9cab6afd/blt23b8b3973a24cb3e/647ec2a6ad11a3177cad2ad4/VAL_ChampionSelect_Banner_EP7-A1_2560x1440.jpg", // Fixed Valorant image
-    isPiratePun: false,
-    coinCost: 12, // Updated from 0 to 12
-    unlocked: false,
-    category: "fps"
-  },
-  {
-    id: "9",
+    id: "cyberpunk-2077",
     title: "Cyberpunk 2077",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg",
+    isPiratePun: false,
+    coinCost: 35,
+    unlocked: false,
+    category: "rpg"
+  },
+  {
+    id: "elden-ring",
+    title: "Elden Ring",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg",
     isPiratePun: false,
     coinCost: 40,
     unlocked: false,
     category: "rpg"
   },
   {
-    id: "10",
+    id: "baldurs-gate-3",
     title: "Baldur's Gate 3",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg",
     isPiratePun: false,
-    coinCost: 45,
+    coinCost: 35,
     unlocked: false,
     category: "rpg"
   },
+
+  // FPS Games - Using reliable placeholders for games without Steam pages
   {
-    id: "11",
-    title: "Elden Ring",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg",
+    id: "valorant",
+    title: "Valorant",
+    imgSrc: "https://picsum.photos/seed/valorant-fps-game/600/800",
     isPiratePun: false,
-    coinCost: 50,
+    coinCost: 25,
     unlocked: false,
-    category: "rpg"
+    category: "fps"
   },
   {
-    id: "12",
-    title: "Minecraft",
-    imgSrc: "https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_Minecraft-300x465.jpg",
+    id: "call-of-duty-warzone",
+    title: "Call of Duty: Warzone",
+    imgSrc: "https://picsum.photos/seed/cod-warzone-battle/600/800",
     isPiratePun: false,
     coinCost: 20,
     unlocked: false,
-    category: "sandbox"
+    category: "fps"
   },
   {
-    id: "13",
-    title: "Grand Theft Auto V",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",
+    id: "counter-strike-2",
+    title: "Counter-Strike 2",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg",
     isPiratePun: false,
-    coinCost: 35,
+    coinCost: 15,
     unlocked: false,
-    category: "action"
+    category: "fps"
   },
   {
-    id: "14",
-    title: "Red Dead Redemption 2",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
+    id: "overwatch-2",
+    title: "Overwatch 2",
+    imgSrc: "https://picsum.photos/seed/overwatch-hero-shooter/600/800",
     isPiratePun: false,
-    coinCost: 45,
+    coinCost: 25,
     unlocked: false,
-    category: "action"
+    category: "fps"
   },
+
+  // MOBA Games
   {
-    id: "15",
-    title: "Apex Legends",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg",
-    isPiratePun: false,
-    coinCost: 14, // Updated from 0 to 14
-    unlocked: false,
-    category: "battle-royale"
-  },
-  {
-    id: "16",
+    id: "league-of-legends",
     title: "League of Legends",
-    imgSrc: "https://images.contentstack.io/v3/assets/blt187521ff0727be24/blt6b9e27cc54b2e7d9/60ee1fc8e74d174034d7ae5e/lol-champion-rumble-splash-art.jpg",
+    imgSrc: "https://picsum.photos/seed/league-legends-moba/600/800",
     isPiratePun: false,
-    coinCost: 10, // Updated from 0 to 10
+    coinCost: 20,
     unlocked: false,
     category: "moba"
   },
   {
-    id: "17",
+    id: "dota-2",
+    title: "Dota 2",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "moba"
+  },
+
+  // Strategy Games
+  {
+    id: "civilization-vi",
+    title: "Civilization VI",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/289070/header.jpg",
+    isPiratePun: false,
+    coinCost: 25,
+    unlocked: false,
+    category: "strategy"
+  },
+  {
+    id: "age-of-empires-iv",
+    title: "Age of Empires IV",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1466860/header.jpg",
+    isPiratePun: false,
+    coinCost: 30,
+    unlocked: false,
+    category: "strategy"
+  },
+
+  // Battle Royale
+  {
+    id: "fortnite",
+    title: "Fortnite",
+    imgSrc: "https://picsum.photos/seed/fortnite-battle-royale/600/800",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "battle-royale"
+  },
+  {
+    id: "apex-legends",
+    title: "Apex Legends",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1172470/header.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "battle-royale"
+  },
+
+  // MMO Games
+  {
+    id: "world-of-warcraft",
     title: "World of Warcraft",
-    imgSrc: "https://bnetcmsus-a.akamaihd.net/cms/page_media/1W04QMRVD6361571234134076.jpg",
+    imgSrc: "https://picsum.photos/seed/wow-mmorpg-classic/600/800",
+    isPiratePun: false,
+    coinCost: 25,
+    unlocked: false,
+    category: "mmorpg"
+  },
+  {
+    id: "final-fantasy-xiv",
+    title: "Final Fantasy XIV",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/39210/header.jpg",
     isPiratePun: false,
     coinCost: 30,
     unlocked: false,
     category: "mmorpg"
   },
+
+  // Horror Games
   {
-    id: "18",
-    title: "Palworld",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1623730/header.jpg",
+    id: "phasmophobia",
+    title: "Phasmophobia",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/739630/header.jpg",
     isPiratePun: false,
-    coinCost: 25,
-    unlocked: false,
-    category: "survival"
-  },
-  {
-    id: "19",
-    title: "Helldivers 2",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/553850/header.jpg",
-    isPiratePun: false,
-    coinCost: 30,
-    unlocked: false,
-    category: "fps"
-  },
-  {
-    id: "20",
-    title: "Stellar Blade",
-    imgSrc: "https://image.api.playstation.com/vulcan/ap/rnd/202312/0117/ac64b8f48c80fc0885b8e1a1f42ca1f99e4c9e65fe1e94c0.jpg",
-    isPiratePun: false,
-    coinCost: 42,
-    unlocked: false,
-    category: "action"
-  },
-  // New trending games from 2024
-  {
-    id: "21",
-    title: "Black Myth: Wukong",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2358720/header.jpg",
-    isPiratePun: false,
-    coinCost: 48,
-    unlocked: false,
-    category: "action"
-  },
-  {
-    id: "22",
-    title: "Warhammer 40K: Space Marine 2", // Shortened title to fix text overflow
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2183900/header.jpg",
-    isPiratePun: false,
-    coinCost: 44,
-    unlocked: false,
-    category: "action"
-  },
-  {
-    id: "23",
-    title: "Dragon Age: The Veilguard",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1845910/header.jpg",
-    isPiratePun: false,
-    coinCost: 46,
-    unlocked: false,
-    category: "rpg"
-  },
-  {
-    id: "24",
-    title: "Metaphor: ReFantazio",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2679460/header.jpg",
-    isPiratePun: false,
-    coinCost: 42,
-    unlocked: false,
-    category: "rpg"
-  },
-  {
-    id: "25",
-    title: "Lethal Company",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1966720/header.jpg",
-    isPiratePun: false,
-    coinCost: 18,
+    coinCost: 15,
     unlocked: false,
     category: "horror"
   },
   {
-    id: "26",
-    title: "Rust",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/252490/header.jpg",
+    id: "dead-by-daylight",
+    title: "Dead by Daylight",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/381210/header.jpg",
     isPiratePun: false,
-    coinCost: 28,
+    coinCost: 20,
     unlocked: false,
-    category: "survival"
+    category: "horror"
+  },
+
+  // Sports Games
+  {
+    id: "fifa-24",
+    title: "EA Sports FC 24",
+    imgSrc: "https://picsum.photos/seed/fifa-football-sports/600/800",
+    isPiratePun: false,
+    coinCost: 35,
+    unlocked: false,
+    category: "sports"
   },
   {
-    id: "27",
-    title: "Valheim",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/892970/header.jpg",
-    isPiratePun: false,
-    coinCost: 22,
-    unlocked: false,
-    category: "survival"
-  },
-  {
-    id: "28",
-    title: "Among Us",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/945360/header.jpg",
-    isPiratePun: false,
-    coinCost: 8,
-    unlocked: false,
-    category: "party"
-  },
-  {
-    id: "29",
-    title: "Fall Guys",
-    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1097150/header.jpg",
-    isPiratePun: false,
-    coinCost: 12, // Updated from 0 to 12
-    unlocked: false,
-    category: "party"
-  },
-  {
-    id: "30",
+    id: "rocket-league",
     title: "Rocket League",
     imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/252950/header.jpg",
     isPiratePun: false,
-    coinCost: 10, // Updated from 0 to 10
+    coinCost: 20,
     unlocked: false,
     category: "sports"
+  },
+
+  // Adventure Games
+  {
+    id: "red-dead-redemption-2",
+    title: "Red Dead Redemption 2",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg",
+    isPiratePun: false,
+    coinCost: 40,
+    unlocked: false,
+    category: "adventure"
+  },
+  {
+    id: "gta-v",
+    title: "Grand Theft Auto V",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",
+    isPiratePun: false,
+    coinCost: 25,
+    unlocked: false,
+    category: "adventure"
+  },
+
+  // Simulation Games
+  {
+    id: "the-sims-4",
+    title: "The Sims 4",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1222670/header.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "simulation"
+  },
+  {
+    id: "cities-skylines",
+    title: "Cities: Skylines",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/255710/header.jpg",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "simulation"
+  },
+
+  // Racing Games
+  {
+    id: "forza-horizon-5",
+    title: "Forza Horizon 5",
+    imgSrc: "https://picsum.photos/seed/forza-racing-cars/600/800",
+    isPiratePun: false,
+    coinCost: 35,
+    unlocked: false,
+    category: "racing"
+  },
+  {
+    id: "f1-23",
+    title: "F1 23",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/2108330/header.jpg",
+    isPiratePun: false,
+    coinCost: 30,
+    unlocked: false,
+    category: "racing"
+  },
+
+  // Indie Games
+  {
+    id: "hades",
+    title: "Hades",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/1145360/header.jpg",
+    isPiratePun: false,
+    coinCost: 20,
+    unlocked: false,
+    category: "indie"
+  },
+  {
+    id: "stardew-valley",
+    title: "Stardew Valley",
+    imgSrc: "https://cdn.cloudflare.steamstatic.com/steam/apps/413150/header.jpg",
+    isPiratePun: false,
+    coinCost: 15,
+    unlocked: false,
+    category: "indie"
   }
 ];
+
+export default games;

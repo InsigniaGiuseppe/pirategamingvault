@@ -28,15 +28,17 @@ const VideoPlayer = ({
   onVideoReady 
 }: VideoPlayerProps) => {
   const [hasWatched, setHasWatched] = useState(false);
-  const [hasEarnedReward, setHasEarnedReward] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
-  const [startTime, setStartTime] = useState<number | null>(null);
   const [videoError, setVideoError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { user } = useSimpleAuth();
   const { toast } = useToast();
+
+  const MAX_RETRIES = 2;
+  const LOAD_TIMEOUT = 8000; // 8 seconds
 
   useEffect(() => {
     const watched = localStorage.getItem(`watched-${embedUrl}`);
@@ -46,43 +48,34 @@ const VideoPlayer = ({
   }, [embedUrl]);
 
   useEffect(() => {
-    console.log('VideoPlayer mounted for:', title);
-    
-    // Set a timeout for video loading
+    if (onVideoReady && !isLoading && !videoError) {
+      onVideoReady();
+    }
+  }, [onVideoReady, isLoading, videoError]);
+
+  useEffect(() => {
     const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('Video loading timeout for:', title);
+      if (isLoading && !videoError) {
         setLoadTimeout(true);
         setIsLoading(false);
       }
-    }, 10000); // 10 second timeout
+    }, LOAD_TIMEOUT);
 
     return () => clearTimeout(timeout);
-  }, [title, isLoading]);
-
-  useEffect(() => {
-    if (onVideoReady) {
-      console.log('Calling onVideoReady for:', title);
-      onVideoReady();
-    }
-  }, [onVideoReady, title]);
+  }, [isLoading, videoError, retryCount]);
 
   const handleVideoStart = async () => {
-    console.log('Video started:', title);
     setVideoStarted(true);
-    setStartTime(Date.now());
     setIsLoading(false);
     
-    // Log video watch activity
     if (user?.id) {
       try {
         await activityLogger.logVideoWatched(user.id, embedUrl, title);
       } catch (error) {
-        console.error('Failed to log video activity:', error);
+        // Silent fail for analytics
       }
     }
 
-    // Track video start analytics
     if (window.gtag) {
       window.gtag('event', 'video_start', {
         video_title: title,
@@ -92,46 +85,34 @@ const VideoPlayer = ({
   };
 
   const handleVideoLoad = () => {
-    console.log('Video iframe loaded for:', title);
     setIsLoading(false);
     setLoadTimeout(false);
-    // Call handleVideoStart after a short delay to ensure video is ready
+    setVideoError(false);
     setTimeout(() => {
       handleVideoStart();
-    }, 1000);
+    }, 500);
   };
 
   const handleVideoError = () => {
-    console.error('Video error for:', title);
     setVideoError(true);
     setIsLoading(false);
     
     if (onError) {
       onError();
     }
-    
-    toast({
-      variant: "destructive",
-      title: "Video Error",
-      description: "There was an error loading the video. You can watch it externally instead.",
-    });
   };
 
   const handleExternalWatch = async () => {
-    console.log('Opening external watch for:', title);
-    
     if (onExternalWatch) {
       try {
         await onExternalWatch();
       } catch (error) {
-        console.error('External watch callback failed:', error);
+        // Silent fail
       }
     }
     
-    // Open the original URL in a new tab
     window.open(originalUrl, '_blank');
     
-    // Track external watch analytics
     if (window.gtag) {
       window.gtag('event', 'external_video_watch', {
         video_title: title,
@@ -142,12 +123,20 @@ const VideoPlayer = ({
   };
 
   const handleRetry = () => {
-    console.log('Retrying video load for:', title);
+    if (retryCount >= MAX_RETRIES) {
+      toast({
+        variant: "destructive",
+        title: "Maximum retries reached",
+        description: "Please try watching externally instead.",
+      });
+      return;
+    }
+
     setVideoError(false);
     setIsLoading(true);
     setLoadTimeout(false);
+    setRetryCount(prev => prev + 1);
     
-    // Force iframe reload
     if (iframeRef.current) {
       const currentSrc = iframeRef.current.src;
       iframeRef.current.src = '';
@@ -155,9 +144,11 @@ const VideoPlayer = ({
         if (iframeRef.current) {
           iframeRef.current.src = currentSrc;
         }
-      }, 100);
+      }, 200);
     }
   };
+
+  const shouldShowError = videoError || loadTimeout;
 
   return (
     <Card className="w-full">
@@ -172,23 +163,30 @@ const VideoPlayer = ({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative">
-          {videoError || loadTimeout ? (
+          {shouldShowError ? (
             <div className="w-full aspect-video rounded-md bg-gray-100 flex items-center justify-center">
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-4 p-6">
                 <AlertCircle size={48} className="text-gray-400 mx-auto" />
                 <div>
-                  <p className="text-gray-600 mb-2">
-                    {loadTimeout ? 'Video loading timed out' : 'Video could not be embedded'}
+                  <p className="text-gray-600 mb-2 font-medium">
+                    {loadTimeout ? 'Video loading timed out' : 'Video could not be loaded'}
                   </p>
                   <p className="text-sm text-gray-500 mb-4">
                     This might be due to network issues or video restrictions
                   </p>
+                  {retryCount > 0 && (
+                    <p className="text-xs text-gray-400">
+                      Attempts: {retryCount}/{MAX_RETRIES}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={handleRetry} variant="outline" size="sm">
-                    <RotateCcw size={16} className="mr-2" />
-                    Try Again
-                  </Button>
+                  {retryCount < MAX_RETRIES && (
+                    <Button onClick={handleRetry} variant="outline" size="sm">
+                      <RotateCcw size={16} className="mr-2" />
+                      Try Again
+                    </Button>
+                  )}
                   <Button onClick={handleExternalWatch} className="flex items-center gap-2">
                     <ExternalLink size={16} />
                     Watch Externally
@@ -203,6 +201,11 @@ const VideoPlayer = ({
                   <div className="text-center">
                     <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
                     <p className="text-gray-600 text-sm">Loading video...</p>
+                    {retryCount > 0 && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        Attempt {retryCount + 1}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -220,7 +223,7 @@ const VideoPlayer = ({
           
           <div className="absolute bottom-2 right-2 flex items-center space-x-2">
             {hasWatched && (
-              <Badge variant="success" className="opacity-80">
+              <Badge variant="default" className="bg-green-600">
                 <CheckCircle size={14} className="mr-1" />
                 Watched
               </Badge>
@@ -233,10 +236,12 @@ const VideoPlayer = ({
             <ExternalLink className="mr-2 h-4 w-4" />
             Watch Externally
           </Button>
-          <Button variant="secondary" onClick={handleRetry}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reload
-          </Button>
+          {retryCount < MAX_RETRIES && (
+            <Button variant="secondary" onClick={handleRetry}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reload ({retryCount}/{MAX_RETRIES})
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
