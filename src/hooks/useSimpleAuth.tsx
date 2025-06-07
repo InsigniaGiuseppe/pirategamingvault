@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { login, logout } from '@/services/customAuthService';
 import { registerUser } from '@/services/registrationService';
 import { getUserBalance, getUserTransactions, getUserUnlockedGames, updateUserBalance } from '@/services/userService';
+import { activityLogger } from '@/services/activityLoggingService';
 import type { CustomUser, CustomSession } from '@/services/customAuthService';
 
 interface AuthState {
@@ -126,7 +127,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
-        // FIXED: Always reset loading state on error
         setState(prev => ({ 
           ...prev, 
           isLoading: false, 
@@ -142,7 +142,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('Login successful, updating state');
       
-      // Update state
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
@@ -152,15 +151,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading: false
       }));
       
-      // Load user data from database
       await loadUserData(user.id);
+      
+      // Log the login activity
+      await activityLogger.logLogin(user.id, user.username);
       
       toast({
         title: "Login Successful",
         description: `Welcome back, ${user.username}!`
       });
       
-      // Navigate after a short delay
       setTimeout(() => {
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
@@ -168,7 +168,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
     } catch (error) {
       console.error('Login error:', error);
-      // FIXED: Always reset loading state on catch
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
@@ -191,7 +190,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error || !user) {
         console.error('Registration failed:', error);
-        // FIXED: Always reset loading state on error
         setState(prev => ({ 
           ...prev, 
           isLoading: false, 
@@ -207,7 +205,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('Registration successful, updating state');
       
-      // Update state
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
@@ -221,15 +218,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading: false
       }));
       
-      // Load user data from database (should include welcome bonus)
       await loadUserData(user.id);
+      
+      // Log the registration activity
+      await activityLogger.logRegistration(user.id, user.username || username);
       
       toast({
         title: "Registration Successful",
         description: "Welcome to Pirate Gaming!"
       });
       
-      // Navigate after a short delay
       setTimeout(() => {
         console.log('Navigating to dashboard...');
         navigate('/dashboard');
@@ -237,7 +235,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
     } catch (error) {
       console.error('Registration error:', error);
-      // FIXED: Always reset loading state on catch
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
@@ -254,6 +251,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const handleLogout = useCallback(async () => {
     try {
       console.log('Starting logout process');
+      
+      // Log the logout activity before clearing state
+      if (state.user?.id && state.user?.username) {
+        await activityLogger.logLogout(state.user.id, state.user.username);
+      }
+      
       await logout();
       
       localStorage.removeItem('pirate_user');
@@ -265,7 +268,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, [navigate]);
+  }, [navigate, state.user]);
 
   const addPirateCoins = useCallback(async (amount: number, description?: string) => {
     if (!state.user?.id) return;
@@ -300,6 +303,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       );
       
       if (success) {
+        // Log the game unlock activity
+        await activityLogger.logGameUnlocked(state.user.id, gameId, gameId, cost);
+        
         // Add to unlocked games (you might want to create a service for this)
         // For now, just refresh user data
         await loadUserData(state.user.id);

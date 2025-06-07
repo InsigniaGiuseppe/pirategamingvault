@@ -3,10 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
 import EnhancedTransactionHistory from '@/components/EnhancedTransactionHistory';
 import UserDetailsModal from '@/components/UserDetailsModal';
+import ActivityLogViewer from '@/components/ActivityLogViewer';
 import { Button } from '@/components/ui/button';
 import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Users, Settings, History, Video } from 'lucide-react';
+import { BarChart, Users, Settings, History, Video, Activity } from 'lucide-react';
+import { activityLogger } from '@/services/activityLoggingService';
 
 import AdminVideoManager from '@/components/AdminVideoManager';
 
@@ -143,6 +145,14 @@ const Admin = () => {
           variant: "destructive",
         });
       } else {
+        // Log admin activity
+        await activityLogger.logAdminAction(
+          'admin-user-id', // You'll need to get the actual admin user ID
+          `Added ${amount} coins to ${username}`,
+          userId,
+          { amount, username }
+        );
+        
         toast({
           title: "Success",
           description: `Successfully added ${amount} coins to ${username}'s balance`,
@@ -181,6 +191,14 @@ const Admin = () => {
           variant: "destructive",
         });
       } else {
+        // Log admin activity
+        await activityLogger.logAdminAction(
+          'admin-user-id', // You'll need to get the actual admin user ID
+          `Removed ${amount} coins from ${username}`,
+          userId,
+          { amount, username }
+        );
+        
          toast({
           title: "Success",
           description: `Successfully removed ${amount} coins from ${username}'s balance`,
@@ -214,6 +232,14 @@ const Admin = () => {
           variant: "destructive",
         });
       } else {
+        // Log admin activity
+        await activityLogger.logAdminAction(
+          'admin-user-id', // You'll need to get the actual admin user ID
+          `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
+          userId,
+          { amount, description, action }
+        );
+        
         toast({
           title: "Success",
           description: `Successfully ${action === 'add' ? 'added' : 'removed'} ${amount} coins`,
@@ -236,6 +262,7 @@ const Admin = () => {
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'videos', label: 'Video Management', icon: Video },
     { id: 'transactions', label: 'Transaction History', icon: History },
+    { id: 'activity', label: 'Activity Log', icon: Activity },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
@@ -260,7 +287,7 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-6 mb-6">
             {tabs.map((tab) => (
               <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-2">
                 <tab.icon className="h-4 w-4" />
@@ -307,6 +334,10 @@ const Admin = () => {
 
           <TabsContent value="transactions">
             <EnhancedTransactionHistory transactions={[]} databaseUsers={users} />
+          </TabsContent>
+
+          <TabsContent value="activity">
+            <ActivityLogViewer />
           </TabsContent>
 
           <TabsContent value="settings">
