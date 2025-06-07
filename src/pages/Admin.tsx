@@ -93,7 +93,7 @@ const Admin = () => {
 
     try {
       const { error } = await supabase.rpc('add_coins', {
-        user_id: userId as any,
+        user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
       });
@@ -131,7 +131,7 @@ const Admin = () => {
 
     try {
       const { error } = await supabase.rpc('remove_coins', {
-        user_id: userId as any,
+        user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
       });
@@ -164,7 +164,7 @@ const Admin = () => {
     try {
       const rpcFunctionName = action === 'add' ? 'add_coins' : 'remove_coins';
       const { error } = await supabase.rpc(rpcFunctionName, {
-        user_id: userId as any,
+        user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
       });

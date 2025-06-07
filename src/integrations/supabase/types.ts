@@ -317,7 +317,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      add_coins: {
+        Args: { user_id: string; amount: number; description?: string }
+        Returns: undefined
+      }
+      remove_coins: {
+        Args: { user_id: string; amount: number; description?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
