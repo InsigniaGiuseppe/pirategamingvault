@@ -191,7 +191,7 @@ const UserDetailsModal = ({ isOpen, onClose, user, onUpdateBalance }: UserDetail
                             <div>
                               <p className="font-medium text-sm">{transaction.description}</p>
                               <p className="text-xs text-gray-500">
-                                {format(new Date(transaction.timestamp), 'PPp')}
+                                {format(new Date(transaction.created_at), 'PPp')}
                               </p>
                             </div>
                           </div>

@@ -62,28 +62,40 @@ const Admin = () => {
         console.error('Error fetching balances:', balanceError);
       }
 
-      // Combine profiles with balances
+      // Get transactions for all users
+      const { data: transactions, error: transactionError } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (transactionError) {
+        console.error('Error fetching transactions:', transactionError);
+      }
+
+      // Combine profiles with balances and transactions
       const profileUsers: User[] = (profiles || []).map(profile => {
         const userBalance = balances?.find(b => b.user_id === profile.id);
+        const userTransactions = transactions?.filter(t => t.user_id === profile.id) || [];
         return {
           id: profile.id,
           username: profile.username,
           balance: userBalance?.balance || 0,
           created_at: profile.created_at,
-          transactions: [],
+          transactions: userTransactions,
           source: 'profiles' as const
         };
       });
 
-      // Combine custom users with balances
+      // Combine custom users with balances and transactions
       const customUsersList: User[] = (customUsers || []).map(customUser => {
         const userBalance = balances?.find(b => b.user_id === customUser.id);
+        const userTransactions = transactions?.filter(t => t.user_id === customUser.id) || [];
         return {
           id: customUser.id,
           username: customUser.username,
           balance: userBalance?.balance || 0,
           created_at: customUser.created_at,
-          transactions: [],
+          transactions: userTransactions,
           source: 'custom_users' as const
         };
       });
@@ -95,6 +107,7 @@ const Admin = () => {
 
       setUsers(allUsers);
       console.log('Fetched users:', allUsers.length, 'from profiles:', profileUsers.length, 'from custom_users:', customUsersList.length);
+      console.log('Total transactions found:', transactions?.length || 0);
     } catch (error) {
       console.error('Unexpected error fetching users:', error);
       toast({
