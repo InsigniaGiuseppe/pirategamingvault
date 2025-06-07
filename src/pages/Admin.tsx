@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
@@ -12,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Settings, History, Video, Activity } from 'lucide-react';
 import { activityLogger } from '@/services/activityLoggingService';
 import AdminVideoManager from '@/components/AdminVideoManager';
+import { OptimizedTransactionHistory } from '@/components/OptimizedTransactionHistory';
 
 interface User {
   id: string;
@@ -273,7 +273,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="transactions">
-            <EnhancedTransactionHistory transactions={[]} databaseUsers={users} />
+            <OptimizedTransactionHistory />
           </TabsContent>
 
           <TabsContent value="activity">
