@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
@@ -104,20 +103,19 @@ const Admin = () => {
   };
 
   const executeRPCWithTimeout = async (rpcFunction: 'add_coins' | 'remove_coins', params: any, timeoutMs: number = 30000): Promise<any> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Operation timed out after ${timeoutMs/1000} seconds`));
       }, timeoutMs);
 
-      supabase.rpc(rpcFunction, params)
-        .then(result => {
-          clearTimeout(timeoutId);
-          resolve(result);
-        })
-        .catch(error => {
-          clearTimeout(timeoutId);
-          reject(error);
-        });
+      try {
+        const result = await supabase.rpc(rpcFunction, params);
+        clearTimeout(timeoutId);
+        resolve(result);
+      } catch (error) {
+        clearTimeout(timeoutId);
+        reject(error);
+      }
     });
   };
 
