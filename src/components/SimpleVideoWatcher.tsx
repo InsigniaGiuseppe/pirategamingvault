@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Coins, ExternalLink, CheckCircle, Play, Clock } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTimerManager } from '@/hooks/useTimerManager';
 
 interface SimpleVideoWatcherProps {
   video: any;
@@ -20,90 +21,56 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
   const [showCoinAnimation, setShowCoinAnimation] = useState(false);
   const [nextRewardIn, setNextRewardIn] = useState(60);
   
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const rewardTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const coinAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { addPirateCoins } = useSimpleAuth();
   const { toast } = useToast();
+  const { setTimer, clearTimer, clearAllTimers } = useTimerManager();
 
-  // Cleanup function to clear all timers
-  const clearAllTimers = useCallback(() => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    if (rewardTimerRef.current) {
-      clearInterval(rewardTimerRef.current);
-      rewardTimerRef.current = null;
-    }
-    if (coinAnimationTimeoutRef.current) {
-      clearTimeout(coinAnimationTimeoutRef.current);
-      coinAnimationTimeoutRef.current = null;
-    }
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      clearAllTimers();
-    };
-  }, [clearAllTimers]);
+  const awardCoins = useCallback(() => {
+    const coinsToAward = 3;
+    addPirateCoins(coinsToAward, `Watched 1 minute of ${video.title}`);
+    setCoinsEarned(prev => prev + coinsToAward);
+    
+    setShowCoinAnimation(true);
+    setTimer('coinAnimation', () => setShowCoinAnimation(false), 2000);
+    
+    toast({
+      title: "+3 Coins Earned!",
+      description: "Keep watching to earn more!",
+      duration: 2000,
+    });
+  }, [addPirateCoins, video.title, toast, setTimer]);
 
   const startEarning = useCallback(() => {
     console.log('Starting to earn coins for video:', video.title);
     
-    // Clear any existing timers first
     clearAllTimers();
-    
     setIsEarning(true);
     setTimeWatched(0);
     setCoinsEarned(0);
     setNextRewardIn(60);
 
     // Main timer - tracks seconds watched
-    timerRef.current = setInterval(() => {
+    setTimer('watchTimer', () => {
       setTimeWatched(prev => prev + 1);
-    }, 1000);
+    }, 1000, 'interval', 'watchTimer');
 
     // Reward timer - gives coins every 60 seconds
-    rewardTimerRef.current = setInterval(() => {
+    setTimer('rewardTimer', () => {
       setNextRewardIn(prev => {
         if (prev <= 1) {
-          // Award coins
-          const coinsToAward = 3;
-          addPirateCoins(coinsToAward, `Watched 1 minute of ${video.title}`);
-          setCoinsEarned(prevCoins => prevCoins + coinsToAward);
-          
-          // Show animation
-          setShowCoinAnimation(true);
-          
-          // Clear existing animation timeout
-          if (coinAnimationTimeoutRef.current) {
-            clearTimeout(coinAnimationTimeoutRef.current);
-          }
-          
-          coinAnimationTimeoutRef.current = setTimeout(() => {
-            setShowCoinAnimation(false);
-          }, 2000);
-          
-          toast({
-            title: "+3 Coins Earned!",
-            description: "Keep watching to earn more!",
-            duration: 2000,
-          });
-          
-          return 60; // Reset to 60 seconds
+          awardCoins();
+          return 60;
         }
         return prev - 1;
       });
-    }, 1000);
+    }, 1000, 'interval', 'rewardTimer');
 
     toast({
       title: "Started Earning!",
       description: "You'll earn 3 coins every minute while watching",
       duration: 3000,
     });
-  }, [video.title, addPirateCoins, toast, clearAllTimers]);
+  }, [video.title, clearAllTimers, setTimer, awardCoins, toast]);
 
   const stopEarning = useCallback(() => {
     console.log('Stopping coin earning');
@@ -172,7 +139,6 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Video embed or placeholder */}
         <div className="w-full aspect-video rounded-md bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
           <div className="text-center space-y-4 p-6">
             <Play size={48} className="text-gray-400 mx-auto" />
@@ -187,7 +153,6 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
           </div>
         </div>
 
-        {/* Earning Status */}
         {isEarning ? (
           <div className="space-y-4">
             <div className="flex justify-between text-sm">
@@ -234,7 +199,6 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
             variant="outline" 

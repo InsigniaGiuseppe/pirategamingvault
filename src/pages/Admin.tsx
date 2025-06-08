@@ -12,6 +12,7 @@ import { Users, Settings, History, Video, Activity } from 'lucide-react';
 import { activityLogger } from '@/services/activityLoggingService';
 import AdminVideoManager from '@/components/AdminVideoManager';
 import OptimizedTransactionHistory from '@/components/OptimizedTransactionHistory';
+import { DatabaseService } from '@/services/databaseService';
 
 interface User {
   id: string;
@@ -29,6 +30,7 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshUsers, setRefreshUsers] = useState(false);
   const [operationLoading, setOperationLoading] = useState<string | null>(null);
+  const [cancelOperations, setCancelOperations] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (activeTab === 'users') {
@@ -51,7 +53,6 @@ const Admin = () => {
       const balances = balancesResult.data || [];
       const transactions = transactionsResult.data || [];
 
-      // Combine profiles with balances and transactions
       const profileUsers: User[] = profiles.map(profile => {
         const userBalance = balances?.find(b => b.user_id === profile.id);
         const userTransactions = transactions?.filter(t => t.user_id === profile.id) || [];
@@ -65,7 +66,6 @@ const Admin = () => {
         };
       });
 
-      // Combine custom users with balances and transactions
       const customUsersList: User[] = customUsers.map(customUser => {
         const userBalance = balances?.find(b => b.user_id === customUser.id);
         const userTransactions = transactions?.filter(t => t.user_id === customUser.id) || [];
@@ -97,83 +97,24 @@ const Admin = () => {
     }
   };
 
-  const validateUserId = (userId: string): boolean => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(userId);
-  };
-
-  const executeRPCWithTimeout = async (rpcFunction: 'add_coins' | 'remove_coins', params: any, timeoutMs: number = 30000): Promise<any> => {
-    let timeoutId: NodeJS.Timeout;
+  const cancelOperation = (operationId: string) => {
+    setCancelOperations(prev => new Set([...prev, operationId]));
+    setOperationLoading(null);
     
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(new Error(`Operation timed out after ${timeoutMs/1000} seconds`));
-      }, timeoutMs);
+    toast({
+      title: "Operation Cancelled",
+      description: "The operation has been cancelled",
     });
-
-    const rpcPromise = supabase.rpc(rpcFunction, params);
-
-    try {
-      const result = await Promise.race([rpcPromise, timeoutPromise]);
-      clearTimeout(timeoutId);
-      return result;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      throw error;
-    }
-  };
-
-  const ensureUserBalanceExists = async (userId: string): Promise<boolean> => {
-    try {
-      console.log('Ensuring user balance exists for:', userId);
-      
-      // Check if balance record exists
-      const { data: existingBalance } = await supabase
-        .from('user_balance')
-        .select('user_id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (!existingBalance) {
-        console.log('Creating initial balance record for user:', userId);
-        
-        // Create initial balance record using upsert to handle race conditions
-        const { error: balanceError } = await supabase
-          .from('user_balance')
-          .upsert(
-            { user_id: userId, balance: 0 },
-            { onConflict: 'user_id', ignoreDuplicates: false }
-          );
-
-        if (balanceError) {
-          console.error('Error creating user balance:', balanceError);
-          return false;
-        }
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error ensuring user balance exists:', error);
-      return false;
-    }
   };
 
   const handleAddCoins = async (username: string, userId: string) => {
-    console.log('Starting add coins operation:', { username, userId });
-    
-    if (!validateUserId(userId)) {
-      console.error('Invalid user ID format:', userId);
-      toast({
-        title: "Error",
-        description: "Invalid user ID format",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const amount = parseInt(prompt(`Enter amount of coins to add to ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid positive number.');
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -184,36 +125,33 @@ const Admin = () => {
 
     const operationId = `add-${userId}`;
     setOperationLoading(operationId);
+    setCancelOperations(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(operationId);
+      return newSet;
+    });
 
     try {
-      // Ensure user balance record exists first
-      const balanceExists = await ensureUserBalanceExists(userId);
-      if (!balanceExists) {
-        throw new Error('Failed to ensure user balance record exists');
-      }
-
-      console.log('Calling add_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin added ${amount} coins` });
-      
-      const result = await executeRPCWithTimeout('add_coins', {
+      const result = await DatabaseService.safeExecuteRPC('add_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
-      }, 30000);
+      });
 
-      const { data, error } = result as any;
-      console.log('RPC response:', { data, error });
+      if (cancelOperations.has(operationId)) {
+        return;
+      }
 
-      if (error) {
-        console.error('Database error in add_coins:', error);
+      if (!result.success) {
         toast({
           title: "Database Error",
-          description: `Failed to add coins: ${error.message || 'Unknown error'}`,
+          description: result.error || 'Failed to add coins',
           variant: "destructive",
         });
         return;
       }
 
-      // Only log activity if user exists in one of the user tables
+      // Log activity
       try {
         await activityLogger.logAdminAction(
           'admin-user-id',
@@ -222,8 +160,7 @@ const Admin = () => {
           { amount, username }
         );
       } catch (activityError) {
-        // Log activity error but don't fail the main operation
-        console.warn('Failed to log activity, but coins were added successfully:', activityError);
+        console.warn('Failed to log activity:', activityError);
       }
       
       toast({
@@ -235,41 +172,24 @@ const Admin = () => {
       
     } catch (error: any) {
       console.error('Error in handleAddCoins:', error);
-      
-      if (error.message.includes('timed out')) {
-        toast({
-          title: "Operation Timeout",
-          description: `The operation took too long to complete. Please check if the coins were added and try again if needed.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: `Failed to add coins: ${error.message || 'Unknown error'}`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: `Failed to add coins: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
     } finally {
       setOperationLoading(null);
     }
   };
 
   const handleRemoveCoins = async (username: string, userId: string) => {
-    console.log('Starting remove coins operation:', { username, userId });
-    
-    if (!validateUserId(userId)) {
-      console.error('Invalid user ID format:', userId);
-      toast({
-        title: "Error",
-        description: "Invalid user ID format",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const amount = parseInt(prompt(`Enter amount of coins to remove from ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid positive number.');
+      toast({
+        title: "Invalid Amount",
+        description: "Please enter a valid positive number",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -280,36 +200,33 @@ const Admin = () => {
 
     const operationId = `remove-${userId}`;
     setOperationLoading(operationId);
+    setCancelOperations(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(operationId);
+      return newSet;
+    });
 
     try {
-      // Ensure user balance record exists first
-      const balanceExists = await ensureUserBalanceExists(userId);
-      if (!balanceExists) {
-        throw new Error('Failed to ensure user balance record exists');
-      }
-
-      console.log('Calling remove_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin removed ${amount} coins` });
-      
-      const result = await executeRPCWithTimeout('remove_coins', {
+      const result = await DatabaseService.safeExecuteRPC('remove_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
-      }, 30000);
+      });
 
-      const { data, error } = result as any;
-      console.log('RPC response:', { data, error });
+      if (cancelOperations.has(operationId)) {
+        return;
+      }
 
-      if (error) {
-        console.error('Database error in remove_coins:', error);
+      if (!result.success) {
         toast({
           title: "Database Error",
-          description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
+          description: result.error || 'Failed to remove coins',
           variant: "destructive",
         });
         return;
       }
 
-      // Only log activity if user exists in one of the user tables
+      // Log activity
       try {
         await activityLogger.logAdminAction(
           'admin-user-id',
@@ -318,8 +235,7 @@ const Admin = () => {
           { amount, username }
         );
       } catch (activityError) {
-        // Log activity error but don't fail the main operation
-        console.warn('Failed to log activity, but coins were removed successfully:', activityError);
+        console.warn('Failed to log activity:', activityError);
       }
       
       toast({
@@ -331,38 +247,17 @@ const Admin = () => {
       
     } catch (error: any) {
       console.error('Error in handleRemoveCoins:', error);
-      
-      if (error.message.includes('timed out')) {
-        toast({
-          title: "Operation Timeout",
-          description: `The operation took too long to complete. Please check if the coins were removed and try again if needed.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
     } finally {
       setOperationLoading(null);
     }
   };
 
   const handleUpdateBalance = async (userId: string, amount: number, description: string, action: 'add' | 'remove') => {
-    console.log('Starting update balance operation:', { userId, amount, description, action });
-    
-    if (!validateUserId(userId)) {
-      console.error('Invalid user ID format:', userId);
-      toast({
-        title: "Error",
-        description: "Invalid user ID format",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (amount <= 0 || isNaN(amount)) {
       toast({
         title: "Error",
@@ -383,41 +278,34 @@ const Admin = () => {
 
     const operationId = `${action}-${userId}`;
     setOperationLoading(operationId);
+    setCancelOperations(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(operationId);
+      return newSet;
+    });
 
     try {
-      // Ensure user balance record exists first
-      const balanceExists = await ensureUserBalanceExists(userId);
-      if (!balanceExists) {
-        throw new Error('Failed to ensure user balance record exists');
-      }
-
-      const rpcFunctionName = action === 'add' ? 'add_coins' : 'remove_coins';
-      console.log(`Calling ${rpcFunctionName} RPC with timeout protection:`, {
+      const rpcFunction = action === 'add' ? 'add_coins' : 'remove_coins';
+      const result = await DatabaseService.safeExecuteRPC(rpcFunction, {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
       });
-      
-      const result = await executeRPCWithTimeout(rpcFunctionName, {
-        user_id: userId,
-        amount: amount,
-        description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
-      }, 30000);
 
-      const { data, error } = result as any;
-      console.log('RPC response:', { data, error });
+      if (cancelOperations.has(operationId)) {
+        return;
+      }
 
-      if (error) {
-        console.error(`Database error in ${rpcFunctionName}:`, error);
+      if (!result.success) {
         toast({
           title: "Database Error",
-          description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
+          description: result.error || `Failed to ${action} coins`,
           variant: "destructive",
         });
         return;
       }
 
-      // Only log activity if user exists in one of the user tables
+      // Log activity
       try {
         await activityLogger.logAdminAction(
           'admin-user-id',
@@ -426,8 +314,7 @@ const Admin = () => {
           { amount, description, action }
         );
       } catch (activityError) {
-        // Log activity error but don't fail the main operation
-        console.warn('Failed to log activity, but operation completed successfully:', activityError);
+        console.warn('Failed to log activity:', activityError);
       }
       
       toast({
@@ -440,20 +327,11 @@ const Admin = () => {
       
     } catch (error: any) {
       console.error(`Error in handleUpdateBalance (${action}):`, error);
-      
-      if (error.message.includes('timed out')) {
-        toast({
-          title: "Operation Timeout",
-          description: `The operation took too long to complete. Please check if the coins were ${action === 'add' ? 'added' : 'removed'} and try again if needed.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: `Failed to ${action === 'add' ? 'add' : 'remove'} coins: ${error.message || 'Unknown error'}`,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: `Failed to ${action} coins: ${error.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
     } finally {
       setOperationLoading(null);
     }
@@ -474,6 +352,20 @@ const Admin = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
           <p className="text-gray-600">Manage users, transactions, and system settings</p>
+          {operationLoading && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm text-gray-600">Operation in progress...</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => cancelOperation(operationLoading)}
+                className="ml-2"
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
