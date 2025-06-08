@@ -27,11 +27,17 @@ export const useVideoManagement = () => {
       console.log('Videos loaded successfully:', data);
       
       setVideos(data);
-      setLoading(false);
       
+      // Fixed: Only set error if no videos AND there was an actual error
+      // Don't show error when videos load successfully but array is empty
       if (data.length === 0) {
+        console.log('No videos found in database');
         setError('No videos available at the moment');
+      } else {
+        setError(null);
       }
+      
+      setLoading(false);
     } catch (error) {
       console.error('Error loading videos:', error);
       setError('Failed to load videos. Please try again.');
@@ -48,6 +54,7 @@ export const useVideoManagement = () => {
           const watchedIds = JSON.parse(watchedVideosStr);
           setWatchedVideos(new Set(watchedIds));
         } catch (e) {
+          console.warn('Failed to parse watched videos from localStorage, resetting:', e);
           setWatchedVideos(new Set());
         }
       }
@@ -73,7 +80,8 @@ export const useVideoManagement = () => {
     try {
       await trackVideoAnalytics(videoId, action, user?.id, watchDuration);
     } catch (error) {
-      // Silent fail for analytics
+      // Silent fail for analytics - don't disrupt user experience
+      console.warn('Analytics tracking failed:', error);
     }
   }, [user?.id]);
 

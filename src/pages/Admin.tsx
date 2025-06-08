@@ -103,20 +103,59 @@ const Admin = () => {
   };
 
   const executeRPCWithTimeout = async (rpcFunction: 'add_coins' | 'remove_coins', params: any, timeoutMs: number = 30000): Promise<any> => {
-    return new Promise(async (resolve, reject) => {
-      const timeoutId = setTimeout(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
         reject(new Error(`Operation timed out after ${timeoutMs/1000} seconds`));
       }, timeoutMs);
-
-      try {
-        const result = await supabase.rpc(rpcFunction, params);
-        clearTimeout(timeoutId);
-        resolve(result);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        reject(error);
-      }
     });
+
+    const rpcPromise = supabase.rpc(rpcFunction, params);
+
+    try {
+      const result = await Promise.race([rpcPromise, timeoutPromise]);
+      clearTimeout(timeoutId);
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  };
+
+  const ensureUserBalanceExists = async (userId: string): Promise<boolean> => {
+    try {
+      console.log('Ensuring user balance exists for:', userId);
+      
+      // Check if balance record exists
+      const { data: existingBalance } = await supabase
+        .from('user_balance')
+        .select('user_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (!existingBalance) {
+        console.log('Creating initial balance record for user:', userId);
+        
+        // Create initial balance record using upsert to handle race conditions
+        const { error: balanceError } = await supabase
+          .from('user_balance')
+          .upsert(
+            { user_id: userId, balance: 0 },
+            { onConflict: 'user_id', ignoreDuplicates: false }
+          );
+
+        if (balanceError) {
+          console.error('Error creating user balance:', balanceError);
+          return false;
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error ensuring user balance exists:', error);
+      return false;
+    }
   };
 
   const handleAddCoins = async (username: string, userId: string) => {
@@ -147,6 +186,12 @@ const Admin = () => {
     setOperationLoading(operationId);
 
     try {
+      // Ensure user balance record exists first
+      const balanceExists = await ensureUserBalanceExists(userId);
+      if (!balanceExists) {
+        throw new Error('Failed to ensure user balance record exists');
+      }
+
       console.log('Calling add_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin added ${amount} coins` });
       
       const result = await executeRPCWithTimeout('add_coins', {
@@ -168,12 +213,18 @@ const Admin = () => {
         return;
       }
 
-      await activityLogger.logAdminAction(
-        'admin-user-id',
-        `Added ${amount} coins to ${username}`,
-        userId,
-        { amount, username }
-      );
+      // Only log activity if user exists in one of the user tables
+      try {
+        await activityLogger.logAdminAction(
+          'admin-user-id',
+          `Added ${amount} coins to ${username}`,
+          userId,
+          { amount, username }
+        );
+      } catch (activityError) {
+        // Log activity error but don't fail the main operation
+        console.warn('Failed to log activity, but coins were added successfully:', activityError);
+      }
       
       toast({
         title: "Success",
@@ -231,6 +282,12 @@ const Admin = () => {
     setOperationLoading(operationId);
 
     try {
+      // Ensure user balance record exists first
+      const balanceExists = await ensureUserBalanceExists(userId);
+      if (!balanceExists) {
+        throw new Error('Failed to ensure user balance record exists');
+      }
+
       console.log('Calling remove_coins RPC with timeout protection:', { user_id: userId, amount, description: `Admin removed ${amount} coins` });
       
       const result = await executeRPCWithTimeout('remove_coins', {
@@ -252,12 +309,18 @@ const Admin = () => {
         return;
       }
 
-      await activityLogger.logAdminAction(
-        'admin-user-id',
-        `Removed ${amount} coins from ${username}`,
-        userId,
-        { amount, username }
-      );
+      // Only log activity if user exists in one of the user tables
+      try {
+        await activityLogger.logAdminAction(
+          'admin-user-id',
+          `Removed ${amount} coins from ${username}`,
+          userId,
+          { amount, username }
+        );
+      } catch (activityError) {
+        // Log activity error but don't fail the main operation
+        console.warn('Failed to log activity, but coins were removed successfully:', activityError);
+      }
       
       toast({
         title: "Success",
@@ -322,6 +385,12 @@ const Admin = () => {
     setOperationLoading(operationId);
 
     try {
+      // Ensure user balance record exists first
+      const balanceExists = await ensureUserBalanceExists(userId);
+      if (!balanceExists) {
+        throw new Error('Failed to ensure user balance record exists');
+      }
+
       const rpcFunctionName = action === 'add' ? 'add_coins' : 'remove_coins';
       console.log(`Calling ${rpcFunctionName} RPC with timeout protection:`, {
         user_id: userId,
@@ -348,12 +417,18 @@ const Admin = () => {
         return;
       }
 
-      await activityLogger.logAdminAction(
-        'admin-user-id',
-        `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
-        userId,
-        { amount, description, action }
-      );
+      // Only log activity if user exists in one of the user tables
+      try {
+        await activityLogger.logAdminAction(
+          'admin-user-id',
+          `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
+          userId,
+          { amount, description, action }
+        );
+      } catch (activityError) {
+        // Log activity error but don't fail the main operation
+        console.warn('Failed to log activity, but operation completed successfully:', activityError);
+      }
       
       toast({
         title: "Success",

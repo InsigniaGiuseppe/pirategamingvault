@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,18 +22,39 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const rewardTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const coinAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { addPirateCoins } = useSimpleAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (rewardTimerRef.current) clearInterval(rewardTimerRef.current);
-    };
+  // Cleanup function to clear all timers
+  const clearAllTimers = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (rewardTimerRef.current) {
+      clearInterval(rewardTimerRef.current);
+      rewardTimerRef.current = null;
+    }
+    if (coinAnimationTimeoutRef.current) {
+      clearTimeout(coinAnimationTimeoutRef.current);
+      coinAnimationTimeoutRef.current = null;
+    }
   }, []);
 
-  const startEarning = () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      clearAllTimers();
+    };
+  }, [clearAllTimers]);
+
+  const startEarning = useCallback(() => {
     console.log('Starting to earn coins for video:', video.title);
+    
+    // Clear any existing timers first
+    clearAllTimers();
+    
     setIsEarning(true);
     setTimeWatched(0);
     setCoinsEarned(0);
@@ -55,7 +76,15 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
           
           // Show animation
           setShowCoinAnimation(true);
-          setTimeout(() => setShowCoinAnimation(false), 2000);
+          
+          // Clear existing animation timeout
+          if (coinAnimationTimeoutRef.current) {
+            clearTimeout(coinAnimationTimeoutRef.current);
+          }
+          
+          coinAnimationTimeoutRef.current = setTimeout(() => {
+            setShowCoinAnimation(false);
+          }, 2000);
           
           toast({
             title: "+3 Coins Earned!",
@@ -74,37 +103,46 @@ const SimpleVideoWatcher: React.FC<SimpleVideoWatcherProps> = ({ video, onCancel
       description: "You'll earn 3 coins every minute while watching",
       duration: 3000,
     });
-  };
+  }, [video.title, addPirateCoins, toast, clearAllTimers]);
 
-  const stopEarning = () => {
+  const stopEarning = useCallback(() => {
     console.log('Stopping coin earning');
     setIsEarning(false);
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (rewardTimerRef.current) clearInterval(rewardTimerRef.current);
-  };
+    clearAllTimers();
+  }, [clearAllTimers]);
 
-  const handleComplete = () => {
+  const handleComplete = useCallback(() => {
     stopEarning();
     onComplete(coinsEarned);
-  };
+  }, [stopEarning, onComplete, coinsEarned]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     stopEarning();
     onCancel();
-  };
+  }, [stopEarning, onCancel]);
 
-  const handleExternalWatch = () => {
+  const handleExternalWatch = useCallback(() => {
     if (!isEarning) {
       startEarning();
     }
-    window.open(video.original_url, '_blank');
     
-    toast({
-      title: "Watching Externally",
-      description: "Coins will be awarded as you watch. Come back to stop the timer when done!",
-      duration: 5000,
-    });
-  };
+    try {
+      window.open(video.original_url, '_blank');
+      
+      toast({
+        title: "Watching Externally",
+        description: "Coins will be awarded as you watch. Come back to stop the timer when done!",
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error('Failed to open external link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open video in new tab. Please check your browser settings.",
+        variant: "destructive",
+      });
+    }
+  }, [isEarning, startEarning, video.original_url, toast]);
 
   const calculateProgress = () => {
     return Math.min((timeWatched / video.duration) * 100, 100);

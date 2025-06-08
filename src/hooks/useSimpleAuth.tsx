@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { login, logout } from '@/services/customAuthService';
@@ -47,6 +48,21 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AuthState>(initialState);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const mountedRef = useRef(true);
+
+  // Set mounted to false on unmount to prevent state updates
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  // Safe state update that checks if component is still mounted
+  const safeSetState = useCallback((updater: (prev: AuthState) => AuthState) => {
+    if (mountedRef.current) {
+      setState(updater);
+    }
+  }, []);
 
   // Load user data from database
   const loadUserData = useCallback(async (userId: string) => {
@@ -61,7 +77,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('User data loaded:', { balance, transactions: transactions.length, unlockedGames: unlockedGames.length });
       
-      setState(prev => ({
+      safeSetState(prev => ({
         ...prev,
         pirateCoins: balance,
         transactions,
@@ -69,8 +85,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       }));
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Don't throw error to prevent auth flow interruption
     }
-  }, []);
+  }, [safeSetState]);
 
   // Simple auth check on mount
   useEffect(() => {
@@ -90,7 +107,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           // Simple expiry check
           if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
             console.log('Valid session found, user authenticated');
-            setState(prev => ({
+            safeSetState(prev => ({
               ...prev,
               isAuthenticated: true,
               user: storedUser,
@@ -116,18 +133,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkAuth();
-  }, [loadUserData]);
+  }, [loadUserData, safeSetState]);
 
   const handleLogin = useCallback(async (username: string, password: string) => {
     try {
       console.log('Starting login for:', username);
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const { user, session, error } = await login(username, password);
       
       if (error || !user || !session) {
         console.error('Login failed:', error);
-        setState(prev => ({ 
+        safeSetState(prev => ({ 
           ...prev, 
           isLoading: false, 
           error: error || 'Login failed' 
@@ -142,7 +159,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('Login successful, updating state');
       
-      setState(prev => ({
+      safeSetState(prev => ({
         ...prev,
         isAuthenticated: true,
         user,
@@ -154,7 +171,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       await loadUserData(user.id);
       
       // Log the login activity
-      await activityLogger.logLogin(user.id, user.username);
+      try {
+        await activityLogger.logLogin(user.id, user.username);
+      } catch (activityError) {
+        console.warn('Failed to log login activity:', activityError);
+      }
       
       toast({
         title: "Login Successful",
@@ -162,13 +183,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       setTimeout(() => {
-        console.log('Navigating to dashboard...');
-        navigate('/dashboard');
+        if (mountedRef.current) {
+          console.log('Navigating to dashboard...');
+          navigate('/dashboard');
+        }
       }, 100);
       
     } catch (error) {
       console.error('Login error:', error);
-      setState(prev => ({ 
+      safeSetState(prev => ({ 
         ...prev, 
         isLoading: false, 
         error: 'Login failed. Please try again.' 
@@ -179,18 +202,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: 'Login failed. Please check your credentials and try again.'
       });
     }
-  }, [toast, navigate, loadUserData]);
+  }, [toast, navigate, loadUserData, safeSetState]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
     try {
       console.log('Starting registration for:', username);
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const { user, session, error } = await registerUser(username, password);
       
       if (error || !user) {
         console.error('Registration failed:', error);
-        setState(prev => ({ 
+        safeSetState(prev => ({ 
           ...prev, 
           isLoading: false, 
           error: error || 'Registration failed' 
@@ -205,7 +228,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log('Registration successful, updating state');
       
-      setState(prev => ({
+      safeSetState(prev => ({
         ...prev,
         isAuthenticated: true,
         user: {
@@ -221,7 +244,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       await loadUserData(user.id);
       
       // Log the registration activity
-      await activityLogger.logRegistration(user.id, user.username || username);
+      try {
+        await activityLogger.logRegistration(user.id, user.username || username);
+      } catch (activityError) {
+        console.warn('Failed to log registration activity:', activityError);
+      }
       
       toast({
         title: "Registration Successful",
@@ -229,13 +256,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       setTimeout(() => {
-        console.log('Navigating to dashboard...');
-        navigate('/dashboard');
+        if (mountedRef.current) {
+          console.log('Navigating to dashboard...');
+          navigate('/dashboard');
+        }
       }, 100);
       
     } catch (error) {
       console.error('Registration error:', error);
-      setState(prev => ({ 
+      safeSetState(prev => ({ 
         ...prev, 
         isLoading: false, 
         error: 'Registration failed. Please try again.' 
@@ -246,7 +275,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: 'Registration failed. Please try again.'
       });
     }
-  }, [toast, navigate, loadUserData]);
+  }, [toast, navigate, loadUserData, safeSetState]);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -254,7 +283,11 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Log the logout activity before clearing state
       if (state.user?.id && state.user?.username) {
-        await activityLogger.logLogout(state.user.id, state.user.username);
+        try {
+          await activityLogger.logLogout(state.user.id, state.user.username);
+        } catch (activityError) {
+          console.warn('Failed to log logout activity:', activityError);
+        }
       }
       
       await logout();
@@ -262,13 +295,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('pirate_user');
       localStorage.removeItem('pirate_session');
       
-      setState(initialState);
-      navigate('/');
+      safeSetState(() => initialState);
+      
+      if (mountedRef.current) {
+        navigate('/');
+      }
       console.log('Logout completed');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, [navigate, state.user]);
+  }, [navigate, state.user, safeSetState]);
 
   const addPirateCoins = useCallback(async (amount: number, description?: string) => {
     if (!state.user?.id) return;
@@ -304,10 +340,13 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (success) {
         // Log the game unlock activity
-        await activityLogger.logGameUnlocked(state.user.id, gameId, gameId, cost);
+        try {
+          await activityLogger.logGameUnlocked(state.user.id, gameId, gameId, cost);
+        } catch (activityError) {
+          console.warn('Failed to log game unlock activity:', activityError);
+        }
         
-        // Add to unlocked games (you might want to create a service for this)
-        // For now, just refresh user data
+        // Refresh user data
         await loadUserData(state.user.id);
         return true;
       }

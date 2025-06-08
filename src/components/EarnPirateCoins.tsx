@@ -21,18 +21,39 @@ const EarnPirateCoins = () => {
       await trackAnalytics(video.id, 'view');
     } catch (error) {
       // Silent fail for analytics
+      console.warn('Failed to track video view analytics:', error);
     }
   };
 
   const handleWatchComplete = (coinsEarned) => {
     if (watchingVideo) {
       markVideoWatched(watchingVideo.id);
+      
+      // Track completion analytics
+      try {
+        trackAnalytics(watchingVideo.id, 'complete');
+      } catch (error) {
+        console.warn('Failed to track video completion analytics:', error);
+      }
     }
     setWatchingVideo(null);
   };
 
   const handleCancelWatching = () => {
+    if (watchingVideo) {
+      // Track skip analytics
+      try {
+        trackAnalytics(watchingVideo.id, 'skip');
+      } catch (error) {
+        console.warn('Failed to track video skip analytics:', error);
+      }
+    }
     setWatchingVideo(null);
+  };
+
+  const handleRetryLoadVideos = async () => {
+    console.log('Retrying video load...');
+    await loadVideos();
   };
 
   if (loading) {
@@ -60,7 +81,7 @@ const EarnPirateCoins = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">{error}</p>
-            <Button onClick={loadVideos} className="w-full">
+            <Button onClick={handleRetryLoadVideos} className="w-full">
               <RefreshCw size={16} className="mr-2" />
               Try Again
             </Button>
