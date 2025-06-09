@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { activityLogger } from '@/services/activityLoggingService';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,13 +12,19 @@ import { format } from 'date-fns';
 
 interface ActivityLog {
   id: string;
-  user_id: string;
+  user_id?: string;
   activity_type: string;
   description: string;
   metadata: Record<string, any>;
   ip_address?: string;
   user_agent?: string;
   created_at: string;
+  username?: string;
+}
+
+interface UserInfo {
+  id: string;
+  username: string;
 }
 
 const ActivityLogViewer = () => {
@@ -28,10 +35,32 @@ const ActivityLogViewer = () => {
   const [activityTypeFilter, setActivityTypeFilter] = useState('');
   const [userIdFilter, setUserIdFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserInfo[]>([]);
 
   // Refs for cleanup and request management
   const abortControllerRef = useRef<AbortController | null>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch users for username resolution
+  const fetchUsers = useCallback(async () => {
+    try {
+      const [profilesResult, customUsersResult] = await Promise.all([
+        supabase.from('profiles').select('id, username'),
+        supabase.from('custom_users').select('id, username')
+      ]);
+
+      const profiles = profilesResult.data || [];
+      const customUsers = customUsersResult.data || [];
+      
+      const allUsers: UserInfo[] = [
+        ...profiles.map(p => ({ id: p.id, username: p.username })),
+        ...customUsers.map(u => ({ id: u.id, username: u.username }))
+      ];
+      
+      setUsers(allUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
 
   const fetchLogs = useCallback(async () => {
     // Cancel any existing request
@@ -65,13 +94,23 @@ const ActivityLogViewer = () => {
         return;
       }
       
+      // Add usernames to logs
+      const logsWithUsernames = fetchedLogs.map((log: ActivityLog) => {
+        const user = users.find(u => u.id === log.user_id);
+        return {
+          ...log,
+          username: user?.username || (log.user_id ? 'Unknown User' : 'System')
+        };
+      });
+
       // Filter by search term if provided
       const filteredLogs = searchTerm 
-        ? fetchedLogs.filter((log: ActivityLog) => 
+        ? logsWithUsernames.filter((log: ActivityLog) => 
             log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.activity_type.toLowerCase().includes(searchTerm.toLowerCase())
+            log.activity_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (log.username && log.username.toLowerCase().includes(searchTerm.toLowerCase()))
           )
-        : fetchedLogs;
+        : logsWithUsernames;
 
       setLogs(filteredLogs);
     } catch (error: any) {
@@ -85,7 +124,7 @@ const ActivityLogViewer = () => {
     } finally {
       setLoading(false);
     }
-  }, [activityTypeFilter, userIdFilter, searchTerm]);
+  }, [activityTypeFilter, userIdFilter, searchTerm, users]);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -104,41 +143,24 @@ const ActivityLogViewer = () => {
     }
   }, []);
 
-  // Debounced search effect
-  useEffect(() => {
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchLogs();
-    }, 300);
-
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-    };
-  }, [searchTerm, fetchLogs]);
-
-  // Fetch logs and stats on filter changes
-  useEffect(() => {
-    fetchLogs();
-  }, [activityTypeFilter, userIdFilter]);
-
   // Initial data fetch
   useEffect(() => {
+    fetchUsers();
     fetchStats();
-  }, [fetchStats]);
+  }, []);
+
+  // Fetch logs when users data is ready or filters change
+  useEffect(() => {
+    if (users.length > 0 || searchTerm || activityTypeFilter || userIdFilter) {
+      fetchLogs();
+    }
+  }, [users, searchTerm, activityTypeFilter, userIdFilter]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
-      }
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
       }
     };
   }, []);
@@ -166,6 +188,7 @@ const ActivityLogViewer = () => {
   };
 
   const handleRefresh = () => {
+    fetchUsers();
     fetchLogs();
     fetchStats();
   };
@@ -230,7 +253,7 @@ const ActivityLogViewer = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search activities..."
+                  placeholder="Search activities or usernames..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -315,6 +338,11 @@ const ActivityLogViewer = () => {
                       <span className="text-sm text-gray-500">
                         {format(new Date(log.created_at), 'MMM d, yyyy HH:mm:ss')}
                       </span>
+                      {log.username && (
+                        <Badge variant="outline" className="text-xs">
+                          {log.username}
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-gray-900 mb-1">{log.description}</p>
                     {log.user_id && (

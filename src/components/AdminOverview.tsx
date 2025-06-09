@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +24,7 @@ interface ActivityLog {
   description: string;
   created_at: string;
   metadata?: Record<string, any>;
+  username?: string;
 }
 
 interface Transaction {
@@ -73,6 +75,11 @@ const AdminOverview = () => {
       const balances = balancesResult.data || [];
       const transactions = transactionsResult.data || [];
 
+      // Create user lookup for usernames
+      const userLookup = new Map();
+      profiles.forEach(p => userLookup.set(p.id, { username: p.username, source: 'profiles' }));
+      customUsers.forEach(u => userLookup.set(u.id, { username: u.username, source: 'custom_users' }));
+
       // Calculate stats
       const totalUsers = profiles.length + customUsers.length;
       const totalBalance = balances.reduce((sum, b) => sum + (b.balance || 0), 0);
@@ -89,20 +96,24 @@ const AdminOverview = () => {
 
       setRecentTransactions(transactions.slice(0, 10));
 
-      // Fetch recent activity with proper type handling
+      // Fetch recent activity with proper type handling and add usernames
       const { logs } = await activityLogger.getActivityLogs(10);
       
-      // Convert the logs to match our ActivityLog interface
-      const typedLogs: ActivityLog[] = logs.map(log => ({
-        id: log.id,
-        user_id: log.user_id,
-        activity_type: log.activity_type,
-        description: log.description,
-        created_at: log.created_at,
-        metadata: typeof log.metadata === 'object' && log.metadata !== null 
-          ? log.metadata as Record<string, any>
-          : {}
-      }));
+      // Convert the logs to match our ActivityLog interface and add usernames
+      const typedLogs: ActivityLog[] = logs.map(log => {
+        const user = userLookup.get(log.user_id);
+        return {
+          id: log.id,
+          user_id: log.user_id,
+          activity_type: log.activity_type,
+          description: log.description,
+          created_at: log.created_at,
+          metadata: typeof log.metadata === 'object' && log.metadata !== null 
+            ? log.metadata as Record<string, any>
+            : {},
+          username: user?.username || (log.user_id ? 'Unknown User' : 'System')
+        };
+      });
       
       setRecentActivity(typedLogs);
 
@@ -246,6 +257,11 @@ const AdminOverview = () => {
                         <Badge variant="secondary" className="text-xs">
                           {activity.activity_type}
                         </Badge>
+                        {activity.username && (
+                          <Badge variant="outline" className="text-xs">
+                            {activity.username}
+                          </Badge>
+                        )}
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(activity.created_at), 'MMM d, HH:mm')}
                         </span>
