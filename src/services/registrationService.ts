@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { DatabaseService } from "./databaseService";
 
 export interface CustomUser {
   id: string;
@@ -26,13 +27,15 @@ const generateUUID = (): string => {
   });
 };
 
-// Pure local registration with database integration
+// Enhanced registration with proper transaction handling and timeout
 export const registerUser = async (
   username: string,
   password: string
 ): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
+  const timeoutMs = 10000; // 10 second timeout
+  
   try {
-    console.log('Registration attempt for:', username);
+    console.log('Starting registration for:', username);
     
     // Input validation
     if (!username || username.trim().length === 0) {
@@ -50,90 +53,138 @@ export const registerUser = async (
     // Clean the username to prevent issues
     const cleanUsername = username.toLowerCase().trim();
     
-    console.log('Checking if user exists...');
+    // Set up timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Registration timed out')), timeoutMs);
+    });
+
+    // Main registration logic
+    const registrationPromise = performRegistration(cleanUsername, password);
     
-    // Check if user already exists in database
-    const { data: existingUser, error: checkError } = await supabase
-      .from('custom_users')
-      .select('username')
-      .eq('username', cleanUsername)
-      .maybeSingle();
+    // Race between registration and timeout
+    return await Promise.race([registrationPromise, timeoutPromise]) as any;
     
-    if (checkError) {
-      console.error('Error checking existing user:', checkError);
-      return { user: null, session: null, error: 'Registration failed: Database error' };
+  } catch (error) {
+    console.error('Registration error:', error);
+    
+    // Clear any partial localStorage data
+    localStorage.removeItem('pirate_user');
+    localStorage.removeItem('pirate_session');
+    
+    // Handle specific error types
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        return { user: null, session: null, error: 'Registration timed out. Please try again.' };
+      }
+      if (error.message.includes('duplicate key')) {
+        return { user: null, session: null, error: 'Username already exists. Please choose a different username.' };
+      }
+      return { user: null, session: null, error: error.message };
     }
     
-    if (existingUser) {
-      console.log('Username already exists');
-      return { user: null, session: null, error: 'Username already exists' };
-    }
-    
-    // Generate proper UUID for new user
-    const newUserId = generateUUID();
-    
-    console.log('Creating user with ID:', newUserId);
-    
-    // Create new user in database
+    return { user: null, session: null, error: 'Registration failed. Please try again.' };
+  }
+};
+
+async function performRegistration(cleanUsername: string, password: string) {
+  console.log('Checking if user exists...');
+  
+  // Check if user already exists in database
+  const { data: existingUser, error: checkError } = await supabase
+    .from('custom_users')
+    .select('username')
+    .eq('username', cleanUsername)
+    .maybeSingle();
+  
+  if (checkError) {
+    console.error('Error checking existing user:', checkError);
+    throw new Error('Registration failed: Database error during user check');
+  }
+  
+  if (existingUser) {
+    console.log('Username already exists');
+    throw new Error('Username already exists');
+  }
+  
+  // Generate proper UUID for new user
+  const newUserId = generateUUID();
+  
+  console.log('Creating user with ID:', newUserId);
+  
+  // Use Supabase transaction-like behavior with error handling
+  try {
+    // Step 1: Create user
     const { data: dbUser, error: insertError } = await supabase
       .from('custom_users')
       .insert([{
         id: newUserId,
         username: cleanUsername,
-        password_hash: password // Store password directly for simplicity
+        password_hash: password
       }])
       .select()
       .single();
     
     if (insertError) {
-      console.error('Error creating user in database:', insertError);
-      return { user: null, session: null, error: `Registration failed: ${insertError.message}` };
+      console.error('Error creating user:', insertError);
+      throw new Error(`User creation failed: ${insertError.message}`);
     }
     
     if (!dbUser) {
-      console.error('No user data returned after insert');
-      return { user: null, session: null, error: 'Registration failed: User creation returned no data' };
+      throw new Error('User creation returned no data');
     }
     
     console.log('User created successfully:', dbUser);
     
-    // Create initial balance
-    console.log('Creating initial balance...');
-    try {
-      await supabase
-        .from('user_balance')
-        .insert({
-          user_id: dbUser.id,
-          balance: 10
-        });
-      console.log('Initial balance created successfully');
-    } catch (balanceError) {
-      console.warn('Balance creation failed but continuing with registration:', balanceError);
+    // Step 2: Create/update balance using UPSERT to handle duplicates
+    console.log('Creating/updating balance...');
+    const { error: balanceError } = await supabase
+      .from('user_balance')
+      .upsert({
+        user_id: dbUser.id,
+        balance: 5
+      }, {
+        onConflict: 'user_id',
+        ignoreDuplicates: false
+      });
+    
+    if (balanceError) {
+      console.error('Balance creation failed:', balanceError);
+      // Don't fail registration for balance issues, but log it
+      console.warn('Continuing registration despite balance error');
+    } else {
+      console.log('Balance created/updated successfully');
     }
     
-    // Create welcome transaction
+    // Step 3: Create welcome transaction using UPSERT
     console.log('Creating welcome transaction...');
-    try {
-      await supabase
-        .from('transactions')
-        .insert({
-          user_id: dbUser.id,
-          amount: 10,
-          description: 'Welcome bonus',
-          type: 'admin'
-        });
+    const { error: transactionError } = await supabase
+      .from('transactions')
+      .upsert({
+        user_id: dbUser.id,
+        amount: 5,
+        description: 'Welcome bonus',
+        type: 'admin'
+      }, {
+        onConflict: 'id',
+        ignoreDuplicates: true
+      });
+    
+    if (transactionError) {
+      console.error('Transaction creation failed:', transactionError);
+      // Don't fail registration for transaction issues
+      console.warn('Continuing registration despite transaction error');
+    } else {
       console.log('Welcome transaction created successfully');
-    } catch (transactionError) {
-      console.warn('Transaction creation failed but continuing with registration:', transactionError);
     }
     
+    // Create user object and session
     const newUser: CustomUser = {
       id: dbUser.id,
       username: dbUser.username,
     };
     
     const newSession: CustomSession = {
-      access_token: `token-${Date.now()}`,
+      access_token: `token-${Date.now()}-${Math.random().toString(36)}`,
       expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     };
     
@@ -142,17 +193,23 @@ export const registerUser = async (
     localStorage.setItem('pirate_user', JSON.stringify(newUser));
     localStorage.setItem('pirate_session', JSON.stringify(newSession));
     
-    console.log('Registration successful for:', username, 'with ID:', newUser.id);
+    console.log('Registration completed successfully for:', cleanUsername);
     return { user: newUser, session: newSession, error: null };
     
-  } catch (error) {
-    console.error('Unexpected registration error:', error);
-    // Clear any partial localStorage data
-    localStorage.removeItem('pirate_user');
-    localStorage.removeItem('pirate_session');
+  } catch (dbError: any) {
+    console.error('Database operation failed:', dbError);
     
-    // Provide more specific error message
-    const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-    return { user: null, session: null, error: errorMessage };
+    // Clean up any partial data
+    if (newUserId) {
+      try {
+        await supabase.from('custom_users').delete().eq('id', newUserId);
+        await supabase.from('user_balance').delete().eq('user_id', newUserId);
+        await supabase.from('transactions').delete().eq('user_id', newUserId);
+      } catch (cleanupError) {
+        console.warn('Cleanup failed:', cleanupError);
+      }
+    }
+    
+    throw dbError;
   }
-};
+}

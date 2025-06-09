@@ -5,6 +5,7 @@ import { login, logout } from '@/services/customAuthService';
 import { registerUser } from '@/services/registrationService';
 import { getUserBalance, getUserTransactions, getUserUnlockedGames, updateUserBalance } from '@/services/userService';
 import { activityLogger } from '@/services/activityLoggingService';
+import { useTimerManager } from '@/hooks/useTimerManager';
 import type { CustomUser, CustomSession } from '@/services/customAuthService';
 
 interface AuthState {
@@ -49,17 +50,23 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const mountedRef = useRef(true);
   const operationInProgressRef = useRef(false);
+  const { setTimer, clearTimer, clearAllTimers } = useTimerManager();
 
   useEffect(() => {
     return () => {
       mountedRef.current = false;
+      clearAllTimers();
     };
-  }, []);
+  }, [clearAllTimers]);
 
   const safeSetState = useCallback((updater: (prev: AuthState) => AuthState) => {
-    if (mountedRef.current && !operationInProgressRef.current) {
+    if (mountedRef.current) {
       setState(updater);
     }
+  }, []);
+
+  const resetOperationState = useCallback(() => {
+    operationInProgressRef.current = false;
   }, []);
 
   const loadUserData = useCallback(async (userId: string) => {
@@ -142,6 +149,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     
     operationInProgressRef.current = true;
     
+    // Set timeout to reset operation state if it gets stuck
+    setTimer('login-timeout', resetOperationState, 15000);
+    
     try {
       console.log('Starting login for:', username);
       safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -189,7 +199,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: `Welcome back, ${user.username}!`
       });
       
-      setTimeout(() => {
+      setTimer('navigation-delay', () => {
         if (mountedRef.current) {
           navigate('/dashboard');
         }
@@ -210,14 +220,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } finally {
-      operationInProgressRef.current = false;
+      clearTimer('login-timeout');
+      resetOperationState();
     }
-  }, [toast, navigate, loadUserData, safeSetState]);
+  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, resetOperationState]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
     if (operationInProgressRef.current || !mountedRef.current) return;
     
     operationInProgressRef.current = true;
+    
+    // Set timeout to reset operation state if it gets stuck
+    setTimer('register-timeout', resetOperationState, 20000);
     
     try {
       console.log('Starting registration for:', username);
@@ -270,7 +284,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         description: "Welcome to Pirate Gaming!"
       });
       
-      setTimeout(() => {
+      setTimer('navigation-delay', () => {
         if (mountedRef.current) {
           navigate('/dashboard');
         }
@@ -291,9 +305,10 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } finally {
-      operationInProgressRef.current = false;
+      clearTimer('register-timeout');
+      resetOperationState();
     }
-  }, [toast, navigate, loadUserData, safeSetState]);
+  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, resetOperationState]);
 
   const handleLogout = useCallback(async () => {
     if (operationInProgressRef.current) return;
@@ -324,9 +339,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      operationInProgressRef.current = false;
+      resetOperationState();
     }
-  }, [navigate, state.user, safeSetState]);
+  }, [navigate, state.user, safeSetState, resetOperationState]);
 
   const addPirateCoins = useCallback(async (amount: number, description?: string) => {
     if (!state.user?.id || operationInProgressRef.current) return;

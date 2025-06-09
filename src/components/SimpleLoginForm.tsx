@@ -19,9 +19,11 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   const [activeTab, setActiveTab] = useState('login');
   const [formError, setFormError] = useState<string | null>(null);
   
-  const { login, register, isLoading } = useSimpleAuth();
+  const { login, register, isLoading, error } = useSimpleAuth();
 
-  const clearErrors = () => setFormError(null);
+  const clearErrors = () => {
+    setFormError(null);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +86,9 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
     }
   };
 
+  // Show auth context error if it exists and no form error
+  const displayError = formError || error;
+
   return (
     <div className="w-full max-w-md mx-auto p-8 bg-white rounded-xl shadow-saas">
       <div className="text-center mb-6">
@@ -99,10 +104,17 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
         <p className="text-gray-600">Enter your credentials or create a new account</p>
       </div>
       
-      {formError && (
+      {displayError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 flex items-start gap-2">
           <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
-          <span>{formError}</span>
+          <span>{displayError}</span>
+        </div>
+      )}
+      
+      {isLoading && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md text-blue-600 flex items-center gap-2">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>{activeTab === 'login' ? 'Signing in...' : 'Creating account...'}</span>
         </div>
       )}
       
@@ -160,7 +172,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
             
             <Button 
               type="submit" 
-              className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
+              className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white disabled:opacity-50"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -168,7 +180,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
               ) : (
                 <LogIn size={18} />
               )}
-              Sign in to your vault
+              {isLoading ? 'Signing in...' : 'Sign in to your vault'}
             </Button>
           </form>
         </TabsContent>
@@ -238,7 +250,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
             
             <Button 
               type="submit" 
-              className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white"
+              className="bg-white text-black border-2 border-black w-full py-6 rounded-md flex gap-2 items-center justify-center font-medium hover:bg-black hover:text-white disabled:opacity-50"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -246,7 +258,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
               ) : (
                 <LogIn size={18} />
               )}
-              Create Account
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </Button>
           </form>
         </TabsContent>
