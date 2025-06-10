@@ -9,15 +9,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, Search, Filter, Activity, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ActivityLog {
   id: string;
-  user_id?: string;
+  user_id?: string | null;
   activity_type: string;
   description: string;
-  metadata: Record<string, any>;
-  ip_address?: string;
-  user_agent?: string;
+  metadata: Json | null;
+  ip_address?: unknown | null;
+  user_agent?: string | null;
   created_at: string;
   username?: string;
 }
@@ -39,6 +40,7 @@ const ActivityLogViewer = () => {
 
   // Fetch users once on mount
   const fetchUsers = useCallback(async () => {
+    console.log('Fetching users...');
     try {
       const [profilesResult, customUsersResult] = await Promise.all([
         supabase.from('profiles').select('id, username'),
@@ -53,16 +55,19 @@ const ActivityLogViewer = () => {
         ...customUsers.map(u => ({ id: u.id, username: u.username }))
       ];
       
+      console.log('Users fetched:', allUsers.length);
       setUsers(allUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers([]);
     }
   }, []);
 
   // Fetch logs with current filters
   const fetchLogs = useCallback(async () => {
-    if (loading) return; // Prevent multiple simultaneous requests
+    if (loading) return;
     
+    console.log('Fetching logs with filters:', { activityTypeFilter, userIdFilter, searchTerm });
     setLoading(true);
     setError(null);
     
@@ -73,9 +78,10 @@ const ActivityLogViewer = () => {
       };
 
       const { logs: fetchedLogs } = await activityLogger.getActivityLogs(100, 0, filters);
+      console.log('Raw logs fetched:', fetchedLogs.length);
       
       // Add usernames to logs after fetching
-      const logsWithUsernames = fetchedLogs.map((log: ActivityLog) => {
+      const logsWithUsernames = fetchedLogs.map((log) => {
         const user = users.find(u => u.id === log.user_id);
         return {
           ...log,
@@ -85,13 +91,14 @@ const ActivityLogViewer = () => {
 
       // Apply search filter
       const filteredLogs = searchTerm 
-        ? logsWithUsernames.filter((log: ActivityLog) => 
+        ? logsWithUsernames.filter((log) => 
             log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             log.activity_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (log.username && log.username.toLowerCase().includes(searchTerm.toLowerCase()))
           )
         : logsWithUsernames;
 
+      console.log('Processed logs:', filteredLogs.length);
       setLogs(filteredLogs);
     } catch (error: any) {
       console.error('Error fetching activity logs:', error);
@@ -104,8 +111,10 @@ const ActivityLogViewer = () => {
 
   // Fetch stats separately
   const fetchStats = useCallback(async () => {
+    console.log('Fetching stats...');
     try {
       const fetchedStats = await activityLogger.getActivityStats();
+      console.log('Stats fetched:', fetchedStats);
       setStats(fetchedStats as Record<string, number>);
     } catch (error) {
       console.error('Error fetching activity stats:', error);
@@ -113,15 +122,17 @@ const ActivityLogViewer = () => {
     }
   }, []);
 
-  // Initial data fetch - fetch users first, then logs
+  // Initial data fetch - users and stats only
   useEffect(() => {
+    console.log('Initial data fetch');
     fetchUsers();
     fetchStats();
-  }, []);
+  }, [fetchUsers, fetchStats]);
 
-  // Fetch logs when users are loaded or filters change
+  // Fetch logs only when users are loaded AND filters change
   useEffect(() => {
     if (users.length > 0) {
+      console.log('Users loaded, fetching logs');
       fetchLogs();
     }
   }, [users.length, activityTypeFilter, userIdFilter, searchTerm]);
@@ -149,12 +160,14 @@ const ActivityLogViewer = () => {
   };
 
   const handleRefresh = () => {
+    console.log('Manual refresh triggered');
     fetchUsers();
     fetchStats();
     // fetchLogs will be called automatically when users update
   };
 
   const handleRetry = () => {
+    console.log('Retry triggered');
     setError(null);
     fetchLogs();
   };
@@ -309,7 +322,7 @@ const ActivityLogViewer = () => {
                     {log.user_id && (
                       <p className="text-xs text-gray-500">User ID: {log.user_id}</p>
                     )}
-                    {log.metadata && Object.keys(log.metadata).length > 0 && (
+                    {log.metadata && typeof log.metadata === 'object' && log.metadata !== null && Object.keys(log.metadata).length > 0 && (
                       <details className="mt-2">
                         <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
                           View metadata
