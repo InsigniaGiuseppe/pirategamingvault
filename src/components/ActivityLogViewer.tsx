@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { activityLogger } from '@/services/activityLoggingService';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -29,18 +29,15 @@ interface UserInfo {
 
 const ActivityLogViewer = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserInfo[]>([]);
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState('');
   const [userIdFilter, setUserIdFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [users, setUsers] = useState<UserInfo[]>([]);
 
-  // Refs for cleanup and request management
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Fetch users for username resolution
+  // Fetch users once on mount
   const fetchUsers = useCallback(async () => {
     try {
       const [profilesResult, customUsersResult] = await Promise.all([
@@ -62,14 +59,9 @@ const ActivityLogViewer = () => {
     }
   }, []);
 
+  // Fetch logs with current filters
   const fetchLogs = useCallback(async () => {
-    // Cancel any existing request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new abort controller for this request
-    abortControllerRef.current = new AbortController();
+    if (loading) return; // Prevent multiple simultaneous requests
     
     setLoading(true);
     setError(null);
@@ -80,21 +72,9 @@ const ActivityLogViewer = () => {
         ...(userIdFilter && { userId: userIdFilter }),
       };
 
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timeout')), 10000);
-      });
-
-      const fetchPromise = activityLogger.getActivityLogs(100, 0, filters);
+      const { logs: fetchedLogs } = await activityLogger.getActivityLogs(100, 0, filters);
       
-      const { logs: fetchedLogs } = await Promise.race([fetchPromise, timeoutPromise]) as any;
-      
-      // Check if request was aborted
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-      
-      // Add usernames to logs
+      // Add usernames to logs after fetching
       const logsWithUsernames = fetchedLogs.map((log: ActivityLog) => {
         const user = users.find(u => u.id === log.user_id);
         return {
@@ -103,7 +83,7 @@ const ActivityLogViewer = () => {
         };
       });
 
-      // Filter by search term if provided
+      // Apply search filter
       const filteredLogs = searchTerm 
         ? logsWithUsernames.filter((log: ActivityLog) => 
             log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,56 +94,37 @@ const ActivityLogViewer = () => {
 
       setLogs(filteredLogs);
     } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return; // Request was cancelled, ignore
-      }
-      
       console.error('Error fetching activity logs:', error);
-      setError(error.message === 'Request timeout' ? 'Request timed out. Please try again.' : 'Failed to load activity logs.');
+      setError('Failed to load activity logs. Please try again.');
       setLogs([]);
     } finally {
       setLoading(false);
     }
-  }, [activityTypeFilter, userIdFilter, searchTerm, users]);
+  }, [activityTypeFilter, userIdFilter, searchTerm, users, loading]);
 
+  // Fetch stats separately
   const fetchStats = useCallback(async () => {
     try {
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Stats timeout')), 5000);
-      });
-
-      const statsPromise = activityLogger.getActivityStats();
-      const fetchedStats = await Promise.race([statsPromise, timeoutPromise]);
-      
+      const fetchedStats = await activityLogger.getActivityStats();
       setStats(fetchedStats as Record<string, number>);
     } catch (error) {
       console.error('Error fetching activity stats:', error);
-      // Don't show error for stats, just use empty stats
       setStats({});
     }
   }, []);
 
-  // Initial data fetch
+  // Initial data fetch - fetch users first, then logs
   useEffect(() => {
     fetchUsers();
     fetchStats();
   }, []);
 
-  // Fetch logs when users data is ready or filters change
+  // Fetch logs when users are loaded or filters change
   useEffect(() => {
-    if (users.length > 0 || searchTerm || activityTypeFilter || userIdFilter) {
+    if (users.length > 0) {
       fetchLogs();
     }
-  }, [users, searchTerm, activityTypeFilter, userIdFilter]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+  }, [users.length, activityTypeFilter, userIdFilter, searchTerm]);
 
   const getActivityTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -189,8 +150,8 @@ const ActivityLogViewer = () => {
 
   const handleRefresh = () => {
     fetchUsers();
-    fetchLogs();
     fetchStats();
+    // fetchLogs will be called automatically when users update
   };
 
   const handleRetry = () => {
