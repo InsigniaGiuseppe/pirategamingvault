@@ -1,6 +1,5 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { DatabaseService } from "./databaseService";
 
 export interface CustomUser {
   id: string;
@@ -19,7 +18,6 @@ const generateUUID = (): string => {
     return crypto.randomUUID();
   }
   
-  // Fallback UUID generation for older browsers
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -27,12 +25,12 @@ const generateUUID = (): string => {
   });
 };
 
-// Enhanced registration with proper transaction handling and timeout
+// Enhanced registration with proper atomic transaction handling
 export const registerUser = async (
   username: string,
   password: string
 ): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
-  const timeoutMs = 10000; // 10 second timeout
+  const timeoutMs = 15000; // 15 second timeout
   
   try {
     console.log('Starting registration for:', username);
@@ -50,18 +48,15 @@ export const registerUser = async (
       return { user: null, session: null, error: 'Password must be at least 5 characters long' };
     }
 
-    // Clean the username to prevent issues
     const cleanUsername = username.toLowerCase().trim();
     
-    // Set up timeout promise
+    // Set up timeout
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Registration timed out')), timeoutMs);
     });
 
-    // Main registration logic
-    const registrationPromise = performRegistration(cleanUsername, password);
+    const registrationPromise = performAtomicRegistration(cleanUsername, password);
     
-    // Race between registration and timeout
     return await Promise.race([registrationPromise, timeoutPromise]) as any;
     
   } catch (error) {
@@ -71,12 +66,11 @@ export const registerUser = async (
     localStorage.removeItem('pirate_user');
     localStorage.removeItem('pirate_session');
     
-    // Handle specific error types
     if (error instanceof Error) {
       if (error.message.includes('timeout')) {
         return { user: null, session: null, error: 'Registration timed out. Please try again.' };
       }
-      if (error.message.includes('duplicate key')) {
+      if (error.message.includes('duplicate key') || error.message.includes('already exists')) {
         return { user: null, session: null, error: 'Username already exists. Please choose a different username.' };
       }
       return { user: null, session: null, error: error.message };
@@ -86,10 +80,10 @@ export const registerUser = async (
   }
 };
 
-async function performRegistration(cleanUsername: string, password: string) {
-  console.log('Checking if user exists...');
+async function performAtomicRegistration(cleanUsername: string, password: string) {
+  console.log('Starting atomic registration for:', cleanUsername);
   
-  // Check if user already exists in database
+  // Check if user already exists
   const { data: existingUser, error: checkError } = await supabase
     .from('custom_users')
     .select('username')
@@ -98,20 +92,17 @@ async function performRegistration(cleanUsername: string, password: string) {
   
   if (checkError) {
     console.error('Error checking existing user:', checkError);
-    throw new Error('Registration failed: Database error during user check');
+    throw new Error('Database error during user check');
   }
   
   if (existingUser) {
-    console.log('Username already exists');
     throw new Error('Username already exists');
   }
   
-  // Generate proper UUID for new user
   const newUserId = generateUUID();
-  
   console.log('Creating user with ID:', newUserId);
   
-  // Use Supabase transaction-like behavior with error handling
+  // Use a single transaction-like operation
   try {
     // Step 1: Create user
     const { data: dbUser, error: insertError } = await supabase
@@ -135,47 +126,21 @@ async function performRegistration(cleanUsername: string, password: string) {
     
     console.log('User created successfully:', dbUser);
     
-    // Step 2: Create/update balance using UPSERT to handle duplicates
-    console.log('Creating/updating balance...');
-    const { error: balanceError } = await supabase
-      .from('user_balance')
-      .upsert({
-        user_id: dbUser.id,
-        balance: 5
-      }, {
-        onConflict: 'user_id',
-        ignoreDuplicates: false
-      });
+    // Step 2: Use RPC function for balance and transaction creation
+    const { error: balanceError } = await supabase.rpc('add_coins', {
+      user_id: dbUser.id,
+      amount: 5,
+      description: 'Welcome bonus'
+    });
     
     if (balanceError) {
-      console.error('Balance creation failed:', balanceError);
-      // Don't fail registration for balance issues, but log it
-      console.warn('Continuing registration despite balance error');
-    } else {
-      console.log('Balance created/updated successfully');
+      console.error('Welcome bonus creation failed:', balanceError);
+      // Clean up user if balance creation fails
+      await supabase.from('custom_users').delete().eq('id', dbUser.id);
+      throw new Error(`Welcome bonus creation failed: ${balanceError.message}`);
     }
     
-    // Step 3: Create welcome transaction using UPSERT
-    console.log('Creating welcome transaction...');
-    const { error: transactionError } = await supabase
-      .from('transactions')
-      .upsert({
-        user_id: dbUser.id,
-        amount: 5,
-        description: 'Welcome bonus',
-        type: 'admin'
-      }, {
-        onConflict: 'id',
-        ignoreDuplicates: true
-      });
-    
-    if (transactionError) {
-      console.error('Transaction creation failed:', transactionError);
-      // Don't fail registration for transaction issues
-      console.warn('Continuing registration despite transaction error');
-    } else {
-      console.log('Welcome transaction created successfully');
-    }
+    console.log('Welcome bonus created successfully');
     
     // Create user object and session
     const newUser: CustomUser = {
@@ -197,17 +162,15 @@ async function performRegistration(cleanUsername: string, password: string) {
     return { user: newUser, session: newSession, error: null };
     
   } catch (dbError: any) {
-    console.error('Database operation failed:', dbError);
+    console.error('Atomic registration failed:', dbError);
     
     // Clean up any partial data
-    if (newUserId) {
-      try {
-        await supabase.from('custom_users').delete().eq('id', newUserId);
-        await supabase.from('user_balance').delete().eq('user_id', newUserId);
-        await supabase.from('transactions').delete().eq('user_id', newUserId);
-      } catch (cleanupError) {
-        console.warn('Cleanup failed:', cleanupError);
-      }
+    try {
+      await supabase.from('custom_users').delete().eq('id', newUserId);
+      await supabase.from('user_balance').delete().eq('user_id', newUserId);
+      await supabase.from('transactions').delete().eq('user_id', newUserId);
+    } catch (cleanupError) {
+      console.warn('Cleanup failed:', cleanupError);
     }
     
     throw dbError;

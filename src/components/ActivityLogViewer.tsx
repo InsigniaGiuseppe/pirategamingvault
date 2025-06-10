@@ -31,16 +31,32 @@ interface UserInfo {
 const ActivityLogViewer = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [users, setUsers] = useState<UserInfo[]>([]);
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [activityTypeFilter, setActivityTypeFilter] = useState('');
   const [userIdFilter, setUserIdFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
+  
+  // Separate loading states to prevent conflicts
+  const [loadingStates, setLoadingStates] = useState({
+    users: false,
+    logs: false,
+    stats: false,
+    refreshing: false
+  });
 
-  // Fetch users once on mount
+  // Debounce search to prevent rapid API calls
+  const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout | null>(null);
+
+  const updateLoadingState = useCallback((key: keyof typeof loadingStates, value: boolean) => {
+    setLoadingStates(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  // Fetch users with proper error handling
   const fetchUsers = useCallback(async () => {
-    console.log('Fetching users...');
+    if (loadingStates.users) return;
+    
+    updateLoadingState('users', true);
     try {
       const [profilesResult, customUsersResult] = await Promise.all([
         supabase.from('profiles').select('id, username'),
@@ -55,20 +71,21 @@ const ActivityLogViewer = () => {
         ...customUsers.map(u => ({ id: u.id, username: u.username }))
       ];
       
-      console.log('Users fetched:', allUsers.length);
       setUsers(allUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers([]);
+    } finally {
+      updateLoadingState('users', false);
     }
-  }, []);
+  }, [loadingStates.users, updateLoadingState]);
 
-  // Fetch logs with current filters
-  const fetchLogs = useCallback(async () => {
-    if (loading) return;
+  // Fetch logs with debouncing and proper state management
+  const fetchLogs = useCallback(async (immediate = false) => {
+    if (loadingStates.logs && !immediate) return;
+    if (users.length === 0) return; // Don't fetch logs without users
     
-    console.log('Fetching logs with filters:', { activityTypeFilter, userIdFilter, searchTerm });
-    setLoading(true);
+    updateLoadingState('logs', true);
     setError(null);
     
     try {
@@ -78,9 +95,8 @@ const ActivityLogViewer = () => {
       };
 
       const { logs: fetchedLogs } = await activityLogger.getActivityLogs(100, 0, filters);
-      console.log('Raw logs fetched:', fetchedLogs.length);
       
-      // Add usernames to logs after fetching
+      // Add usernames to logs
       const logsWithUsernames = fetchedLogs.map((log) => {
         const user = users.find(u => u.id === log.user_id);
         return {
@@ -98,44 +114,70 @@ const ActivityLogViewer = () => {
           )
         : logsWithUsernames;
 
-      console.log('Processed logs:', filteredLogs.length);
       setLogs(filteredLogs);
     } catch (error: any) {
       console.error('Error fetching activity logs:', error);
       setError('Failed to load activity logs. Please try again.');
       setLogs([]);
     } finally {
-      setLoading(false);
+      updateLoadingState('logs', false);
     }
-  }, [activityTypeFilter, userIdFilter, searchTerm, users, loading]);
+  }, [users, activityTypeFilter, userIdFilter, searchTerm, loadingStates.logs, updateLoadingState]);
 
   // Fetch stats separately
   const fetchStats = useCallback(async () => {
-    console.log('Fetching stats...');
+    if (loadingStates.stats) return;
+    
+    updateLoadingState('stats', true);
     try {
       const fetchedStats = await activityLogger.getActivityStats();
-      console.log('Stats fetched:', fetchedStats);
       setStats(fetchedStats as Record<string, number>);
     } catch (error) {
       console.error('Error fetching activity stats:', error);
       setStats({});
+    } finally {
+      updateLoadingState('stats', false);
     }
-  }, []);
+  }, [loadingStates.stats, updateLoadingState]);
 
-  // Initial data fetch - users and stats only
+  // Initial load - only users and stats
   useEffect(() => {
-    console.log('Initial data fetch');
     fetchUsers();
     fetchStats();
-  }, [fetchUsers, fetchStats]);
+  }, []); // No dependencies to prevent loops
 
-  // Fetch logs only when users are loaded AND filters change
+  // Load logs when users are available
   useEffect(() => {
     if (users.length > 0) {
-      console.log('Users loaded, fetching logs');
-      fetchLogs();
+      fetchLogs(true);
     }
-  }, [users.length, activityTypeFilter, userIdFilter, searchTerm]);
+  }, [users.length]); // Only depend on users length
+
+  // Debounced search effect
+  useEffect(() => {
+    if (searchDebounce) {
+      clearTimeout(searchDebounce);
+    }
+    
+    const timeout = setTimeout(() => {
+      if (users.length > 0) {
+        fetchLogs(true);
+      }
+    }, 500);
+    
+    setSearchDebounce(timeout);
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [searchTerm]); // Only search term
+
+  // Filter change effect
+  useEffect(() => {
+    if (users.length > 0) {
+      fetchLogs(true);
+    }
+  }, [activityTypeFilter, userIdFilter]); // Only filters
 
   const getActivityTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -160,17 +202,18 @@ const ActivityLogViewer = () => {
   };
 
   const handleRefresh = () => {
-    console.log('Manual refresh triggered');
+    updateLoadingState('refreshing', true);
     fetchUsers();
     fetchStats();
-    // fetchLogs will be called automatically when users update
+    setTimeout(() => updateLoadingState('refreshing', false), 1000);
   };
 
   const handleRetry = () => {
-    console.log('Retry triggered');
     setError(null);
-    fetchLogs();
+    fetchLogs(true);
   };
+
+  const isAnyLoading = Object.values(loadingStates).some(Boolean);
 
   return (
     <div className="space-y-6">
@@ -231,11 +274,12 @@ const ActivityLogViewer = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
+                  disabled={isAnyLoading}
                 />
               </div>
             </div>
             
-            <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter}>
+            <Select value={activityTypeFilter} onValueChange={setActivityTypeFilter} disabled={isAnyLoading}>
               <SelectTrigger className="w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Activity Type" />
@@ -260,14 +304,15 @@ const ActivityLogViewer = () => {
               value={userIdFilter}
               onChange={(e) => setUserIdFilter(e.target.value)}
               className="w-[200px]"
+              disabled={isAnyLoading}
             />
             
             <Button
               onClick={handleRefresh}
-              disabled={loading}
+              disabled={isAnyLoading}
               variant="outline"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 mr-2 ${loadingStates.refreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -288,7 +333,7 @@ const ActivityLogViewer = () => {
 
           {/* Activity Log List */}
           <div className="space-y-3 max-h-[600px] overflow-y-auto">
-            {loading ? (
+            {loadingStates.logs ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-2 text-gray-600">Loading activity logs...</p>

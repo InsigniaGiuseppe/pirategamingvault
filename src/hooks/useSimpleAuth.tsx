@@ -49,7 +49,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const mountedRef = useRef(true);
-  const operationInProgressRef = useRef(false);
+  const operationQueueRef = useRef<Promise<any>>(Promise.resolve());
   const { setTimer, clearTimer, clearAllTimers } = useTimerManager();
 
   useEffect(() => {
@@ -65,15 +65,22 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const resetOperationState = useCallback(() => {
-    operationInProgressRef.current = false;
+  // Queue operations to prevent race conditions
+  const queueOperation = useCallback(async <T>(operation: () => Promise<T>): Promise<T> => {
+    const currentQueue = operationQueueRef.current;
+    const newOperation = currentQueue.then(operation).catch((error) => {
+      console.error('Queued operation failed:', error);
+      throw error;
+    });
+    operationQueueRef.current = newOperation.catch(() => {}); // Don't let failures break the queue
+    return newOperation;
   }, []);
 
   const loadUserData = useCallback(async (userId: string) => {
     if (!mountedRef.current) return;
     
     try {
-      console.log('Loading user data from database for:', userId);
+      console.log('Loading user data for:', userId);
       
       const [balance, transactions, unlockedGames] = await Promise.all([
         getUserBalance(userId),
@@ -82,8 +89,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       ]);
       
       if (!mountedRef.current) return;
-      
-      console.log('User data loaded:', { balance, transactions: transactions.length, unlockedGames: unlockedGames.length });
       
       safeSetState(prev => ({
         ...prev,
@@ -100,7 +105,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('Starting auth check...');
     
     const checkAuth = async () => {
-      if (operationInProgressRef.current || !mountedRef.current) return;
+      if (!mountedRef.current) return;
       
       try {
         const userStr = localStorage.getItem('pirate_user');
@@ -110,10 +115,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           const storedUser = JSON.parse(userStr);
           const storedSession = JSON.parse(sessionStr);
           
-          console.log('Found stored session:', { user: storedUser.username, expires: storedSession.expires_at });
-          
           if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
-            console.log('Valid session found, user authenticated');
+            console.log('Valid session found');
             
             if (!mountedRef.current) return;
             
@@ -127,13 +130,13 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
             await loadUserData(storedUser.id);
             return;
           } else {
-            console.log('Session expired, clearing');
+            console.log('Session expired');
             localStorage.removeItem('pirate_user');
             localStorage.removeItem('pirate_session');
           }
         }
         
-        console.log('No valid session, user not authenticated');
+        console.log('No valid session found');
       } catch (error) {
         console.error('Auth check error:', error);
         localStorage.removeItem('pirate_user');
@@ -145,206 +148,202 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [loadUserData, safeSetState]);
 
   const handleLogin = useCallback(async (username: string, password: string) => {
-    if (operationInProgressRef.current || !mountedRef.current) return;
-    
-    operationInProgressRef.current = true;
-    
-    // Set timeout to reset operation state if it gets stuck
-    setTimer('login-timeout', resetOperationState, 15000);
-    
-    try {
-      console.log('Starting login for:', username);
-      safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const { user, session, error } = await login(username, password);
-      
+    return queueOperation(async () => {
       if (!mountedRef.current) return;
       
-      if (error || !user || !session) {
-        console.error('Login failed:', error);
-        safeSetState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: error || 'Login failed' 
-        }));
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: error || 'Invalid credentials. Please check your username and password.'
-        });
-        return;
-      }
-      
-      console.log('Login successful, updating state');
-      
-      safeSetState(prev => ({
-        ...prev,
-        isAuthenticated: true,
-        user,
-        session,
-        error: null,
-        isLoading: false
-      }));
-      
-      await loadUserData(user.id);
+      const timeoutId = setTimer('login-timeout', () => {
+        if (mountedRef.current) {
+          safeSetState(prev => ({ ...prev, isLoading: false, error: 'Login timed out' }));
+        }
+      }, 15000);
       
       try {
-        await activityLogger.logLogin(user.id, user.username);
-      } catch (activityError) {
-        console.warn('Failed to log login activity:', activityError);
-      }
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome back, ${user.username}!`
-      });
-      
-      setTimer('navigation-delay', () => {
-        if (mountedRef.current) {
-          navigate('/dashboard');
+        console.log('Starting login for:', username);
+        safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
+        
+        const { user, session, error } = await login(username, password);
+        
+        clearTimer('login-timeout');
+        
+        if (!mountedRef.current) return;
+        
+        if (error || !user || !session) {
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: error || 'Login failed' 
+          }));
+          toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: error || 'Invalid credentials'
+          });
+          return;
         }
-      }, 100);
-      
-    } catch (error) {
-      console.error('Login error:', error);
-      if (mountedRef.current) {
-        safeSetState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: 'Login failed. Please try again.' 
+        
+        safeSetState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          user,
+          session,
+          error: null,
+          isLoading: false
         }));
+        
+        await loadUserData(user.id);
+        
+        try {
+          await activityLogger.logLogin(user.id, user.username);
+        } catch (activityError) {
+          console.warn('Failed to log login activity:', activityError);
+        }
+        
         toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: 'Login failed. Please check your credentials and try again.'
+          title: "Login Successful",
+          description: `Welcome back, ${user.username}!`
         });
+        
+        setTimer('navigation-delay', () => {
+          if (mountedRef.current) {
+            navigate('/dashboard');
+          }
+        }, 100);
+        
+      } catch (error) {
+        clearTimer('login-timeout');
+        console.error('Login error:', error);
+        if (mountedRef.current) {
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: 'Login failed. Please try again.' 
+          }));
+          toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: 'Login failed. Please try again.'
+          });
+        }
       }
-    } finally {
-      clearTimer('login-timeout');
-      resetOperationState();
-    }
-  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, resetOperationState]);
+    });
+  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, queueOperation]);
 
   const handleRegister = useCallback(async (username: string, password: string) => {
-    if (operationInProgressRef.current || !mountedRef.current) return;
-    
-    operationInProgressRef.current = true;
-    
-    // Set timeout to reset operation state if it gets stuck
-    setTimer('register-timeout', resetOperationState, 20000);
-    
-    try {
-      console.log('Starting registration for:', username);
-      safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      const { user, session, error } = await registerUser(username, password);
-      
+    return queueOperation(async () => {
       if (!mountedRef.current) return;
       
-      if (error || !user) {
-        console.error('Registration failed:', error);
-        safeSetState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: error || 'Registration failed' 
-        }));
-        toast({
-          variant: "destructive",
-          title: "Registration Failed",
-          description: error || 'Registration failed'
-        });
-        return;
-      }
-      
-      console.log('Registration successful, updating state');
-      
-      safeSetState(prev => ({
-        ...prev,
-        isAuthenticated: true,
-        user: {
-          id: user.id,
-          username: user.username || username,
-          email: user.email || ''
-        },
-        session,
-        error: null,
-        isLoading: false
-      }));
-      
-      await loadUserData(user.id);
+      const timeoutId = setTimer('register-timeout', () => {
+        if (mountedRef.current) {
+          safeSetState(prev => ({ ...prev, isLoading: false, error: 'Registration timed out' }));
+        }
+      }, 20000);
       
       try {
-        await activityLogger.logRegistration(user.id, user.username || username);
-      } catch (activityError) {
-        console.warn('Failed to log registration activity:', activityError);
-      }
-      
-      toast({
-        title: "Registration Successful",
-        description: "Welcome to Pirate Gaming!"
-      });
-      
-      setTimer('navigation-delay', () => {
-        if (mountedRef.current) {
-          navigate('/dashboard');
+        console.log('Starting registration for:', username);
+        safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
+        
+        const { user, session, error } = await registerUser(username, password);
+        
+        clearTimer('register-timeout');
+        
+        if (!mountedRef.current) return;
+        
+        if (error || !user) {
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: error || 'Registration failed' 
+          }));
+          toast({
+            variant: "destructive",
+            title: "Registration Failed",
+            description: error || 'Registration failed'
+          });
+          return;
         }
-      }, 100);
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      if (mountedRef.current) {
-        safeSetState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: 'Registration failed. Please try again.' 
+        
+        safeSetState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          user: {
+            id: user.id,
+            username: user.username || username,
+            email: user.email || ''
+          },
+          session,
+          error: null,
+          isLoading: false
         }));
+        
+        await loadUserData(user.id);
+        
+        try {
+          await activityLogger.logRegistration(user.id, user.username || username);
+        } catch (activityError) {
+          console.warn('Failed to log registration activity:', activityError);
+        }
+        
         toast({
-          variant: "destructive",
-          title: "Registration Failed",
-          description: 'Registration failed. Please try again.'
+          title: "Registration Successful",
+          description: "Welcome to Pirate Gaming!"
         });
+        
+        setTimer('navigation-delay', () => {
+          if (mountedRef.current) {
+            navigate('/dashboard');
+          }
+        }, 100);
+        
+      } catch (error) {
+        clearTimer('register-timeout');
+        console.error('Registration error:', error);
+        if (mountedRef.current) {
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false, 
+            error: 'Registration failed. Please try again.' 
+          }));
+          toast({
+            variant: "destructive",
+            title: "Registration Failed",
+            description: 'Registration failed. Please try again.'
+          });
+        }
       }
-    } finally {
-      clearTimer('register-timeout');
-      resetOperationState();
-    }
-  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, resetOperationState]);
+    });
+  }, [toast, navigate, loadUserData, safeSetState, setTimer, clearTimer, queueOperation]);
 
   const handleLogout = useCallback(async () => {
-    if (operationInProgressRef.current) return;
-    
-    operationInProgressRef.current = true;
-    
-    try {
-      console.log('Starting logout process');
-      
-      if (state.user?.id && state.user?.username) {
-        try {
-          await activityLogger.logLogout(state.user.id, state.user.username);
-        } catch (activityError) {
-          console.warn('Failed to log logout activity:', activityError);
+    return queueOperation(async () => {
+      try {
+        console.log('Starting logout process');
+        
+        if (state.user?.id && state.user?.username) {
+          try {
+            await activityLogger.logLogout(state.user.id, state.user.username);
+          } catch (activityError) {
+            console.warn('Failed to log logout activity:', activityError);
+          }
         }
+        
+        await logout();
+        
+        localStorage.removeItem('pirate_user');
+        localStorage.removeItem('pirate_session');
+        
+        if (mountedRef.current) {
+          safeSetState(() => initialState);
+          navigate('/');
+        }
+        console.log('Logout completed');
+      } catch (error) {
+        console.error('Logout error:', error);
       }
-      
-      await logout();
-      
-      localStorage.removeItem('pirate_user');
-      localStorage.removeItem('pirate_session');
-      
-      if (mountedRef.current) {
-        safeSetState(() => initialState);
-        navigate('/');
-      }
-      console.log('Logout completed');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      resetOperationState();
-    }
-  }, [navigate, state.user, safeSetState, resetOperationState]);
+    });
+  }, [navigate, state.user, safeSetState, queueOperation]);
 
   const addPirateCoins = useCallback(async (amount: number, description?: string) => {
-    if (!state.user?.id || operationInProgressRef.current) return;
+    if (!state.user?.id) return;
     
     try {
       const success = await updateUserBalance(
@@ -363,7 +362,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [state.user?.id, loadUserData]);
 
   const unlockGame = useCallback(async (gameId: string, cost: number): Promise<boolean> => {
-    if (!state.user?.id || state.pirateCoins < cost || operationInProgressRef.current) return false;
+    if (!state.user?.id || state.pirateCoins < cost) return false;
     
     try {
       const success = await updateUserBalance(
@@ -396,7 +395,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [state.unlockedGames]);
 
   const refreshUserData = useCallback(async () => {
-    if (state.user?.id && !operationInProgressRef.current) {
+    if (state.user?.id) {
       await loadUserData(state.user.id);
     }
   }, [state.user?.id, loadUserData]);
@@ -412,14 +411,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     refreshUserData
   };
 
-  console.log('Auth context state:', { 
-    isAuthenticated: state.isAuthenticated, 
-    isLoading: state.isLoading,
-    user: state.user?.username,
-    hasError: !!state.error,
-    pirateCoins: state.pirateCoins
-  });
-
   return (
     <AuthContext.Provider value={contextValue}>
       {children}
@@ -434,3 +425,5 @@ export const useSimpleAuth = () => {
   }
   return context;
 };
+
+export const SimpleAuthContext = AuthContext;
