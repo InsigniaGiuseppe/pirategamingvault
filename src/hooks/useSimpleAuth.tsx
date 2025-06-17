@@ -59,7 +59,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     userId: state.user?.id,
     pirateCoins: state.pirateCoins,
     transactionCount: state.transactions.length,
-    unlockedGamesCount: state.unlockedGames.length
+    unlockedGamesCount: state.unlockedGames.length,
+    isLoading: state.isLoading,
+    hasError: !!state.error
+  });
+
+  console.log('🔐 SimpleAuthProvider - Component render:', {
+    mountedRef: mountedRef.current,
+    operationQueueLength: 'active',
+    timerManagerStatus: 'available'
   });
 
   useEffect(() => {
