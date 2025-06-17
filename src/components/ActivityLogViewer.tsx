@@ -48,20 +48,44 @@ const ActivityLogViewer = () => {
   // Debounce search to prevent rapid API calls
   const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout | null>(null);
 
+  // Add comprehensive logging
+  console.log('📊 ActivityLogViewer - Component state:', {
+    logsCount: logs.length,
+    usersCount: users.length,
+    statsCount: Object.keys(stats).length,
+    loadingStates,
+    searchTerm,
+    activityTypeFilter,
+    userIdFilter,
+    error
+  });
+
   const updateLoadingState = useCallback((key: keyof typeof loadingStates, value: boolean) => {
+    console.log('📊 ActivityLogViewer - Updating loading state:', { key, value });
     setLoadingStates(prev => ({ ...prev, [key]: value }));
   }, []);
 
   // Fetch users with proper error handling
   const fetchUsers = useCallback(async () => {
-    if (loadingStates.users) return;
+    if (loadingStates.users) {
+      console.log('📊 ActivityLogViewer - Users already loading, skipping');
+      return;
+    }
     
+    console.log('📊 ActivityLogViewer - Starting to fetch users');
     updateLoadingState('users', true);
     try {
       const [profilesResult, customUsersResult] = await Promise.all([
         supabase.from('profiles').select('id, username'),
         supabase.from('custom_users').select('id, username')
       ]);
+
+      console.log('📊 ActivityLogViewer - Users fetched:', {
+        profiles: profilesResult.data?.length || 0,
+        customUsers: customUsersResult.data?.length || 0,
+        profilesError: profilesResult.error,
+        customUsersError: customUsersResult.error
+      });
 
       const profiles = profilesResult.data || [];
       const customUsers = customUsersResult.data || [];
@@ -71,9 +95,10 @@ const ActivityLogViewer = () => {
         ...customUsers.map(u => ({ id: u.id, username: u.username }))
       ];
       
+      console.log('📊 ActivityLogViewer - Total users processed:', allUsers.length);
       setUsers(allUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('📊 ActivityLogViewer - Error fetching users:', error);
       setUsers([]);
     } finally {
       updateLoadingState('users', false);
@@ -82,8 +107,21 @@ const ActivityLogViewer = () => {
 
   // Fetch logs with debouncing and proper state management
   const fetchLogs = useCallback(async (immediate = false) => {
-    if (loadingStates.logs && !immediate) return;
-    if (users.length === 0) return; // Don't fetch logs without users
+    if (loadingStates.logs && !immediate) {
+      console.log('📊 ActivityLogViewer - Logs already loading, skipping');
+      return;
+    }
+    if (users.length === 0) {
+      console.log('📊 ActivityLogViewer - No users available, skipping logs fetch');
+      return;
+    }
+    
+    console.log('📊 ActivityLogViewer - Starting to fetch logs with filters:', {
+      searchTerm,
+      activityTypeFilter,
+      userIdFilter,
+      immediate
+    });
     
     updateLoadingState('logs', true);
     setError(null);
@@ -94,7 +132,18 @@ const ActivityLogViewer = () => {
         ...(userIdFilter && { userId: userIdFilter }),
       };
 
+      console.log('📊 ActivityLogViewer - Calling activityLogger.getActivityLogs with filters:', filters);
       const { logs: fetchedLogs } = await activityLogger.getActivityLogs(100, 0, filters);
+      
+      console.log('📊 ActivityLogViewer - Raw logs fetched:', {
+        count: fetchedLogs.length,
+        sample: fetchedLogs.slice(0, 3).map(log => ({
+          id: log.id,
+          activity_type: log.activity_type,
+          user_id: log.user_id,
+          description: log.description.substring(0, 50)
+        }))
+      });
       
       // Add usernames to logs
       const logsWithUsernames = fetchedLogs.map((log) => {
@@ -105,6 +154,8 @@ const ActivityLogViewer = () => {
         };
       });
 
+      console.log('📊 ActivityLogViewer - Logs with usernames processed:', logsWithUsernames.length);
+
       // Apply search filter
       const filteredLogs = searchTerm 
         ? logsWithUsernames.filter((log) => 
@@ -114,9 +165,15 @@ const ActivityLogViewer = () => {
           )
         : logsWithUsernames;
 
+      console.log('📊 ActivityLogViewer - Final filtered logs:', {
+        originalCount: logsWithUsernames.length,
+        filteredCount: filteredLogs.length,
+        searchTerm
+      });
+
       setLogs(filteredLogs);
     } catch (error: any) {
-      console.error('Error fetching activity logs:', error);
+      console.error('📊 ActivityLogViewer - Error fetching activity logs:', error);
       setError('Failed to load activity logs. Please try again.');
       setLogs([]);
     } finally {
@@ -126,14 +183,19 @@ const ActivityLogViewer = () => {
 
   // Fetch stats separately
   const fetchStats = useCallback(async () => {
-    if (loadingStates.stats) return;
+    if (loadingStates.stats) {
+      console.log('📊 ActivityLogViewer - Stats already loading, skipping');
+      return;
+    }
     
+    console.log('📊 ActivityLogViewer - Starting to fetch stats');
     updateLoadingState('stats', true);
     try {
       const fetchedStats = await activityLogger.getActivityStats();
+      console.log('📊 ActivityLogViewer - Stats fetched:', fetchedStats);
       setStats(fetchedStats as Record<string, number>);
     } catch (error) {
-      console.error('Error fetching activity stats:', error);
+      console.error('📊 ActivityLogViewer - Error fetching activity stats:', error);
       setStats({});
     } finally {
       updateLoadingState('stats', false);
@@ -142,12 +204,14 @@ const ActivityLogViewer = () => {
 
   // Initial load - only users and stats
   useEffect(() => {
+    console.log('📊 ActivityLogViewer - Initial effect triggered');
     fetchUsers();
     fetchStats();
   }, []); // No dependencies to prevent loops
 
   // Load logs when users are available
   useEffect(() => {
+    console.log('📊 ActivityLogViewer - Users dependency effect triggered:', { usersLength: users.length });
     if (users.length > 0) {
       fetchLogs(true);
     }
@@ -155,11 +219,13 @@ const ActivityLogViewer = () => {
 
   // Debounced search effect
   useEffect(() => {
+    console.log('📊 ActivityLogViewer - Search effect triggered:', { searchTerm });
     if (searchDebounce) {
       clearTimeout(searchDebounce);
     }
     
     const timeout = setTimeout(() => {
+      console.log('📊 ActivityLogViewer - Search timeout triggered');
       if (users.length > 0) {
         fetchLogs(true);
       }
@@ -174,6 +240,7 @@ const ActivityLogViewer = () => {
 
   // Filter change effect
   useEffect(() => {
+    console.log('📊 ActivityLogViewer - Filter effect triggered:', { activityTypeFilter, userIdFilter });
     if (users.length > 0) {
       fetchLogs(true);
     }
@@ -202,6 +269,7 @@ const ActivityLogViewer = () => {
   };
 
   const handleRefresh = () => {
+    console.log('📊 ActivityLogViewer - Manual refresh triggered');
     updateLoadingState('refreshing', true);
     fetchUsers();
     fetchStats();
@@ -209,6 +277,7 @@ const ActivityLogViewer = () => {
   };
 
   const handleRetry = () => {
+    console.log('📊 ActivityLogViewer - Retry triggered');
     setError(null);
     fetchLogs(true);
   };
@@ -262,6 +331,11 @@ const ActivityLogViewer = () => {
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
             Activity Logs
+            {isAnyLoading && (
+              <div className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                Loading...
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -317,6 +391,17 @@ const ActivityLogViewer = () => {
             </Button>
           </div>
 
+          {/* Debug Information */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
+              <div>Debug Info:</div>
+              <div>Users loaded: {users.length}</div>
+              <div>Logs loaded: {logs.length}</div>
+              <div>Loading states: {JSON.stringify(loadingStates)}</div>
+              <div>Has error: {!!error}</div>
+            </div>
+          )}
+
           {/* Error State */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -342,6 +427,9 @@ const ActivityLogViewer = () => {
               <div className="text-center py-8">
                 <Activity className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600">No activities found</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Users: {users.length} | Filters active: {activityTypeFilter || userIdFilter || searchTerm ? 'Yes' : 'No'}
+                </p>
               </div>
             ) : (
               logs.map((log) => (

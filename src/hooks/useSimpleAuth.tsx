@@ -53,8 +53,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const operationQueueRef = useRef<Promise<any>>(Promise.resolve());
   const { setTimer, clearTimer, clearAllTimers } = useTimerManager();
 
+  // Add comprehensive logging for debugging
+  console.log('🔐 SimpleAuthProvider - Current state:', {
+    isAuthenticated: state.isAuthenticated,
+    userId: state.user?.id,
+    pirateCoins: state.pirateCoins,
+    transactionCount: state.transactions.length,
+    unlockedGamesCount: state.unlockedGames.length
+  });
+
   useEffect(() => {
     return () => {
+      console.log('🔐 SimpleAuthProvider - Cleanup triggered');
       mountedRef.current = false;
       clearAllTimers();
     };
@@ -62,15 +72,19 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const safeSetState = useCallback((updater: (prev: AuthState) => AuthState) => {
     if (mountedRef.current) {
+      console.log('🔐 SimpleAuthProvider - State update triggered');
       setState(updater);
+    } else {
+      console.warn('🔐 SimpleAuthProvider - Attempted state update after unmount');
     }
   }, []);
 
   // Queue operations to prevent race conditions
   const queueOperation = useCallback(async <T>(operation: () => Promise<T>): Promise<T> => {
+    console.log('🔐 SimpleAuthProvider - Queueing operation');
     const currentQueue = operationQueueRef.current;
     const newOperation = currentQueue.then(operation).catch((error) => {
-      console.error('Queued operation failed:', error);
+      console.error('🔐 SimpleAuthProvider - Queued operation failed:', error);
       throw error;
     });
     operationQueueRef.current = newOperation.catch(() => {}); // Don't let failures break the queue
@@ -81,13 +95,19 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     if (!mountedRef.current) return;
     
     try {
-      console.log('Loading user data for:', userId);
+      console.log('🔐 SimpleAuthProvider - Loading user data for:', userId);
       
       const [balance, transactions, unlockedGames] = await Promise.all([
         getUserBalance(userId),
         getUserTransactions(userId),
         getUserUnlockedGames(userId)
       ]);
+      
+      console.log('🔐 SimpleAuthProvider - User data loaded:', {
+        balance,
+        transactionCount: transactions.length,
+        unlockedGamesCount: unlockedGames.length
+      });
       
       if (!mountedRef.current) return;
       
@@ -98,12 +118,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         unlockedGames
       }));
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('🔐 SimpleAuthProvider - Error loading user data:', error);
     }
   }, [safeSetState]);
 
   useEffect(() => {
-    console.log('Starting auth check...');
+    console.log('🔐 SimpleAuthProvider - Starting auth check...');
     
     const checkAuth = async () => {
       if (!mountedRef.current) return;
@@ -112,12 +132,17 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         const userStr = localStorage.getItem('pirate_user');
         const sessionStr = localStorage.getItem('pirate_session');
         
+        console.log('🔐 SimpleAuthProvider - Checking localStorage:', {
+          hasUser: !!userStr,
+          hasSession: !!sessionStr
+        });
+        
         if (userStr && sessionStr) {
           const storedUser = JSON.parse(userStr);
           const storedSession = JSON.parse(sessionStr);
           
           if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
-            console.log('Valid session found');
+            console.log('🔐 SimpleAuthProvider - Valid session found');
             
             if (!mountedRef.current) return;
             
@@ -131,15 +156,15 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
             await loadUserData(storedUser.id);
             return;
           } else {
-            console.log('Session expired');
+            console.log('🔐 SimpleAuthProvider - Session expired');
             localStorage.removeItem('pirate_user');
             localStorage.removeItem('pirate_session');
           }
         }
         
-        console.log('No valid session found');
+        console.log('🔐 SimpleAuthProvider - No valid session found');
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('🔐 SimpleAuthProvider - Auth check error:', error);
         localStorage.removeItem('pirate_user');
         localStorage.removeItem('pirate_session');
       }
@@ -152,14 +177,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     return queueOperation(async () => {
       if (!mountedRef.current) return;
       
+      console.log('🔐 SimpleAuthProvider - Starting login for:', username);
+      
       const timeoutId = setTimer('login-timeout', () => {
         if (mountedRef.current) {
+          console.log('🔐 SimpleAuthProvider - Login timeout triggered');
           safeSetState(prev => ({ ...prev, isLoading: false, error: 'Login timed out' }));
         }
       }, 15000);
       
       try {
-        console.log('Starting login for:', username);
         safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
         
         const { user, session, error } = await login(username, password);
@@ -169,6 +196,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         if (!mountedRef.current) return;
         
         if (error || !user || !session) {
+          console.error('🔐 SimpleAuthProvider - Login failed:', error);
           safeSetState(prev => ({ 
             ...prev, 
             isLoading: false, 
@@ -182,6 +210,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         
+        console.log('🔐 SimpleAuthProvider - Login successful');
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -195,8 +224,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
         try {
           await activityLogger.logLogin(user.id, user.username);
+          console.log('🔐 SimpleAuthProvider - Login activity logged');
         } catch (activityError) {
-          console.warn('Failed to log login activity:', activityError);
+          console.warn('🔐 SimpleAuthProvider - Failed to log login activity:', activityError);
         }
         
         toast({
@@ -212,7 +242,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
       } catch (error) {
         clearTimer('login-timeout');
-        console.error('Login error:', error);
+        console.error('🔐 SimpleAuthProvider - Login error:', error);
         if (mountedRef.current) {
           safeSetState(prev => ({ 
             ...prev, 
@@ -233,14 +263,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     return queueOperation(async () => {
       if (!mountedRef.current) return;
       
+      console.log('🔐 SimpleAuthProvider - Starting registration for:', username);
+      
       const timeoutId = setTimer('register-timeout', () => {
         if (mountedRef.current) {
+          console.log('🔐 SimpleAuthProvider - Registration timeout triggered');
           safeSetState(prev => ({ ...prev, isLoading: false, error: 'Registration timed out' }));
         }
       }, 20000);
       
       try {
-        console.log('Starting registration for:', username);
         safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
         
         const { user, session, error } = await registerUser(username, password);
@@ -250,6 +282,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         if (!mountedRef.current) return;
         
         if (error || !user) {
+          console.error('🔐 SimpleAuthProvider - Registration failed:', error);
           safeSetState(prev => ({ 
             ...prev, 
             isLoading: false, 
@@ -263,6 +296,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         
+        console.log('🔐 SimpleAuthProvider - Registration successful');
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -280,8 +314,9 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
         try {
           await activityLogger.logRegistration(user.id, user.username || username);
+          console.log('🔐 SimpleAuthProvider - Registration activity logged');
         } catch (activityError) {
-          console.warn('Failed to log registration activity:', activityError);
+          console.warn('🔐 SimpleAuthProvider - Failed to log registration activity:', activityError);
         }
         
         toast({
@@ -297,7 +332,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
       } catch (error) {
         clearTimer('register-timeout');
-        console.error('Registration error:', error);
+        console.error('🔐 SimpleAuthProvider - Registration error:', error);
         if (mountedRef.current) {
           safeSetState(prev => ({ 
             ...prev, 
@@ -317,13 +352,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const handleLogout = useCallback(async () => {
     return queueOperation(async () => {
       try {
-        console.log('Starting logout process');
+        console.log('🔐 SimpleAuthProvider - Starting logout process');
         
         if (state.user?.id && state.user?.username) {
           try {
             await activityLogger.logLogout(state.user.id, state.user.username);
+            console.log('🔐 SimpleAuthProvider - Logout activity logged');
           } catch (activityError) {
-            console.warn('Failed to log logout activity:', activityError);
+            console.warn('🔐 SimpleAuthProvider - Failed to log logout activity:', activityError);
           }
         }
         
@@ -336,15 +372,20 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           safeSetState(() => initialState);
           navigate('/');
         }
-        console.log('Logout completed');
+        console.log('🔐 SimpleAuthProvider - Logout completed');
       } catch (error) {
-        console.error('Logout error:', error);
+        console.error('🔐 SimpleAuthProvider - Logout error:', error);
       }
     });
   }, [navigate, state.user, safeSetState, queueOperation]);
 
   const addPirateCoins = useCallback(async (amount: number, description?: string) => {
-    if (!state.user?.id) return;
+    if (!state.user?.id) {
+      console.warn('🔐 SimpleAuthProvider - Cannot add coins: No user ID');
+      return;
+    }
+    
+    console.log('🔐 SimpleAuthProvider - Adding coins:', { amount, description, userId: state.user.id });
     
     try {
       const success = await updateUserBalance(
@@ -354,16 +395,27 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         'earn'
       );
       
+      console.log('🔐 SimpleAuthProvider - Add coins result:', success);
+      
       if (success && mountedRef.current) {
         await loadUserData(state.user.id);
       }
     } catch (error) {
-      console.error('Error adding pirate coins:', error);
+      console.error('🔐 SimpleAuthProvider - Error adding pirate coins:', error);
     }
   }, [state.user?.id, loadUserData]);
 
   const unlockGame = useCallback(async (gameId: string, cost: number): Promise<boolean> => {
-    if (!state.user?.id || state.pirateCoins < cost) return false;
+    if (!state.user?.id || state.pirateCoins < cost) {
+      console.warn('🔐 SimpleAuthProvider - Cannot unlock game:', {
+        hasUserId: !!state.user?.id,
+        currentCoins: state.pirateCoins,
+        cost
+      });
+      return false;
+    }
+    
+    console.log('🔐 SimpleAuthProvider - Unlocking game:', { gameId, cost, userId: state.user.id });
     
     try {
       const success = await updateUserBalance(
@@ -373,11 +425,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         'spend'
       );
       
+      console.log('🔐 SimpleAuthProvider - Game unlock result:', success);
+      
       if (success && mountedRef.current) {
         try {
           await activityLogger.logGameUnlocked(state.user.id, gameId, gameId, cost);
+          console.log('🔐 SimpleAuthProvider - Game unlock activity logged');
         } catch (activityError) {
-          console.warn('Failed to log game unlock activity:', activityError);
+          console.warn('🔐 SimpleAuthProvider - Failed to log game unlock activity:', activityError);
         }
         
         await loadUserData(state.user.id);
@@ -386,16 +441,19 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       
       return false;
     } catch (error) {
-      console.error('Error unlocking game:', error);
+      console.error('🔐 SimpleAuthProvider - Error unlocking game:', error);
       return false;
     }
   }, [state.user?.id, state.pirateCoins, loadUserData]);
 
   const checkIfGameUnlocked = useCallback((gameId: string): boolean => {
-    return state.unlockedGames.includes(gameId);
+    const isUnlocked = state.unlockedGames.includes(gameId);
+    console.log('🔐 SimpleAuthProvider - Checking game unlock status:', { gameId, isUnlocked });
+    return isUnlocked;
   }, [state.unlockedGames]);
 
   const refreshUserData = useCallback(async () => {
+    console.log('🔐 SimpleAuthProvider - Refreshing user data');
     if (state.user?.id) {
       await loadUserData(state.user.id);
     }

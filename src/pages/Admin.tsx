@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedUserTable from '@/components/EnhancedUserTable';
@@ -32,13 +33,25 @@ const Admin = () => {
   const [operationLoading, setOperationLoading] = useState<string | null>(null);
   const [cancelOperations, setCancelOperations] = useState<Set<string>>(new Set());
 
+  // Add comprehensive logging
+  console.log('🏴‍☠️ Admin Dashboard - Component state:', {
+    usersCount: users.length,
+    loading,
+    selectedUserId: selectedUser?.id,
+    activeTab,
+    operationLoading,
+    cancelOperationsCount: cancelOperations.size
+  });
+
   useEffect(() => {
     if (activeTab === 'users') {
+      console.log('🏴‍☠️ Admin Dashboard - Users tab active, fetching users');
       fetchUsers();
     }
   }, [refreshUsers, activeTab]);
 
   const fetchUsers = async () => {
+    console.log('🏴‍☠️ Admin Dashboard - Starting to fetch users');
     setLoading(true);
     try {
       const [profilesResult, customUsersResult, balancesResult, transactionsResult] = await Promise.all([
@@ -47,6 +60,19 @@ const Admin = () => {
         supabase.from('user_balance').select('*'),
         supabase.from('transactions').select('*').order('created_at', { ascending: false })
       ]);
+
+      console.log('🏴‍☠️ Admin Dashboard - Raw data fetched:', {
+        profiles: profilesResult.data?.length || 0,
+        customUsers: customUsersResult.data?.length || 0,
+        balances: balancesResult.data?.length || 0,
+        transactions: transactionsResult.data?.length || 0,
+        errors: {
+          profiles: profilesResult.error,
+          customUsers: customUsersResult.error,
+          balances: balancesResult.error,
+          transactions: transactionsResult.error
+        }
+      });
 
       const profiles = profilesResult.data || [];
       const customUsers = customUsersResult.data || [];
@@ -83,9 +109,15 @@ const Admin = () => {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
+      console.log('🏴‍☠️ Admin Dashboard - Users processed:', {
+        profileUsers: profileUsers.length,
+        customUsers: customUsersList.length,
+        totalUsers: allUsers.length
+      });
+
       setUsers(allUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('🏴‍☠️ Admin Dashboard - Error fetching users:', error);
       toast({
         title: "Error",
         description: "Failed to fetch users",
@@ -98,6 +130,7 @@ const Admin = () => {
   };
 
   const cancelOperation = (operationId: string) => {
+    console.log('🏴‍☠️ Admin Dashboard - Cancelling operation:', operationId);
     setCancelOperations(prev => new Set([...prev, operationId]));
     setOperationLoading(null);
     
@@ -108,8 +141,11 @@ const Admin = () => {
   };
 
   const handleAddCoins = async (username: string, userId: string) => {
+    console.log('🏴‍☠️ Admin Dashboard - Starting add coins flow:', { username, userId });
+    
     const amount = parseInt(prompt(`Enter amount of coins to add to ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
+      console.warn('🏴‍☠️ Admin Dashboard - Invalid amount entered:', amount);
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid positive number",
@@ -120,10 +156,15 @@ const Admin = () => {
 
     if (amount > 10000) {
       const confirmed = confirm(`You're about to add ${amount} coins. This is a large amount. Are you sure?`);
-      if (!confirmed) return;
+      if (!confirmed) {
+        console.log('🏴‍☠️ Admin Dashboard - Large amount cancelled by user');
+        return;
+      }
     }
 
     const operationId = `add-${userId}`;
+    console.log('🏴‍☠️ Admin Dashboard - Starting coin add operation:', { operationId, amount, userId });
+    
     setOperationLoading(operationId);
     setCancelOperations(prev => {
       const newSet = new Set(prev);
@@ -132,17 +173,22 @@ const Admin = () => {
     });
 
     try {
+      console.log('🏴‍☠️ Admin Dashboard - Calling DatabaseService.safeExecuteRPC for add_coins');
       const result = await DatabaseService.safeExecuteRPC('add_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin added ${amount} coins`
       });
 
+      console.log('🏴‍☠️ Admin Dashboard - RPC result:', result);
+
       if (cancelOperations.has(operationId)) {
+        console.log('🏴‍☠️ Admin Dashboard - Operation was cancelled');
         return;
       }
 
       if (!result.success) {
+        console.error('🏴‍☠️ Admin Dashboard - RPC failed:', result.error);
         toast({
           title: "Database Error",
           description: result.error || 'Failed to add coins',
@@ -153,14 +199,16 @@ const Admin = () => {
 
       // Log activity
       try {
+        console.log('🏴‍☠️ Admin Dashboard - Logging admin activity');
         await activityLogger.logAdminAction(
           'admin-user-id',
           `Added ${amount} coins to ${username}`,
           userId,
           { amount, username }
         );
+        console.log('🏴‍☠️ Admin Dashboard - Activity logged successfully');
       } catch (activityError) {
-        console.warn('Failed to log activity:', activityError);
+        console.warn('🏴‍☠️ Admin Dashboard - Failed to log activity:', activityError);
       }
       
       toast({
@@ -168,10 +216,11 @@ const Admin = () => {
         description: `Successfully added ${amount} coins to ${username}'s balance`,
       });
       
+      console.log('🏴‍☠️ Admin Dashboard - Triggering user refresh');
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error('Error in handleAddCoins:', error);
+      console.error('🏴‍☠️ Admin Dashboard - Error in handleAddCoins:', error);
       toast({
         title: "Error",
         description: `Failed to add coins: ${error.message || 'Unknown error'}`,
@@ -183,8 +232,11 @@ const Admin = () => {
   };
 
   const handleRemoveCoins = async (username: string, userId: string) => {
+    console.log('🏴‍☠️ Admin Dashboard - Starting remove coins flow:', { username, userId });
+    
     const amount = parseInt(prompt(`Enter amount of coins to remove from ${username}'s balance:`) || '0');
     if (isNaN(amount) || amount <= 0) {
+      console.warn('🏴‍☠️ Admin Dashboard - Invalid amount entered:', amount);
       toast({
         title: "Invalid Amount",
         description: "Please enter a valid positive number",
@@ -195,10 +247,15 @@ const Admin = () => {
 
     if (amount > 10000) {
       const confirmed = confirm(`You're about to remove ${amount} coins. This is a large amount. Are you sure?`);
-      if (!confirmed) return;
+      if (!confirmed) {
+        console.log('🏴‍☠️ Admin Dashboard - Large amount cancelled by user');
+        return;
+      }
     }
 
     const operationId = `remove-${userId}`;
+    console.log('🏴‍☠️ Admin Dashboard - Starting coin remove operation:', { operationId, amount, userId });
+    
     setOperationLoading(operationId);
     setCancelOperations(prev => {
       const newSet = new Set(prev);
@@ -207,17 +264,22 @@ const Admin = () => {
     });
 
     try {
+      console.log('🏴‍☠️ Admin Dashboard - Calling DatabaseService.safeExecuteRPC for remove_coins');
       const result = await DatabaseService.safeExecuteRPC('remove_coins', {
         user_id: userId,
         amount: amount,
         description: `Admin removed ${amount} coins`
       });
 
+      console.log('🏴‍☠️ Admin Dashboard - RPC result:', result);
+
       if (cancelOperations.has(operationId)) {
+        console.log('🏴‍☠️ Admin Dashboard - Operation was cancelled');
         return;
       }
 
       if (!result.success) {
+        console.error('🏴‍☠️ Admin Dashboard - RPC failed:', result.error);
         toast({
           title: "Database Error",
           description: result.error || 'Failed to remove coins',
@@ -228,14 +290,16 @@ const Admin = () => {
 
       // Log activity
       try {
+        console.log('🏴‍☠️ Admin Dashboard - Logging admin activity');
         await activityLogger.logAdminAction(
           'admin-user-id',
           `Removed ${amount} coins from ${username}`,
           userId,
           { amount, username }
         );
+        console.log('🏴‍☠️ Admin Dashboard - Activity logged successfully');
       } catch (activityError) {
-        console.warn('Failed to log activity:', activityError);
+        console.warn('🏴‍☠️ Admin Dashboard - Failed to log activity:', activityError);
       }
       
       toast({
@@ -243,10 +307,11 @@ const Admin = () => {
         description: `Successfully removed ${amount} coins from ${username}'s balance`,
       });
       
+      console.log('🏴‍☠️ Admin Dashboard - Triggering user refresh');
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error('Error in handleRemoveCoins:', error);
+      console.error('🏴‍☠️ Admin Dashboard - Error in handleRemoveCoins:', error);
       toast({
         title: "Error",
         description: `Failed to remove coins: ${error.message || 'Unknown error'}`,
@@ -258,7 +323,10 @@ const Admin = () => {
   };
 
   const handleUpdateBalance = async (userId: string, amount: number, description: string, action: 'add' | 'remove') => {
+    console.log('🏴‍☠️ Admin Dashboard - Starting update balance:', { userId, amount, description, action });
+    
     if (amount <= 0 || isNaN(amount)) {
+      console.warn('🏴‍☠️ Admin Dashboard - Invalid amount:', amount);
       toast({
         title: "Error",
         description: "Please enter a valid positive amount",
@@ -268,6 +336,7 @@ const Admin = () => {
     }
 
     if (!description.trim()) {
+      console.warn('🏴‍☠️ Admin Dashboard - Empty description');
       toast({
         title: "Error",
         description: "Please provide a description for this operation",
@@ -277,6 +346,8 @@ const Admin = () => {
     }
 
     const operationId = `${action}-${userId}`;
+    console.log('🏴‍☠️ Admin Dashboard - Starting balance update operation:', { operationId });
+    
     setOperationLoading(operationId);
     setCancelOperations(prev => {
       const newSet = new Set(prev);
@@ -286,17 +357,23 @@ const Admin = () => {
 
     try {
       const rpcFunction = action === 'add' ? 'add_coins' : 'remove_coins';
+      console.log('🏴‍☠️ Admin Dashboard - Calling RPC function:', rpcFunction);
+      
       const result = await DatabaseService.safeExecuteRPC(rpcFunction, {
         user_id: userId,
         amount: amount,
         description: `Admin ${action === 'add' ? 'added' : 'removed'} ${amount} coins - ${description}`
       });
 
+      console.log('🏴‍☠️ Admin Dashboard - RPC result:', result);
+
       if (cancelOperations.has(operationId)) {
+        console.log('🏴‍☠️ Admin Dashboard - Operation was cancelled');
         return;
       }
 
       if (!result.success) {
+        console.error('🏴‍☠️ Admin Dashboard - RPC failed:', result.error);
         toast({
           title: "Database Error",
           description: result.error || `Failed to ${action} coins`,
@@ -307,14 +384,16 @@ const Admin = () => {
 
       // Log activity
       try {
+        console.log('🏴‍☠️ Admin Dashboard - Logging admin activity');
         await activityLogger.logAdminAction(
           'admin-user-id',
           `${action === 'add' ? 'Added' : 'Removed'} ${amount} coins - ${description}`,
           userId,
           { amount, description, action }
         );
+        console.log('🏴‍☠️ Admin Dashboard - Activity logged successfully');
       } catch (activityError) {
-        console.warn('Failed to log activity:', activityError);
+        console.warn('🏴‍☠️ Admin Dashboard - Failed to log activity:', activityError);
       }
       
       toast({
@@ -322,11 +401,12 @@ const Admin = () => {
         description: `Successfully ${action === 'add' ? 'added' : 'removed'} ${amount} coins`,
       });
       
+      console.log('🏴‍☠️ Admin Dashboard - Closing modal and refreshing');
       setSelectedUser(null);
       setRefreshUsers(prev => !prev);
       
     } catch (error: any) {
-      console.error(`Error in handleUpdateBalance (${action}):`, error);
+      console.error('🏴‍☠️ Admin Dashboard - Error in handleUpdateBalance:', error);
       toast({
         title: "Error",
         description: `Failed to ${action} coins: ${error.message || 'Unknown error'}`,
@@ -355,7 +435,7 @@ const Admin = () => {
           {operationLoading && (
             <div className="mt-2 flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm text-gray-600">Operation in progress...</span>
+              <span className="text-sm text-gray-600">Operation in progress: {operationLoading}</span>
               <Button
                 size="sm"
                 variant="outline"
