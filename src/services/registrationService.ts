@@ -118,7 +118,7 @@ export const registerUser = async (
       console.warn('🔐 Non-critical: Activity logging failed:', activityLogError);
     }
     
-    // Create user object and session
+    // Create user object and session for auto-login
     const newUser: CustomUser = {
       id: dbUser.id,
       username: dbUser.username,
@@ -129,20 +129,11 @@ export const registerUser = async (
       expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     };
     
-    // Store auth in localStorage
-    console.log('🔐 Storing authentication data...');
-    localStorage.setItem('pirate_user', JSON.stringify(newUser));
-    localStorage.setItem('pirate_session', JSON.stringify(newSession));
-    
     console.log('🔐 Registration completed successfully for:', cleanUsername);
     return { user: newUser, session: newSession, error: null };
     
   } catch (error) {
     console.error('🔐 Registration error:', error);
-    
-    // Clear any partial localStorage data
-    localStorage.removeItem('pirate_user');
-    localStorage.removeItem('pirate_session');
     
     if (error instanceof Error) {
       if (error.message.includes('duplicate key') || error.message.includes('already exists')) {

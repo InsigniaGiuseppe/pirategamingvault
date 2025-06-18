@@ -39,7 +39,7 @@ export const useAuthRegister = (
         
         if (!mountedRef.current) return;
         
-        if (error || !user) {
+        if (error || !user || !session) {
           console.error('🔐 Registration failed:', error);
           safeSetState(prev => ({ 
             ...prev, 
@@ -54,7 +54,12 @@ export const useAuthRegister = (
           return;
         }
         
-        console.log('🔐 Registration successful');
+        console.log('🔐 Registration successful, auto-logging in...');
+        
+        // Store auth in localStorage for auto-login
+        localStorage.setItem('pirate_user', JSON.stringify(user));
+        localStorage.setItem('pirate_session', JSON.stringify(session));
+        
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -79,7 +84,7 @@ export const useAuthRegister = (
         
         toast({
           title: "Registration Successful",
-          description: "Welcome to Pirate Gaming!"
+          description: "Welcome to Pirate Gaming! You have been automatically logged in."
         });
         
         setTimer('navigation-delay', () => {
