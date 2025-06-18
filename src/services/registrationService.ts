@@ -33,7 +33,7 @@ export const registerUser = async (
   const timeoutMs = 15000; // 15 second timeout
   
   try {
-    console.log('Starting registration for:', username);
+    console.log('🔐 Starting registration for:', username);
     
     // Input validation
     if (!username || username.trim().length === 0) {
@@ -60,7 +60,7 @@ export const registerUser = async (
     return await Promise.race([registrationPromise, timeoutPromise]) as any;
     
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('🔐 Registration error:', error);
     
     // Clear any partial localStorage data
     localStorage.removeItem('pirate_user');
@@ -81,7 +81,7 @@ export const registerUser = async (
 };
 
 async function performAtomicRegistration(cleanUsername: string, password: string) {
-  console.log('Starting atomic registration for:', cleanUsername);
+  console.log('🔐 Starting atomic registration for:', cleanUsername);
   
   // Check if user already exists
   const { data: existingUser, error: checkError } = await supabase
@@ -91,7 +91,7 @@ async function performAtomicRegistration(cleanUsername: string, password: string
     .maybeSingle();
   
   if (checkError) {
-    console.error('Error checking existing user:', checkError);
+    console.error('🔐 Error checking existing user:', checkError);
     throw new Error('Database error during user check');
   }
   
@@ -100,7 +100,7 @@ async function performAtomicRegistration(cleanUsername: string, password: string
   }
   
   const newUserId = generateUUID();
-  console.log('Creating user with ID:', newUserId);
+  console.log('🔐 Creating user with ID:', newUserId);
   
   // Use a single transaction-like operation
   try {
@@ -116,7 +116,7 @@ async function performAtomicRegistration(cleanUsername: string, password: string
       .single();
     
     if (insertError) {
-      console.error('Error creating user:', insertError);
+      console.error('🔐 Error creating user:', insertError);
       throw new Error(`User creation failed: ${insertError.message}`);
     }
     
@@ -124,7 +124,7 @@ async function performAtomicRegistration(cleanUsername: string, password: string
       throw new Error('User creation returned no data');
     }
     
-    console.log('User created successfully:', dbUser);
+    console.log('🔐 User created successfully:', dbUser);
     
     // Step 2: Use RPC function for balance and transaction creation
     const { error: balanceError } = await supabase.rpc('add_coins', {
@@ -134,13 +134,33 @@ async function performAtomicRegistration(cleanUsername: string, password: string
     });
     
     if (balanceError) {
-      console.error('Welcome bonus creation failed:', balanceError);
+      console.error('🔐 Welcome bonus creation failed:', balanceError);
       // Clean up user if balance creation fails
       await supabase.from('custom_users').delete().eq('id', dbUser.id);
       throw new Error(`Welcome bonus creation failed: ${balanceError.message}`);
     }
     
-    console.log('Welcome bonus created successfully');
+    console.log('🔐 Welcome bonus created successfully');
+    
+    // Step 3: Log registration activity
+    try {
+      const { error: activityError } = await supabase
+        .from('activity_logs')
+        .insert([{
+          user_id: dbUser.id,
+          activity_type: 'registration',
+          description: `User ${cleanUsername} registered`,
+          metadata: { username: cleanUsername, timestamp: new Date().toISOString() }
+        }]);
+      
+      if (activityError) {
+        console.warn('🔐 Failed to log registration activity:', activityError);
+      } else {
+        console.log('🔐 Registration activity logged successfully');
+      }
+    } catch (activityLogError) {
+      console.warn('🔐 Non-critical: Activity logging failed:', activityLogError);
+    }
     
     // Create user object and session
     const newUser: CustomUser = {
@@ -154,15 +174,15 @@ async function performAtomicRegistration(cleanUsername: string, password: string
     };
     
     // Store auth in localStorage
-    console.log('Storing authentication data...');
+    console.log('🔐 Storing authentication data...');
     localStorage.setItem('pirate_user', JSON.stringify(newUser));
     localStorage.setItem('pirate_session', JSON.stringify(newSession));
     
-    console.log('Registration completed successfully for:', cleanUsername);
+    console.log('🔐 Registration completed successfully for:', cleanUsername);
     return { user: newUser, session: newSession, error: null };
     
   } catch (dbError: any) {
-    console.error('Atomic registration failed:', dbError);
+    console.error('🔐 Atomic registration failed:', dbError);
     
     // Clean up any partial data
     try {
@@ -170,7 +190,7 @@ async function performAtomicRegistration(cleanUsername: string, password: string
       await supabase.from('user_balance').delete().eq('user_id', newUserId);
       await supabase.from('transactions').delete().eq('user_id', newUserId);
     } catch (cleanupError) {
-      console.warn('Cleanup failed:', cleanupError);
+      console.warn('🔐 Cleanup failed:', cleanupError);
     }
     
     throw dbError;
