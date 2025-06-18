@@ -16,7 +16,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const operationQueueRef = useRef<Promise<any>>(Promise.resolve());
   const { setTimer, clearTimer, clearAllTimers } = useTimerManager();
 
-  // Add comprehensive logging for debugging
   console.log('🔐 SimpleAuthProvider - Current state:', {
     isAuthenticated: state.isAuthenticated,
     userId: state.user?.id,
@@ -25,12 +24,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     unlockedGamesCount: state.unlockedGames.length,
     isLoading: state.isLoading,
     hasError: !!state.error
-  });
-
-  console.log('🔐 SimpleAuthProvider - Component render:', {
-    mountedRef: mountedRef.current,
-    operationQueueLength: 'active',
-    timerManagerStatus: 'available'
   });
 
   useEffect(() => {
@@ -50,7 +43,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // Queue operations to prevent race conditions
   const queueOperation = useCallback(async <T>(operation: () => Promise<T>): Promise<T> => {
     console.log('🔐 SimpleAuthProvider - Queueing operation');
     const currentQueue = operationQueueRef.current;
@@ -58,7 +50,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('🔐 SimpleAuthProvider - Queued operation failed:', error);
       throw error;
     });
-    operationQueueRef.current = newOperation.catch(() => {}); // Don't let failures break the queue
+    operationQueueRef.current = newOperation.catch(() => {});
     return newOperation;
   }, []);
 

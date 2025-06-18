@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,7 +25,7 @@ const SimpleActivityLogViewer = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchLogs = async () => {
-    if (loading) return; // Prevent multiple simultaneous requests
+    if (loading) return;
     
     setLoading(true);
     setError(null);
@@ -54,11 +54,6 @@ const SimpleActivityLogViewer = () => {
       setLoading(false);
     }
   };
-
-  // Simple effect with no dependencies to prevent loops
-  useEffect(() => {
-    fetchLogs();
-  }, []); // Empty dependency array
 
   const getActivityTypeIcon = (type: string) => {
     switch (type) {
@@ -103,7 +98,7 @@ const SimpleActivityLogViewer = () => {
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {loading ? 'Loading...' : 'Load Logs'}
           </Button>
         </div>
       </CardHeader>
@@ -117,7 +112,7 @@ const SimpleActivityLogViewer = () => {
         )}
         
         <ScrollArea className="h-[400px]">
-          {loading && logs.length === 0 ? (
+          {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
@@ -134,6 +129,7 @@ const SimpleActivityLogViewer = () => {
             <div className="text-center py-8 text-gray-500">
               <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No activity logs found</p>
+              <p className="text-sm mt-2">Click "Load Logs" to fetch recent activity</p>
             </div>
           ) : (
             <div className="space-y-3">

@@ -18,11 +18,13 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [activeTab, setActiveTab] = useState('login');
   const [formError, setFormError] = useState<string | null>(null);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   
   const { login, register, isLoading, error } = useSimpleAuth();
 
   const clearErrors = () => {
     setFormError(null);
+    setRegistrationSuccess(false);
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,13 +42,15 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
     }
     
     try {
+      console.log('🔐 Login form - Starting login for:', username);
       if (onLogin) {
         await onLogin(username, password);
       } else {
         await login(username, password);
       }
+      console.log('🔐 Login form - Login completed');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('🔐 Login form - Login error:', error);
       setFormError('Login failed. Please try again.');
     }
   };
@@ -76,12 +80,16 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
     }
     
     try {
+      console.log('🔐 Registration form - Starting registration for:', registerUsername);
       await register(registerUsername, registerPassword);
+      console.log('🔐 Registration form - Registration completed');
+      
+      setRegistrationSuccess(true);
       setRegisterUsername('');
       setRegisterPassword('');
       setConfirmPassword('');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error('🔐 Registration form - Registration error:', error);
       setFormError('Registration failed. Please try again.');
     }
   };
@@ -103,6 +111,13 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
         <h2 className="text-2xl font-bold text-black mb-2 font-heading">Welcome to the PIRATE VAULT</h2>
         <p className="text-gray-600">Enter your credentials or create a new account</p>
       </div>
+      
+      {registrationSuccess && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-600 flex items-start gap-2">
+          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <span>Account created successfully! You should be automatically logged in.</span>
+        </div>
+      )}
       
       {displayError && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-600 flex items-start gap-2">
