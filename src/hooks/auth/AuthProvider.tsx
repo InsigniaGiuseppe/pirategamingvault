@@ -105,7 +105,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           const storedSession = JSON.parse(sessionStr);
           
           if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
-            console.log('🔐 SimpleAuthProvider - Valid session found');
+            console.log('🔐 SimpleAuthProvider - Valid session found, setting authenticated state');
             
             if (!isMounted || !mountedRef.current) return;
             
