@@ -1,27 +1,57 @@
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Toaster } from '@/components/ui/sonner';
 import Navigation from '@/components/Navigation';
-import GameGrid from '@/components/GameGrid';
+import SafeGameGrid from '@/components/SafeGameGrid';
 import Footer from '@/components/Footer';
 import SupportSection from '@/components/SupportSection';
 import EarnPirateCoins from '@/components/EarnPirateCoins';
 import TransactionHistory from '@/components/TransactionHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Gamepad2, Coins, Heart, History } from 'lucide-react';
+import { Gamepad2, Coins, Heart, History, Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
-  const { isAuthenticated } = useSimpleAuth();
+  const { isAuthenticated, isLoading, error } = useSimpleAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
   
-  if (!isAuthenticated) return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">Error: {error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!isAuthenticated) {
+    return null;
+  }
   
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -74,7 +104,7 @@ const Dashboard = () => {
             </TabsList>
             
             <TabsContent value="games">
-              <GameGrid />
+              <SafeGameGrid />
             </TabsContent>
             
             <TabsContent value="earn">

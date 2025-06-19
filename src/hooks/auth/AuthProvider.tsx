@@ -57,7 +57,18 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   const { loadUserData } = useAuthData();
   
   const wrappedLoadUserData = useCallback(async (userId: string) => {
-    await loadUserData(userId, safeSetState, mountedRef);
+    try {
+      await loadUserData(userId, safeSetState, mountedRef);
+    } catch (error) {
+      console.error('🔐 SimpleAuthProvider - Failed to load user data:', error);
+      if (mountedRef.current) {
+        safeSetState(prev => ({ 
+          ...prev, 
+          error: 'Failed to load user data',
+          isLoading: false 
+        }));
+      }
+    }
   }, [loadUserData, safeSetState]);
 
   const { handleLogin } = useAuthLogin(safeSetState, wrappedLoadUserData, setTimer, clearTimer, queueOperation, mountedRef);
@@ -73,10 +84,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [state.user?.id, wrappedLoadUserData]);
 
   useEffect(() => {
-    console.log('🔐 SimpleAuthProvider - Starting auth check...');
+    let isMounted = true;
     
     const checkAuth = async () => {
-      if (!mountedRef.current) return;
+      if (!isMounted || !mountedRef.current) return;
+      
+      console.log('🔐 SimpleAuthProvider - Starting auth check...');
       
       try {
         const userStr = localStorage.getItem('pirate_user');
@@ -94,16 +107,23 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
             console.log('🔐 SimpleAuthProvider - Valid session found');
             
-            if (!mountedRef.current) return;
+            if (!isMounted || !mountedRef.current) return;
             
             safeSetState(prev => ({
               ...prev,
               isAuthenticated: true,
               user: storedUser,
-              session: storedSession
+              session: storedSession,
+              isLoading: false
             }));
             
-            await wrappedLoadUserData(storedUser.id);
+            // Load user data after setting auth state
+            setTimeout(() => {
+              if (isMounted && mountedRef.current) {
+                wrappedLoadUserData(storedUser.id);
+              }
+            }, 100);
+            
             return;
           } else {
             console.log('🔐 SimpleAuthProvider - Session expired');
@@ -113,14 +133,28 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         console.log('🔐 SimpleAuthProvider - No valid session found');
+        if (isMounted && mountedRef.current) {
+          safeSetState(prev => ({ ...prev, isLoading: false }));
+        }
       } catch (error) {
         console.error('🔐 SimpleAuthProvider - Auth check error:', error);
         localStorage.removeItem('pirate_user');
         localStorage.removeItem('pirate_session');
+        if (isMounted && mountedRef.current) {
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false,
+            error: 'Auth check failed' 
+          }));
+        }
       }
     };
 
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [wrappedLoadUserData, safeSetState]);
 
   const contextValue: AuthContextType = {
