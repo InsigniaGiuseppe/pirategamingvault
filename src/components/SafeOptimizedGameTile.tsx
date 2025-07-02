@@ -48,7 +48,7 @@ const SafeOptimizedGameTile = memo(({ game, priority = false }: SafeOptimizedGam
   }
   
   const canAfford = pirateCoins >= game.coinCost;
-  const isUnlocked = checkIfGameUnlocked(game.id);
+  const isUnlocked = handleCheckUnlocked();
 
   useEffect(() => {
     mountedRef.current = true;

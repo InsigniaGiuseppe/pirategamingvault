@@ -100,7 +100,13 @@ const Admin = () => {
                 <CardTitle>User Management</CardTitle>
               </CardHeader>
               <CardContent>
-                <EnhancedUserTable />
+            <EnhancedUserTable 
+              users={[]} 
+              onViewDetails={() => {}} 
+              onAddCoins={() => {}} 
+              onRemoveCoins={() => {}} 
+              onRefresh={() => {}} 
+            />
               </CardContent>
             </Card>
           </TabsContent>
@@ -114,7 +120,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <AdminSettings />
+            <AdminSettings isOpen={false} onClose={() => {}} />
           </TabsContent>
         </Tabs>
       </main>
