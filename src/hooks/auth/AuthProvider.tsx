@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect, ReactNode } from 'react';
 import { AuthContext } from './context';
 import { initialState } from './types';
@@ -43,7 +42,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const queueOperation = useCallback(async <T>(operation: () => Promise<T>): Promise<T> => {
+  const queueOperation = useCallback(async <T,>(operation: () => Promise<T>): Promise<T> => {
     console.log('🔐 SimpleAuthProvider - Queueing operation');
     const currentQueue = operationQueueRef.current;
     const newOperation = currentQueue.then(operation).catch((error) => {
@@ -174,3 +173,5 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
+
+export default SimpleAuthProvider;

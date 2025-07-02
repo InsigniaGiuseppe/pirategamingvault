@@ -9,116 +9,126 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      activity_logs: {
+      meme_coins: {
         Row: {
-          activity_type: string
-          created_at: string
-          description: string
-          id: string
-          ip_address: unknown | null
-          metadata: Json | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          activity_type: string
-          created_at?: string
-          description: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          activity_type?: string
-          created_at?: string
-          description?: string
-          id?: string
-          ip_address?: unknown | null
-          metadata?: Json | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      credentials: {
-        Row: {
-          active: boolean | null
-          auth_code: string
           created_at: string | null
+          description: string | null
           id: string
-          password: string
-          username: string
+          image_url: string | null
+          initial_price: number
+          name: string
+          ticker: string
+          volatility_level: string
         }
         Insert: {
-          active?: boolean | null
-          auth_code: string
           created_at?: string | null
+          description?: string | null
           id?: string
-          password: string
-          username: string
+          image_url?: string | null
+          initial_price: number
+          name: string
+          ticker: string
+          volatility_level: string
         }
         Update: {
-          active?: boolean | null
-          auth_code?: string
           created_at?: string | null
+          description?: string | null
           id?: string
-          password?: string
-          username?: string
+          image_url?: string | null
+          initial_price?: number
+          name?: string
+          ticker?: string
+          volatility_level?: string
         }
         Relationships: []
       }
-      custom_users: {
+      orders: {
         Row: {
-          created_at: string
-          id: string
-          password_hash: string
-          username: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          password_hash: string
-          username: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          password_hash?: string
-          username?: string
-        }
-        Relationships: []
-      }
-      games: {
-        Row: {
-          category: string | null
-          coin_cost: number
+          coin_id: string
           created_at: string | null
+          filled_quantity: number
           id: string
-          img_src: string | null
-          is_pirate_pun: boolean | null
-          title: string
+          order_status: Database["public"]["Enums"]["order_status"]
+          order_type: Database["public"]["Enums"]["order_type"]
+          price: number
+          quantity: number
+          updated_at: string | null
+          user_id: string
         }
         Insert: {
-          category?: string | null
-          coin_cost: number
+          coin_id: string
           created_at?: string | null
-          id: string
-          img_src?: string | null
-          is_pirate_pun?: boolean | null
-          title: string
+          filled_quantity?: number
+          id?: string
+          order_status?: Database["public"]["Enums"]["order_status"]
+          order_type: Database["public"]["Enums"]["order_type"]
+          price: number
+          quantity: number
+          updated_at?: string | null
+          user_id: string
         }
         Update: {
-          category?: string | null
-          coin_cost?: number
+          coin_id?: string
           created_at?: string | null
+          filled_quantity?: number
           id?: string
-          img_src?: string | null
-          is_pirate_pun?: boolean | null
-          title?: string
+          order_status?: Database["public"]["Enums"]["order_status"]
+          order_type?: Database["public"]["Enums"]["order_type"]
+          price?: number
+          quantity?: number
+          updated_at?: string | null
+          user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_coin_id_fkey"
+            columns: ["coin_id"]
+            isOneToOne: false
+            referencedRelation: "meme_coins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      price_history: {
+        Row: {
+          close_price: number
+          coin_id: string
+          high_price: number
+          id: string
+          low_price: number
+          open_price: number
+          timestamp: string
+          volume: number
+        }
+        Insert: {
+          close_price: number
+          coin_id: string
+          high_price: number
+          id?: string
+          low_price: number
+          open_price: number
+          timestamp: string
+          volume: number
+        }
+        Update: {
+          close_price?: number
+          coin_id?: string
+          high_price?: number
+          id?: string
+          low_price?: number
+          open_price?: number
+          timestamp?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_coin_id_fkey"
+            columns: ["coin_id"]
+            isOneToOne: false
+            referencedRelation: "meme_coins"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -141,55 +151,37 @@ export type Database = {
       transactions: {
         Row: {
           amount: number
+          coin_id: string | null
           created_at: string | null
           description: string | null
           id: string
-          type: string
+          type: Database["public"]["Enums"]["transaction_type"]
           user_id: string
         }
         Insert: {
           amount: number
+          coin_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
-          type: string
+          type: Database["public"]["Enums"]["transaction_type"]
           user_id: string
         }
         Update: {
           amount?: number
+          coin_id?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      unlocked_games: {
-        Row: {
-          game_id: string
-          id: string
-          unlocked_at: string | null
-          user_id: string
-        }
-        Insert: {
-          game_id: string
-          id?: string
-          unlocked_at?: string | null
-          user_id: string
-        }
-        Update: {
-          game_id?: string
-          id?: string
-          unlocked_at?: string | null
+          type?: Database["public"]["Enums"]["transaction_type"]
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "unlocked_games_game_id_fkey"
-            columns: ["game_id"]
+            foreignKeyName: "transactions_coin_id_fkey"
+            columns: ["coin_id"]
             isOneToOne: false
-            referencedRelation: "games"
+            referencedRelation: "meme_coins"
             referencedColumns: ["id"]
           },
         ]
@@ -212,138 +204,40 @@ export type Database = {
         }
         Relationships: []
       }
-      user_sessions: {
+      user_coin_holdings: {
         Row: {
-          created_at: string
-          expires_at: string
+          average_buy_price: number
+          coin_id: string
           id: string
-          session_token: string
+          quantity: number
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          created_at?: string
-          expires_at: string
+          average_buy_price?: number
+          coin_id: string
           id?: string
-          session_token: string
+          quantity?: number
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          created_at?: string
-          expires_at?: string
+          average_buy_price?: number
+          coin_id?: string
           id?: string
-          session_token?: string
+          quantity?: number
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "user_sessions_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "user_coin_holdings_coin_id_fkey"
+            columns: ["coin_id"]
             isOneToOne: false
-            referencedRelation: "custom_users"
+            referencedRelation: "meme_coins"
             referencedColumns: ["id"]
           },
         ]
-      }
-      video_analytics: {
-        Row: {
-          action: string
-          id: string
-          session_id: string | null
-          timestamp: string | null
-          user_id: string | null
-          video_id: string | null
-          watch_duration: number | null
-        }
-        Insert: {
-          action: string
-          id?: string
-          session_id?: string | null
-          timestamp?: string | null
-          user_id?: string | null
-          video_id?: string | null
-          watch_duration?: number | null
-        }
-        Update: {
-          action?: string
-          id?: string
-          session_id?: string | null
-          timestamp?: string | null
-          user_id?: string | null
-          video_id?: string | null
-          watch_duration?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "video_analytics_video_id_fkey"
-            columns: ["video_id"]
-            isOneToOne: false
-            referencedRelation: "videos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      videos: {
-        Row: {
-          category: string | null
-          completion_count: number | null
-          created_at: string | null
-          description: string | null
-          duration: number
-          duration_display: string
-          embed_url: string
-          id: string
-          is_active: boolean
-          original_url: string
-          platform_type: string
-          reward_amount: number
-          tags: string[] | null
-          thumbnail_url: string
-          title: string
-          updated_at: string | null
-          video_id: string
-          view_count: number | null
-        }
-        Insert: {
-          category?: string | null
-          completion_count?: number | null
-          created_at?: string | null
-          description?: string | null
-          duration: number
-          duration_display: string
-          embed_url: string
-          id?: string
-          is_active?: boolean
-          original_url: string
-          platform_type: string
-          reward_amount?: number
-          tags?: string[] | null
-          thumbnail_url: string
-          title: string
-          updated_at?: string | null
-          video_id: string
-          view_count?: number | null
-        }
-        Update: {
-          category?: string | null
-          completion_count?: number | null
-          created_at?: string | null
-          description?: string | null
-          duration?: number
-          duration_display?: string
-          embed_url?: string
-          id?: string
-          is_active?: boolean
-          original_url?: string
-          platform_type?: string
-          reward_amount?: number
-          tags?: string[] | null
-          thumbnail_url?: string
-          title?: string
-          updated_at?: string | null
-          video_id?: string
-          view_count?: number | null
-        }
-        Relationships: []
       }
     }
     Views: {
@@ -351,16 +245,52 @@ export type Database = {
     }
     Functions: {
       add_coins: {
-        Args: { user_id: string; amount: number; description?: string }
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description?: string
+          p_coin_id?: string
+        }
         Returns: undefined
       }
-      remove_coins: {
-        Args: { user_id: string; amount: number; description?: string }
+      buy_meme_coin: {
+        Args: {
+          p_user_id: string
+          p_coin_id: string
+          p_quantity: number
+          p_price_per_coin: number
+        }
+        Returns: undefined
+      }
+      sell_meme_coin: {
+        Args: {
+          p_user_id: string
+          p_coin_id: string
+          p_quantity: number
+          p_price_per_coin: number
+        }
+        Returns: undefined
+      }
+      subtract_coins: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description?: string
+          p_coin_id?: string
+        }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      order_status: "pending" | "filled" | "cancelled"
+      order_type: "buy" | "sell"
+      transaction_type:
+        | "deposit"
+        | "withdrawal"
+        | "buy"
+        | "sell"
+        | "fee"
+        | "initial_bonus"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -475,6 +405,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      order_status: ["pending", "filled", "cancelled"],
+      order_type: ["buy", "sell"],
+      transaction_type: [
+        "deposit",
+        "withdrawal",
+        "buy",
+        "sell",
+        "fee",
+        "initial_bonus",
+      ],
+    },
   },
 } as const
