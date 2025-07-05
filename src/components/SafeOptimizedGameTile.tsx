@@ -1,54 +1,42 @@
-
-import { useState, useRef, memo, useEffect } from 'react';
-import { Game } from '@/data/games';
-import SecretCodeModal from './SecretCodeModal';
-import { Tag, Info, Lock, Coins, ExternalLink, AlertTriangle } from 'lucide-react';
-import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Coins, Lock, Unlock, Play, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from './ui/button';
-import { imageService } from '@/services/imageService';
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-const PAYMENT_LINK = "https://checkout.revolut.com/pay/4b623f7a-5dbc-400c-9291-ff34c4258654";
+import { useAuth } from '@/hooks/useAuthState';
+import type { Game } from '@/data/games';
+import ErrorBoundary from './ErrorBoundary';
 
 interface SafeOptimizedGameTileProps {
   game: Game;
-  priority?: boolean;
 }
 
-const SafeOptimizedGameTile = memo(({ game, priority = false }: SafeOptimizedGameTileProps) => {
-  const [showModal, setShowModal] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string>('');
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
-  const [hasError, setHasError] = useState(false);
+const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const mountedRef = useRef(true);
-  
   const { toast } = useToast();
-
-  // Safe access to auth context with error handling
-  let pirateCoins = 0;
-  let unlockGame = async () => false;
-  let checkIfGameUnlocked = () => false;
   
+  // Safely get auth context with error handling
+  let pirateCoins = 0;
+  let unlockGame: ((gameId: string, cost: number) => Promise<boolean>) | null = null;
+  let checkIfGameUnlocked: ((gameId: string) => boolean) | null = null;
+  let isAuthenticated = false;
+  let user = null;
+
   try {
-    const auth = useSimpleAuth();
-    pirateCoins = auth.pirateCoins || 0;
-    unlockGame = auth.unlockGame || (async () => false);
-    checkIfGameUnlocked = auth.checkIfGameUnlocked || (() => false);
+    const auth = useAuth();
+    pirateCoins = auth?.pirateCoins || 0;
+    unlockGame = auth?.unlockGame || null;
+    checkIfGameUnlocked = auth?.checkIfGameUnlocked || null;
+    isAuthenticated = auth?.isAuthenticated || false;
+    user = auth?.user || null;
   } catch (error) {
     console.error('🔐 SafeOptimizedGameTile - Auth context error:', error);
-    setHasError(true);
   }
   
-  const canAfford = pirateCoins >= game.coinCost;
-  const isUnlocked = handleCheckUnlocked();
+  const canAfford = pirateCoins >= (game.coinCost || 0);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -58,216 +46,206 @@ const SafeOptimizedGameTile = memo(({ game, priority = false }: SafeOptimizedGam
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const loadImage = async () => {
+    if (checkIfGameUnlocked && isAuthenticated) {
       try {
-        setImageLoading(true);
-        setImageError(false);
-        
-        const optimizedSrc = await imageService.getOptimizedImageUrl(game.imgSrc, game.title);
-        
-        if (!cancelled && mountedRef.current) {
-          setImageSrc(optimizedSrc);
-          setImageLoading(false);
-        }
+        const unlocked = checkIfGameUnlocked(game.id);
+        setIsUnlocked(unlocked);
       } catch (error) {
-        console.error('Error loading image for', game.title, error);
-        if (!cancelled && mountedRef.current) {
-          setImageError(true);
-          setImageLoading(false);
-          // Generate fallback
-          const fallbackSrc = `https://picsum.photos/seed/${encodeURIComponent(game.title.toLowerCase().replace(/[^a-z0-9]/g, '-'))}/600/337`;
-          setImageSrc(fallbackSrc);
-        }
+        console.error('🔐 SafeOptimizedGameTile - Check unlock error:', error);
+        setIsUnlocked(false);
       }
-    };
+    }
+  }, [game.id, checkIfGameUnlocked, isAuthenticated]);
 
-    loadImage();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [game.imgSrc, game.title]);
-  
-  const handleUnlock = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (hasError) {
+  const handleUnlockClick = useCallback(async () => {
+    if (!unlockGame || !isAuthenticated) {
       toast({
+        title: "Authentication Required",
+        description: "Please log in to unlock games.",
         variant: "destructive",
-        title: "Error",
-        description: "Authentication error. Please refresh the page."
       });
       return;
     }
-    
+
     if (!canAfford) {
       toast({
-        title: "Not Enough Coins",
-        description: `You need ${game.coinCost - pirateCoins} more coins to unlock this game!`,
-        action: (
-          <Button 
-            size="sm"
-            variant="outline"
-            onClick={() => window.open(PAYMENT_LINK, '_blank')}
-          >
-            <ExternalLink size={14} className="mr-1" />
-            Buy Coins
-          </Button>
-        )
+        title: "Insufficient Coins",
+        description: `You need ${game.coinCost} pirate coins to unlock this game.`,
+        variant: "destructive",
       });
       return;
     }
-    
-    setIsUnlocking(true);
-    
+
+    setIsLoading(true);
     try {
-      await unlockGame(game.id, game.coinCost);
+      const success = await unlockGame(game.id, game.coinCost || 0);
       
-      setTimeout(() => {
-        setIsUnlocking(false);
-        toast({
-          title: "Game Unlocked!",
-          description: `You've successfully unlocked ${game.title}.`
-        });
-      }, 800);
+      if (mountedRef.current) {
+        if (success) {
+          setIsUnlocked(true);
+          toast({
+            title: "Game Unlocked!",
+            description: `${game.title} has been unlocked!`,
+          });
+        } else {
+          toast({
+            title: "Unlock Failed",
+            description: "Failed to unlock the game. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
     } catch (error) {
-      setIsUnlocking(false);
-      toast({
-        variant: "destructive",
-        title: "Error Unlocking Game",
-        description: "Something went wrong. Please try again."
-      });
+      console.error('🔐 SafeOptimizedGameTile - Unlock error:', error);
+      if (mountedRef.current) {
+        toast({
+          title: "Error",
+          description: "An error occurred while unlocking the game.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      if (mountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [unlockGame, isAuthenticated, canAfford, game, toast]);
 
-  const handleGameClick = () => {
-    if (hasError) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Authentication error. Please refresh the page."
-      });
-      return;
+  const handlePlayClick = useCallback(() => {
+    if (game.url) {
+      window.open(game.url, '_blank');
     }
-    
-    if (isUnlocked) {
-      setShowModal(true);
-    } else {
-      toast({
-        title: "Game Locked",
-        description: `This game costs ${game.coinCost} Pirate Coins to unlock.`,
-        action: (
-          <Button 
-            size="sm"
-            variant="outline"
-            onClick={() => window.open(PAYMENT_LINK, '_blank')}
-          >
-            <ExternalLink size={14} className="mr-1" />
-            Get Coins
-          </Button>
-        )
-      });
-    }
-  };
-
-  if (hasError) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-        <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-        <p className="text-sm text-red-600">Error loading game</p>
-      </div>
-    );
-  }
+  }, [game.url]);
 
   return (
-    <>
-      <TooltipProvider>
-        <Tooltip delayDuration={300}>
-          <TooltipTrigger asChild>
-            <div 
-              className={`relative cursor-pointer group transition-transform duration-200 hover:scale-105 ${!isUnlocked ? 'opacity-95' : ''}`}
-              onClick={handleGameClick}
-            >
-              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <div className="relative h-full">
-                  {imageLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
-                      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
-                  
-                  <div className="relative">
-                    {imageSrc && (
-                      <img 
-                        src={imageSrc} 
-                        alt={game.title}
-                        className={`w-full h-full aspect-[16/9] object-cover rounded-t-lg ${
-                          !isUnlocked 
-                            ? 'saturate-50 brightness-75 contrast-90' 
-                            : ''
-                        } transition-all duration-200`}
-                        loading={priority ? 'eager' : 'lazy'}
-                        onError={() => setImageError(true)}
-                      />
-                    )}
-                    
-                    {!isUnlocked && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
-                        <Lock size={28} className="text-white opacity-90" />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="absolute top-3 left-3 bg-black/90 px-2 py-1 rounded text-xs font-medium text-white flex items-center max-w-[60%]">
-                    <Tag size={12} className="mr-1 flex-shrink-0" />
-                    <span className="truncate">{game.title}</span>
-                  </div>
-                  
-                  <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded text-xs font-medium text-white flex items-center">
-                    <Coins size={12} className="mr-1 text-yellow-500" />
-                    {game.coinCost}
-                  </div>
-                  
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent flex justify-between items-center">
-                    <span className="text-white text-sm font-medium truncate pr-2 max-w-[120px]">{game.title}</span>
-                    {!isUnlocked ? (
-                      <Button 
-                        onClick={handleUnlock}
-                        size="sm"
-                        variant="outline"
-                        disabled={!canAfford || isUnlocking}
-                        className="h-7 rounded-full px-2 flex items-center gap-1 bg-white/90 border-yellow-500 text-black hover:bg-blue-600 hover:text-white hover:border-blue-600 flex-shrink-0"
-                      >
-                        <Lock size={12} className="text-yellow-500" />
-                        <span>{isUnlocking ? '...' : 'Unlock'}</span>
-                      </Button>
-                    ) : (
-                      <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">
-                        <Info size={14} />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
+    <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
+      <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-secondary/20">
+        <img 
+          src={game.image} 
+          alt={game.title}
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+        />
+        
+        {/* Overlay badges */}
+        <div className="absolute top-2 left-2 flex gap-2">
+          {game.category && (
+            <Badge variant="secondary" className="text-xs">
+              {game.category}
+            </Badge>
+          )}
+          {game.coinReward && (
+            <Badge className="bg-yellow-500 text-yellow-900 text-xs">
+              <Coins className="w-3 h-3 mr-1" />
+              {game.coinReward}
+            </Badge>
+          )}
+        </div>
+
+        {/* Lock/Unlock status */}
+        <div className="absolute top-2 right-2">
+          {isUnlocked ? (
+            <div className="bg-green-500 text-white p-1.5 rounded-full">
+              <Unlock className="w-4 h-4" />
             </div>
-          </TooltipTrigger>
-          <TooltipContent side="top">
-            <p>{isUnlocked ? "Click to view game details" : "Unlock with Pirate Coins to play!"}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+          ) : (
+            <div className="bg-orange-500 text-white p-1.5 rounded-full">
+              <Lock className="w-4 h-4" />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <SecretCodeModal 
-        isOpen={showModal} 
-        onClose={() => setShowModal(false)} 
-        gameTitle={game.title}
-      />
-    </>
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          <div>
+            <h3 className="font-semibold text-lg line-clamp-1">{game.title}</h3>
+            {game.description && (
+              <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+                {game.description}
+              </p>
+            )}
+          </div>
+
+          {/* Game stats */}
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            {game.difficulty && (
+              <span>Difficulty: {game.difficulty}</span>
+            )}
+            {game.coinCost && (
+              <div className="flex items-center gap-1">
+                <Coins className="w-4 h-4" />
+                <span>{game.coinCost} coins</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-2 pt-2">
+            {isUnlocked ? (
+              <Button 
+                onClick={handlePlayClick}
+                className="flex-1"
+                disabled={!game.url}
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Play Game
+                <ExternalLink className="w-4 h-4 ml-2" />
+              </Button>
+            ) : (
+              <Button
+                onClick={handleUnlockClick}
+                disabled={isLoading || !canAfford || !isAuthenticated}
+                className="flex-1"
+                variant={canAfford ? "default" : "secondary"}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Unlocking...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    {canAfford ? 'Unlock Game' : 'Need More Coins'}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+
+          {!isAuthenticated && (
+            <p className="text-xs text-muted-foreground text-center">
+              Log in to unlock and play games
+            </p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
-});
+};
 
-SafeOptimizedGameTile.displayName = 'SafeOptimizedGameTile';
+const GameTileErrorFallback = ({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) => (
+  <Card className="p-4">
+    <div className="flex items-center gap-2 text-red-600 mb-2">
+      <AlertTriangle size={16} />
+      <span className="font-medium">Game Tile Error</span>
+    </div>
+    <p className="text-sm text-gray-600 mb-3">
+      This game tile couldn't load properly.
+    </p>
+    <Button onClick={resetErrorBoundary} size="sm" variant="outline">
+      Try Again
+    </Button>
+  </Card>
+);
+
+const SafeOptimizedGameTile: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
+  return (
+    <ErrorBoundary fallback={<GameTileErrorFallback error={new Error('Unknown error')} resetErrorBoundary={() => window.location.reload()} />}>
+      <GameTileContent game={game} />
+    </ErrorBoundary>
+  );
+};
 
 export default SafeOptimizedGameTile;

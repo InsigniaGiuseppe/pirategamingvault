@@ -314,6 +314,57 @@ export type Database = {
           },
         ]
       }
+      videos: {
+        Row: {
+          coin_reward: number
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          platform_type: string
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_id: string
+          view_count: number
+        }
+        Insert: {
+          coin_reward?: number
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          platform_type?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_id: string
+          view_count?: number
+        }
+        Update: {
+          coin_reward?: number
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          platform_type?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_id?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
