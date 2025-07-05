@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '@/services/customAuthService';
 import { activityLogger } from '@/services/activityLoggingService';
-import type { AuthState, initialState } from './types';
+import { AuthState, initialState } from './types';
 
 export const useAuthLogout = (
   state: AuthState,

@@ -46,7 +46,7 @@ const SimpleActivityLogViewer = () => {
       }
       
       console.log('✅ Activity logs fetched:', data?.length || 0);
-      setLogs(data || []);
+      setLogs((data || []) as ActivityLog[]);
     } catch (err) {
       console.error('❌ Unexpected error:', err);
       setError('Failed to load activity logs');

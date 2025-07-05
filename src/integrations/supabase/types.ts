@@ -240,6 +240,27 @@ export type Database = {
           },
         ]
       }
+      unlocked_games: {
+        Row: {
+          game_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_balance: {
         Row: {
           balance: number
@@ -313,6 +334,15 @@ export type Database = {
           p_coin_id: string
           p_quantity: number
           p_price_per_coin: number
+        }
+        Returns: undefined
+      }
+      remove_coins: {
+        Args: {
+          p_user_id: string
+          p_amount: number
+          p_description?: string
+          p_coin_id?: string
         }
         Returns: undefined
       }
