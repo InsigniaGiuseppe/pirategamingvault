@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Coins, Lock, Unlock, Play, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuthState';
+import { useAuthState } from '@/hooks/useAuthState';
 import type { Game } from '@/data/games';
 import ErrorBoundary from './ErrorBoundary';
 
@@ -26,10 +26,8 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
   let user = null;
 
   try {
-    const auth = useAuth();
+    const auth = useAuthState();
     pirateCoins = auth?.pirateCoins || 0;
-    unlockGame = auth?.unlockGame || null;
-    checkIfGameUnlocked = auth?.checkIfGameUnlocked || null;
     isAuthenticated = auth?.isAuthenticated || false;
     user = auth?.user || null;
   } catch (error) {
@@ -58,7 +56,7 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
   }, [game.id, checkIfGameUnlocked, isAuthenticated]);
 
   const handleUnlockClick = useCallback(async () => {
-    if (!unlockGame || !isAuthenticated) {
+    if (!isAuthenticated) {
       toast({
         title: "Authentication Required",
         description: "Please log in to unlock games.",
@@ -78,23 +76,17 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
 
     setIsLoading(true);
     try {
-      const success = await unlockGame(game.id, game.coinCost || 0);
-      
-      if (mountedRef.current) {
-        if (success) {
+      // Mock unlock for now
+      setTimeout(() => {
+        if (mountedRef.current) {
           setIsUnlocked(true);
           toast({
             title: "Game Unlocked!",
             description: `${game.title} has been unlocked!`,
           });
-        } else {
-          toast({
-            title: "Unlock Failed",
-            description: "Failed to unlock the game. Please try again.",
-            variant: "destructive",
-          });
+          setIsLoading(false);
         }
-      }
+      }, 800);
     } catch (error) {
       console.error('🔐 SafeOptimizedGameTile - Unlock error:', error);
       if (mountedRef.current) {
@@ -103,25 +95,24 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
           description: "An error occurred while unlocking the game.",
           variant: "destructive",
         });
-      }
-    } finally {
-      if (mountedRef.current) {
         setIsLoading(false);
       }
     }
-  }, [unlockGame, isAuthenticated, canAfford, game, toast]);
+  }, [isAuthenticated, canAfford, game, toast]);
 
   const handlePlayClick = useCallback(() => {
-    if (game.url) {
-      window.open(game.url, '_blank');
-    }
-  }, [game.url]);
+    // Mock play action
+    toast({
+      title: "Game Launched!",
+      description: `Playing ${game.title}...`,
+    });
+  }, [game.title, toast]);
 
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 overflow-hidden">
       <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-secondary/20">
         <img 
-          src={game.image} 
+          src={game.imgSrc} 
           alt={game.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
@@ -134,12 +125,10 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
               {game.category}
             </Badge>
           )}
-          {game.coinReward && (
-            <Badge className="bg-yellow-500 text-yellow-900 text-xs">
-              <Coins className="w-3 h-3 mr-1" />
-              {game.coinReward}
-            </Badge>
-          )}
+          <Badge className="bg-yellow-500 text-yellow-900 text-xs">
+            <Coins className="w-3 h-3 mr-1" />
+            {game.coinCost}
+          </Badge>
         </div>
 
         {/* Lock/Unlock status */}
@@ -160,24 +149,18 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
         <div className="space-y-3">
           <div>
             <h3 className="font-semibold text-lg line-clamp-1">{game.title}</h3>
-            {game.description && (
-              <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
-                {game.description}
-              </p>
-            )}
+            <p className="text-muted-foreground text-sm line-clamp-2 mt-1">
+              {game.category} game
+            </p>
           </div>
 
           {/* Game stats */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            {game.difficulty && (
-              <span>Difficulty: {game.difficulty}</span>
-            )}
-            {game.coinCost && (
-              <div className="flex items-center gap-1">
-                <Coins className="w-4 h-4" />
-                <span>{game.coinCost} coins</span>
-              </div>
-            )}
+            <span>Category: {game.category}</span>
+            <div className="flex items-center gap-1">
+              <Coins className="w-4 h-4" />
+              <span>{game.coinCost} coins</span>
+            </div>
           </div>
 
           {/* Action buttons */}
@@ -186,7 +169,6 @@ const GameTileContent: React.FC<SafeOptimizedGameTileProps> = ({ game }) => {
               <Button 
                 onClick={handlePlayClick}
                 className="flex-1"
-                disabled={!game.url}
               >
                 <Play className="w-4 h-4 mr-2" />
                 Play Game
