@@ -45,7 +45,7 @@ export const unlockGame = async (gameId: string, userId: string, cost: number): 
         user_id: userId,
         amount: -cost,
         description: `Unlocked game: ${gameId}`,
-        type: 'spend'
+        type: 'spend' as const
       }]);
     
     if (transactionError) {

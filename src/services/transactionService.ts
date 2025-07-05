@@ -49,7 +49,7 @@ export const fetchTransactions = async (filters: TransactionFilters = {}): Promi
 
     // Apply filters
     if (typeFilter !== 'all') {
-      query = query.eq('type', typeFilter);
+      query = query.eq('type', typeFilter as any);
     }
 
     if (searchTerm) {

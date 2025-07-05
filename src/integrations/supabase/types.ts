@@ -314,6 +314,36 @@ export type Database = {
           },
         ]
       }
+      video_analytics: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+          video_id: string
+          watch_duration: number | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          video_id: string
+          watch_duration?: number | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+          video_id?: string
+          watch_duration?: number | null
+        }
+        Relationships: []
+      }
       videos: {
         Row: {
           coin_reward: number
@@ -426,6 +456,9 @@ export type Database = {
         | "sell"
         | "fee"
         | "initial_bonus"
+        | "earn"
+        | "spend"
+        | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -550,6 +583,9 @@ export const Constants = {
         "sell",
         "fee",
         "initial_bonus",
+        "earn",
+        "spend",
+        "admin",
       ],
     },
   },

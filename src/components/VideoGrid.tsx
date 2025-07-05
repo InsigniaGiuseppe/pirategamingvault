@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Coins, Play, CheckCircle, Youtube, Twitch } from 'lucide-react';
+import { Clock, Play, Star, Coins, CheckCircle, Youtube, Twitch } from 'lucide-react';
+import { formatDuration } from '@/utils/duration';
 import { Video } from '@/services/videoService';
 
 interface VideoGridProps {
@@ -68,7 +69,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({ videos, watchedVideos, onWatchVid
             />
             <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
               <Clock size={12} />
-              {video.duration_display}
+              {formatDuration(video.duration)}
             </div>
             <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 text-xs rounded-md flex items-center gap-1">
               {getVideoIcon(video.platform_type)}

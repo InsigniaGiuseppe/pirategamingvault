@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { formatDuration } from '@/utils/duration';
 import { Progress } from '@/components/ui/progress';
 import { Coins, ExternalLink, CheckCircle } from 'lucide-react';
 import VideoPlayer from './VideoPlayer';
@@ -64,9 +65,9 @@ const VideoWatcher: React.FC<VideoWatcherProps> = ({ onCancel, onComplete }) => 
   return (
     <div className="mb-8">
       <VideoPlayer 
-        type={activeVideo.platform_type}
-        embedUrl={activeVideo.embed_url}
-        originalUrl={activeVideo.original_url}
+        type={activeVideo.platform_type as 'youtube' | 'twitch-clip' | 'twitch'}
+        embedUrl={`https://www.youtube.com/embed/${activeVideo.video_id}`}
+        originalUrl={`https://www.youtube.com/watch?v=${activeVideo.video_id}`}
         title={activeVideo.title}
         onError={handleVideoError}
         onExternalWatch={handleExternalWatchAsync}
@@ -78,7 +79,7 @@ const VideoWatcher: React.FC<VideoWatcherProps> = ({ onCancel, onComplete }) => 
           <h3 className="text-lg font-medium mb-1">{activeVideo.title}</h3>
           <p className="text-sm text-gray-500">
             {getVideoTypeLabel(activeVideo.platform_type)} • 
-            {activeVideo.duration_display} • 
+            {formatDuration(activeVideo.duration)} • 
             Up to {calculateTotalCoins(activeVideo.duration)} coins
           </p>
         </div>

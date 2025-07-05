@@ -84,9 +84,9 @@ export const registerUser = async (
     
     // Create welcome bonus using RPC function
     const { error: balanceError } = await supabase.rpc('add_coins', {
-      user_id: dbUser.id,
-      amount: 5,
-      description: 'Welcome bonus'
+      p_user_id: dbUser.id,
+      p_amount: 5,
+      p_description: 'Welcome bonus'
     });
     
     if (balanceError) {

@@ -5,19 +5,15 @@ import { extractYouTubeVideoId, processVideoUrl } from '@/utils/videoProcessor';
 export interface Video {
   id: string;
   video_id: string;
-  platform_type: 'youtube' | 'twitch' | 'twitch-clip';
+  platform_type: string;
   title: string;
   description?: string;
   duration: number;
-  duration_display: string;
-  thumbnail_url: string;
-  embed_url: string;
-  original_url: string;
-  reward_amount: number;
+  thumbnail_url?: string;
+  coin_reward: number;
   is_active: boolean;
   view_count: number;
-  completion_count: number;
-  category?: string;
+  is_featured: boolean;
   tags?: string[];
   created_at: string;
   updated_at: string;
@@ -45,19 +41,15 @@ export interface YouTubeVideoData {
 
 interface VideoInsert {
   video_id: string;
-  platform_type: 'youtube' | 'twitch' | 'twitch-clip';
+  platform_type: string;
   title: string;
   description?: string;
   duration: number;
-  duration_display: string;
-  thumbnail_url: string;
-  embed_url: string;
-  original_url: string;
-  reward_amount: number;
+  thumbnail_url?: string;
+  coin_reward: number;
   is_active: boolean;
   view_count: number;
-  completion_count: number;
-  category?: string;
+  is_featured: boolean;
   tags?: string[];
 }
 
@@ -158,19 +150,15 @@ export const processYouTubeUrls = async (urls: string[]): Promise<VideoInsert[]>
     
     return {
       video_id: video.id,
-      platform_type: 'youtube' as const,
+      platform_type: 'youtube',
       title: video.snippet.title,
       description: video.snippet.description,
       duration,
-      duration_display: formatDuration(duration),
       thumbnail_url: thumbnail,
-      embed_url: `https://www.youtube.com/embed/${video.id}`,
-      original_url: urlMap[video.id],
-      reward_amount: calculateReward(duration, isShort),
+      coin_reward: calculateReward(duration, isShort),
       is_active: true,
       view_count: 0,
-      completion_count: 0,
-      category: isShort ? 'shorts' : undefined,
+      is_featured: false,
       tags: isShort ? ['shorts'] : undefined
     };
   });
@@ -184,7 +172,7 @@ export const saveVideos = async (videos: VideoInsert[]): Promise<Video[]> => {
 
   if (error) throw error;
   
-  return (data || []) as Video[];
+  return data || [];
 };
 
 export const getVideos = async (includeInactive = false): Promise<Video[]> => {
@@ -208,7 +196,7 @@ export const getVideos = async (includeInactive = false): Promise<Video[]> => {
     }
     
     console.log('Videos fetched successfully:', data?.length || 0);
-    return (data || []) as Video[];
+    return data || [];
   } catch (error) {
     console.error('Unexpected error fetching videos:', error);
     return [];
@@ -225,7 +213,7 @@ export const updateVideo = async (id: string, updates: Partial<Video>): Promise<
 
   if (error) throw error;
   
-  return data as Video;
+  return data;
 };
 
 export const deleteVideo = async (id: string): Promise<void> => {

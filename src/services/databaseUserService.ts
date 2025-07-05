@@ -119,12 +119,12 @@ export const updateDatabaseUserBalance = async (
     // Add transaction record
     const { error: transactionError } = await supabase
       .from('transactions')
-      .insert({
+      .insert([{
         user_id: userId,
         amount,
         description,
         type
-      });
+      }]);
     
     if (transactionError) {
       console.error('Error creating transaction:', transactionError);

@@ -117,7 +117,7 @@ export const updateUserBalance = async (
         user_id: userId,
         amount,
         description,
-        type
+        type: type as any
       }]);
     
     if (transactionError) {
