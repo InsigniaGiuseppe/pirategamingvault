@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Users, Activity, BarChart3, Settings, Coins, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -100,13 +102,9 @@ const Admin = () => {
                 <CardTitle>User Management</CardTitle>
               </CardHeader>
               <CardContent>
-            <EnhancedUserTable 
-              users={[]} 
-              onViewDetails={() => {}} 
-              onAddCoins={() => {}} 
-              onRemoveCoins={() => {}} 
-              onRefresh={() => {}} 
-            />
+                <div className="text-center py-8 text-gray-500">
+                  No users found. Users will appear here when they register.
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -120,7 +118,37 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
-            <AdminSettings isOpen={false} onClose={() => {}} />
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Settings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="max-w-md space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="adminUsername">Admin Username</Label>
+                    <Input
+                      id="adminUsername"
+                      placeholder="Current: admin"
+                      className="bg-white border-2 border-gray-300 text-black focus:border-black focus:ring-black"
+                      disabled
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="adminPassword">Admin Password</Label>
+                    <Input
+                      id="adminPassword"
+                      type="password"
+                      placeholder="Current: admin"
+                      className="bg-white border-2 border-gray-300 text-black focus:border-black focus:ring-black"
+                      disabled
+                    />
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Admin credentials: admin/admin (currently hardcoded)
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
