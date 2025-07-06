@@ -19,19 +19,19 @@ const Admin = () => {
 
   // Check admin authentication
   useEffect(() => {
-    const adminAuth = localStorage.getItem('admin_authenticated');
+    const adminAuth = localStorage.getItem('pirateAdminLoggedIn');
     if (!adminAuth || adminAuth !== 'true') {
       toast({
         title: "Access Denied",
         description: "Please log in as admin to access this page.",
         variant: "destructive",
       });
-      navigate('/admin-login');
+      navigate('/admin/login');
     }
   }, [navigate, toast]);
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_authenticated');
+    localStorage.removeItem('pirateAdminLoggedIn');
     toast({
       title: "Logged Out",
       description: "You have been logged out from admin panel.",
