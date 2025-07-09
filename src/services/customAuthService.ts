@@ -64,9 +64,10 @@ export const login = async (
       username: dbUser.username,
     };
     
+    // Create session that expires in 24 hours (timestamp in seconds)
     const session: CustomSession = {
       access_token: `token-${Date.now()}-${Math.random()}`,
-      expires_at: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now (more generous expiry)
+      expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now in seconds
     };
     
     console.log('🔍 LOGIN - About to store in localStorage:', { user, session });
@@ -112,9 +113,12 @@ export const logout = async (): Promise<void> => {
 export const verifySession = async (session: CustomSession): Promise<boolean> => {
   try {
     console.log('🔍 SESSION - Verifying session:', session);
+    console.log('🔍 SESSION - Current time (seconds):', Math.floor(Date.now() / 1000));
+    console.log('🔍 SESSION - Session expires at:', session.expires_at);
     
-    // Simple expiry check for mock session
-    if (session.expires_at * 1000 > Date.now()) {
+    // Check if session is expired (both times in seconds)
+    const currentTimeSeconds = Math.floor(Date.now() / 1000);
+    if (session.expires_at > currentTimeSeconds) {
       console.log('🔍 SESSION - Session is valid');
       return true;
     }

@@ -8,6 +8,7 @@ import { useAuthLogin } from './useAuthLogin';
 import { useAuthRegister } from './useAuthRegister';
 import { useAuthLogout } from './useAuthLogout';
 import { useAuthCoins } from './useAuthCoins';
+import { verifySession } from '@/services/customAuthService';
 import type { AuthState, AuthContextType } from './types';
 
 export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
@@ -94,6 +95,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('🔍 AUTH PROVIDER - Starting auth check...');
       
       try {
+        safeSetState(prev => ({ ...prev, isLoading: true }));
+        
         const userStr = localStorage.getItem('pirate_user');
         const sessionStr = localStorage.getItem('pirate_session');
         
@@ -112,12 +115,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
             user: storedUser,
             session: storedSession,
             sessionExpiresAt: storedSession.expires_at,
-            currentTime: Math.floor(Date.now() / 1000),
-            isExpired: storedSession.expires_at <= Math.floor(Date.now() / 1000)
+            currentTime: Math.floor(Date.now() / 1000)
           });
           
-          // Simplified session check - if session exists and has expires_at, consider it valid
-          if (storedSession.expires_at && storedSession.expires_at > Math.floor(Date.now() / 1000)) {
+          // Verify session is still valid
+          const isSessionValid = await verifySession(storedSession);
+          console.log('🔍 AUTH PROVIDER - Session validity check:', isSessionValid);
+          
+          if (isSessionValid) {
             console.log('🔍 AUTH PROVIDER - Valid session found, restoring authenticated state');
             
             if (!isMounted || !mountedRef.current) return;
@@ -130,7 +135,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
               session: storedSession,
               isLoading: false,
               error: null,
-              pirateCoins: 5, // Default pirate coins
+              pirateCoins: 5,
               transactions: [{
                 id: 'welcome-1',
                 timestamp: Date.now(),

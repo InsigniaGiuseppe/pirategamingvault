@@ -136,7 +136,7 @@ export const registerUser = async (
       console.warn('🔍 REGISTRATION DEBUG - Non-critical: Activity logging failed:', activityLogError);
     }
     
-    // Create user object and session for auto-login
+    // Create user object and session for auto-login (expires in 24 hours as seconds)
     const newUser: CustomUser = {
       id: dbUser.id,
       username: dbUser.username,
@@ -144,7 +144,7 @@ export const registerUser = async (
     
     const newSession: CustomSession = {
       access_token: `token-${Date.now()}-${Math.random().toString(36)}`,
-      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      expires_at: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now in seconds
     };
     
     console.log('🔍 REGISTRATION DEBUG - Created user and session objects:', { newUser, newSession });
