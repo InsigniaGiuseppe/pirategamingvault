@@ -22,6 +22,14 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   
   const { login, register, isLoading, error } = useSimpleAuth();
 
+  console.log('🔍 LOGIN FORM DEBUG - Current auth state:', {
+    isLoading,
+    error,
+    activeTab,
+    formError,
+    registrationSuccess
+  });
+
   const clearErrors = () => {
     setFormError(null);
     setRegistrationSuccess(false);
@@ -30,6 +38,8 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
+    
+    console.log('🔍 LOGIN FORM DEBUG - Login form submitted:', { username, password });
     
     if (!username.trim()) {
       setFormError('Please enter your username');
@@ -42,15 +52,17 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
     }
     
     try {
-      console.log('🔐 Login form - Starting login for:', username);
+      console.log('🔍 LOGIN FORM DEBUG - Starting login for:', username);
       if (onLogin) {
+        console.log('🔍 LOGIN FORM DEBUG - Using onLogin prop');
         await onLogin(username, password);
       } else {
+        console.log('🔍 LOGIN FORM DEBUG - Using login from useSimpleAuth');
         await login(username, password);
       }
-      console.log('🔐 Login form - Login completed');
+      console.log('🔍 LOGIN FORM DEBUG - Login completed');
     } catch (error) {
-      console.error('🔐 Login form - Login error:', error);
+      console.error('🔍 LOGIN FORM DEBUG - Login error:', error);
       setFormError('Login failed. Please try again.');
     }
   };
@@ -58,6 +70,12 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
+    
+    console.log('🔍 LOGIN FORM DEBUG - Register form submitted:', { 
+      registerUsername, 
+      registerPassword, 
+      confirmPassword 
+    });
     
     if (!registerUsername.trim()) {
       setFormError('Please enter a username');
@@ -80,16 +98,16 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
     }
     
     try {
-      console.log('🔐 Registration form - Starting registration for:', registerUsername);
+      console.log('🔍 LOGIN FORM DEBUG - Starting registration for:', registerUsername);
       await register(registerUsername, registerPassword);
-      console.log('🔐 Registration form - Registration completed');
+      console.log('🔍 LOGIN FORM DEBUG - Registration completed');
       
       setRegistrationSuccess(true);
       setRegisterUsername('');
       setRegisterPassword('');
       setConfirmPassword('');
     } catch (error) {
-      console.error('🔐 Registration form - Registration error:', error);
+      console.error('🔍 LOGIN FORM DEBUG - Registration error:', error);
       setFormError('Registration failed. Please try again.');
     }
   };
@@ -244,7 +262,7 @@ const SimpleLoginForm = ({ onLogin }: LoginFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-black block">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-black block">Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                 <Input
