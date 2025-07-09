@@ -118,10 +118,12 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
             storedSession,
             sessionExpiry: storedSession.expires_at,
             currentTime: Math.floor(Date.now() / 1000),
-            isExpired: storedSession.expires_at * 1000 <= Date.now()
+            isExpired: storedSession.expires_at <= Math.floor(Date.now() / 1000),
+            expiryCheck: `${storedSession.expires_at} vs ${Math.floor(Date.now() / 1000)}`
           });
           
-          if (storedSession.expires_at && storedSession.expires_at * 1000 > Date.now()) {
+          // Fix the session validation - check expires_at as Unix timestamp
+          if (storedSession.expires_at && storedSession.expires_at > Math.floor(Date.now() / 1000)) {
             console.log('🔍 AUTH PROVIDER DEBUG - Valid session found, setting authenticated state');
             
             if (!isMounted || !mountedRef.current) return;
@@ -131,7 +133,8 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
               isAuthenticated: true,
               user: storedUser,
               session: storedSession,
-              isLoading: false
+              isLoading: false,
+              error: null
             }));
             
             // Load user data after setting auth state
@@ -152,7 +155,14 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
         console.log('🔍 AUTH PROVIDER DEBUG - No valid session found, setting unauthenticated');
         if (isMounted && mountedRef.current) {
-          safeSetState(prev => ({ ...prev, isLoading: false }));
+          safeSetState(prev => ({ 
+            ...prev, 
+            isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            session: null,
+            error: null
+          }));
         }
       } catch (error) {
         console.error('🔍 AUTH PROVIDER DEBUG - Auth check error:', error);
@@ -162,12 +172,16 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
           safeSetState(prev => ({ 
             ...prev, 
             isLoading: false,
+            isAuthenticated: false,
+            user: null,
+            session: null,
             error: 'Auth check failed' 
           }));
         }
       }
     };
 
+    // Run auth check immediately
     checkAuth();
     
     return () => {

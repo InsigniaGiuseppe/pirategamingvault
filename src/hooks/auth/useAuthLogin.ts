@@ -54,7 +54,7 @@ export const useAuthLogin = (
           return;
         }
         
-        console.log('🔐 Login successful');
+        console.log('🔐 Login successful, setting authenticated state');
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,

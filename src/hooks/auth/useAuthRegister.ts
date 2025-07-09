@@ -54,12 +54,9 @@ export const useAuthRegister = (
           return;
         }
         
-        console.log('🔐 Registration successful, auto-logging in...');
+        console.log('🔐 Registration successful, setting authenticated state...');
         
-        // Store auth in localStorage for auto-login
-        localStorage.setItem('pirate_user', JSON.stringify(user));
-        localStorage.setItem('pirate_session', JSON.stringify(session));
-        
+        // Immediately set authenticated state
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -73,6 +70,7 @@ export const useAuthRegister = (
           isLoading: false
         }));
         
+        // Load user data
         await loadUserData(user.id);
         
         try {
