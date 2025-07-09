@@ -23,19 +23,10 @@ export const useAuthLogin = (
       
       console.log('🔐 Starting login for:', username);
       
-      const timeoutId = setTimer('login-timeout', () => {
-        if (mountedRef.current) {
-          console.log('🔐 Login timeout triggered');
-          safeSetState(prev => ({ ...prev, isLoading: false, error: 'Login timed out' }));
-        }
-      }, 15000);
-      
       try {
         safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
         
         const { user, session, error } = await login(username, password);
-        
-        clearTimer('login-timeout');
         
         if (!mountedRef.current) return;
         
@@ -54,7 +45,9 @@ export const useAuthLogin = (
           return;
         }
         
-        console.log('🔐 Login successful, setting authenticated state');
+        console.log('🔐 Login successful, setting authenticated state immediately');
+        
+        // Set authenticated state immediately with all required data
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -64,8 +57,14 @@ export const useAuthLogin = (
           isLoading: false
         }));
         
-        await loadUserData(user.id);
+        // Load additional user data in background
+        try {
+          await loadUserData(user.id);
+        } catch (dataError) {
+          console.warn('🔐 Failed to load user data:', dataError);
+        }
         
+        // Log activity in background
         try {
           await activityLogger.logLogin(user.id, user.username);
           console.log('🔐 Login activity logged');
@@ -78,14 +77,14 @@ export const useAuthLogin = (
           description: `Welcome back, ${user.username}!`
         });
         
-        setTimer('navigation-delay', () => {
+        // Navigate after a brief delay to ensure state is updated
+        setTimeout(() => {
           if (mountedRef.current) {
             navigate('/dashboard');
           }
         }, 100);
         
       } catch (error) {
-        clearTimer('login-timeout');
         console.error('🔐 Login error:', error);
         if (mountedRef.current) {
           safeSetState(prev => ({ 

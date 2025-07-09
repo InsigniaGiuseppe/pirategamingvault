@@ -86,6 +86,7 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [state.user?.id, wrappedLoadUserData]);
 
+  // Check for existing authentication on app start
   useEffect(() => {
     let isMounted = true;
     
@@ -93,10 +94,6 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
       if (!isMounted || !mountedRef.current) return;
       
       console.log('🔍 AUTH PROVIDER DEBUG - Starting auth check...');
-      console.log('🔍 AUTH PROVIDER DEBUG - Current localStorage:', {
-        pirate_user: localStorage.getItem('pirate_user'),
-        pirate_session: localStorage.getItem('pirate_session')
-      });
       
       try {
         const userStr = localStorage.getItem('pirate_user');
@@ -104,30 +101,22 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
         
         console.log('🔍 AUTH PROVIDER DEBUG - Checking localStorage:', {
           hasUser: !!userStr,
-          hasSession: !!sessionStr,
-          userStr: userStr,
-          sessionStr: sessionStr
+          hasSession: !!sessionStr
         });
         
         if (userStr && sessionStr) {
           const storedUser = JSON.parse(userStr);
           const storedSession = JSON.parse(sessionStr);
           
-          console.log('🔍 AUTH PROVIDER DEBUG - Parsed stored data:', {
-            storedUser,
-            storedSession,
-            sessionExpiry: storedSession.expires_at,
-            currentTime: Math.floor(Date.now() / 1000),
-            isExpired: storedSession.expires_at <= Math.floor(Date.now() / 1000),
-            expiryCheck: `${storedSession.expires_at} vs ${Math.floor(Date.now() / 1000)}`
-          });
+          console.log('🔍 AUTH PROVIDER DEBUG - Found stored auth data, validating session...');
           
-          // Fix the session validation - check expires_at as Unix timestamp
+          // Check if session is still valid (expires_at is Unix timestamp)
           if (storedSession.expires_at && storedSession.expires_at > Math.floor(Date.now() / 1000)) {
-            console.log('🔍 AUTH PROVIDER DEBUG - Valid session found, setting authenticated state');
+            console.log('🔍 AUTH PROVIDER DEBUG - Valid session found, restoring authenticated state');
             
             if (!isMounted || !mountedRef.current) return;
             
+            // Restore authenticated state
             safeSetState(prev => ({
               ...prev,
               isAuthenticated: true,
@@ -137,23 +126,23 @@ export const SimpleAuthProvider = ({ children }: { children: ReactNode }) => {
               error: null
             }));
             
-            // Load user data after setting auth state
+            // Load user data after restoring auth state
             setTimeout(() => {
-              if (isMounted && mountedRef.current) {
-                console.log('🔍 AUTH PROVIDER DEBUG - Loading user data after auth state set');
+              if (isMounted && mountedRef.current && storedUser.id) {
+                console.log('🔍 AUTH PROVIDER DEBUG - Loading user data after auth restoration');
                 wrappedLoadUserData(storedUser.id);
               }
             }, 100);
             
             return;
           } else {
-            console.log('🔍 AUTH PROVIDER DEBUG - Session expired, clearing localStorage');
+            console.log('🔍 AUTH PROVIDER DEBUG - Session expired, clearing storage');
             localStorage.removeItem('pirate_user');
             localStorage.removeItem('pirate_session');
           }
         }
         
-        console.log('🔍 AUTH PROVIDER DEBUG - No valid session found, setting unauthenticated');
+        console.log('🔍 AUTH PROVIDER DEBUG - No valid session found, setting unauthenticated state');
         if (isMounted && mountedRef.current) {
           safeSetState(prev => ({ 
             ...prev, 

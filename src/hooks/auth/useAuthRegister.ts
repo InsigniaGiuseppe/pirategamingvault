@@ -23,19 +23,10 @@ export const useAuthRegister = (
       
       console.log('🔐 Starting registration for:', username);
       
-      const timeoutId = setTimer('register-timeout', () => {
-        if (mountedRef.current) {
-          console.log('🔐 Registration timeout triggered');
-          safeSetState(prev => ({ ...prev, isLoading: false, error: 'Registration timed out' }));
-        }
-      }, 20000);
-      
       try {
         safeSetState(prev => ({ ...prev, isLoading: true, error: null }));
         
         const { user, session, error } = await registerUser(username, password);
-        
-        clearTimer('register-timeout');
         
         if (!mountedRef.current) return;
         
@@ -54,9 +45,9 @@ export const useAuthRegister = (
           return;
         }
         
-        console.log('🔐 Registration successful, setting authenticated state...');
+        console.log('🔐 Registration successful, setting authenticated state immediately');
         
-        // Immediately set authenticated state
+        // Immediately set authenticated state with complete user data
         safeSetState(prev => ({
           ...prev,
           isAuthenticated: true,
@@ -70,9 +61,14 @@ export const useAuthRegister = (
           isLoading: false
         }));
         
-        // Load user data
-        await loadUserData(user.id);
+        // Load additional user data in background
+        try {
+          await loadUserData(user.id);
+        } catch (dataError) {
+          console.warn('🔐 Failed to load user data:', dataError);
+        }
         
+        // Log activity in background
         try {
           await activityLogger.logRegistration(user.id, user.username || username);
           console.log('🔐 Registration activity logged');
@@ -85,14 +81,14 @@ export const useAuthRegister = (
           description: "Welcome to Pirate Gaming! You have been automatically logged in."
         });
         
-        setTimer('navigation-delay', () => {
+        // Navigate after a brief delay to ensure state is updated
+        setTimeout(() => {
           if (mountedRef.current) {
             navigate('/dashboard');
           }
         }, 100);
         
       } catch (error) {
-        clearTimer('register-timeout');
         console.error('🔐 Registration error:', error);
         if (mountedRef.current) {
           safeSetState(prev => ({ 
