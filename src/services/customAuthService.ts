@@ -18,28 +18,24 @@ export const login = async (
   password: string
 ): Promise<{user: CustomUser | null, session: CustomSession | null, error: string | null}> => {
   try {
-    console.log('🔍 LOGIN DEBUG - Starting login process for:', username);
-    console.log('🔍 LOGIN DEBUG - Current localStorage items:', {
-      pirate_user: localStorage.getItem('pirate_user'),
-      pirate_session: localStorage.getItem('pirate_session')
-    });
+    console.log('🔍 LOGIN - Starting login process for:', username);
     
     // Input validation
     if (!username || username.trim().length === 0) {
-      console.log('🔍 LOGIN DEBUG - Username validation failed');
+      console.log('🔍 LOGIN - Username validation failed');
       return { user: null, session: null, error: 'Username is required' };
     }
     
     if (!password || password.length === 0) {
-      console.log('🔍 LOGIN DEBUG - Password validation failed');
+      console.log('🔍 LOGIN - Password validation failed');
       return { user: null, session: null, error: 'Password is required' };
     }
 
     // Clean the username to prevent issues
     const cleanUsername = username.toLowerCase().trim();
-    console.log('🔍 LOGIN DEBUG - Cleaned username:', cleanUsername);
+    console.log('🔍 LOGIN - Cleaned username:', cleanUsername);
     
-    console.log('🔍 LOGIN DEBUG - Checking user in database...');
+    console.log('🔍 LOGIN - Checking user in database...');
     
     // Check user in database with direct query
     const { data: dbUser, error: loginError } = await supabase
@@ -49,19 +45,19 @@ export const login = async (
       .eq('password_hash', password) // Simple password check for now
       .maybeSingle();
     
-    console.log('🔍 LOGIN DEBUG - Database query result:', { dbUser, loginError });
+    console.log('🔍 LOGIN - Database query result:', { dbUser, loginError });
     
     if (loginError) {
-      console.error('🔍 LOGIN DEBUG - Database error:', loginError);
+      console.error('🔍 LOGIN - Database error:', loginError);
       return { user: null, session: null, error: 'Login failed: Database error' };
     }
     
     if (!dbUser) {
-      console.log('🔍 LOGIN DEBUG - No user found with provided credentials');
+      console.log('🔍 LOGIN - No user found with provided credentials');
       return { user: null, session: null, error: 'Invalid username or password' };
     }
     
-    console.log('🔍 LOGIN DEBUG - User found, creating session...');
+    console.log('🔍 LOGIN - User found, creating session...');
     
     const user: CustomUser = {
       id: dbUser.id,
@@ -69,25 +65,31 @@ export const login = async (
     };
     
     const session: CustomSession = {
-      access_token: `token-${Date.now()}`,
-      expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      access_token: `token-${Date.now()}-${Math.random()}`,
+      expires_at: Math.floor(Date.now() / 1000) + 86400, // 24 hours from now (more generous expiry)
     };
     
-    console.log('🔍 LOGIN DEBUG - Created user and session:', { user, session });
+    console.log('🔍 LOGIN - About to store in localStorage:', { user, session });
     
     // Store auth in localStorage
     localStorage.setItem('pirate_user', JSON.stringify(user));
     localStorage.setItem('pirate_session', JSON.stringify(session));
     
-    console.log('🔍 LOGIN DEBUG - Stored in localStorage, verifying storage...');
-    console.log('🔍 LOGIN DEBUG - Verification - stored user:', localStorage.getItem('pirate_user'));
-    console.log('🔍 LOGIN DEBUG - Verification - stored session:', localStorage.getItem('pirate_session'));
+    // Verify storage immediately
+    const storedUser = localStorage.getItem('pirate_user');
+    const storedSession = localStorage.getItem('pirate_session');
+    console.log('🔍 LOGIN - Verification after storage:', {
+      storedUser: storedUser,
+      storedSession: storedSession,
+      userParsed: storedUser ? JSON.parse(storedUser) : null,
+      sessionParsed: storedSession ? JSON.parse(storedSession) : null
+    });
     
-    console.log('🔍 LOGIN DEBUG - Login successful for:', username);
+    console.log('🔍 LOGIN - Login successful for:', username);
     return { user, session, error: null };
     
   } catch (error) {
-    console.error('🔍 LOGIN DEBUG - Login error:', error);
+    console.error('🔍 LOGIN - Login error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Login failed';
     return { user: null, session: null, error: errorMessage };
   }
@@ -95,40 +97,32 @@ export const login = async (
 
 export const logout = async (): Promise<void> => {
   try {
-    console.log('🔍 LOGOUT DEBUG - Starting logout process');
-    console.log('🔍 LOGOUT DEBUG - Current localStorage before cleanup:', {
-      pirate_user: localStorage.getItem('pirate_user'),
-      pirate_session: localStorage.getItem('pirate_session')
-    });
+    console.log('🔍 LOGOUT - Starting logout process');
     
     // Clear localStorage
     localStorage.removeItem('pirate_user');
     localStorage.removeItem('pirate_session');
     
-    console.log('🔍 LOGOUT DEBUG - Logout completed, localStorage cleared');
-    console.log('🔍 LOGOUT DEBUG - Verification - localStorage after cleanup:', {
-      pirate_user: localStorage.getItem('pirate_user'),
-      pirate_session: localStorage.getItem('pirate_session')
-    });
+    console.log('🔍 LOGOUT - Logout completed, localStorage cleared');
   } catch (error) {
-    console.error('🔍 LOGOUT DEBUG - Logout error:', error);
+    console.error('🔍 LOGOUT - Logout error:', error);
   }
 };
 
 export const verifySession = async (session: CustomSession): Promise<boolean> => {
   try {
-    console.log('🔍 SESSION DEBUG - Verifying session:', session);
+    console.log('🔍 SESSION - Verifying session:', session);
     
     // Simple expiry check for mock session
     if (session.expires_at * 1000 > Date.now()) {
-      console.log('🔍 SESSION DEBUG - Session is valid');
+      console.log('🔍 SESSION - Session is valid');
       return true;
     }
     
-    console.log('🔍 SESSION DEBUG - Session expired');
+    console.log('🔍 SESSION - Session expired');
     return false;
   } catch (error) {
-    console.error('🔍 SESSION DEBUG - Session verification error:', error);
+    console.error('🔍 SESSION - Session verification error:', error);
     return false;
   }
 };
